@@ -1,0 +1,14 @@
+# VS Code
+.vscode/
+
+# Misc
+.DS_Store
+
+# Python
+__pycache__/
+.mypy_cache/
+
+
+# Data files
+*.db
+*.db-journal
