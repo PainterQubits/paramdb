@@ -1,5 +1,5 @@
 """Parameter database exceptions."""
 
 
-class EmptyDatabaseError(Exception):
-    """Parameter database is empty"""
+class CommitNotFoundError(Exception):
+    """Commit does not exist in the database."""

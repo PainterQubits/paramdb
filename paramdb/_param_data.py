@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import Any
 from collections.abc import Iterable, Mapping
 from abc import ABCMeta, abstractmethod
+from weakref import WeakValueDictionary
 from datetime import datetime
 from dataclasses import dataclass, field, fields
 
 
-# Stores all classes created using ParamClass
-_param_classes: dict[str, _ParamClass] = {}
+# Stores weak references to existing parameter classes
+_param_classes: WeakValueDictionary[str, _ParamClass] = WeakValueDictionary()
 
 
 def get_param_class(class_name: str) -> _ParamClass | None:
@@ -87,16 +88,14 @@ class Struct(ParamData):
 
     def _get_last_updated(self, obj: Any) -> datetime | None:
         """
-        Get the last updated time from a `ParamData` object, or from any iterable.
-        Helper function for the `last_updated` property.
+        Get the last updated time from a `ParamData` object, or recursively search
+        through any iterable type to find the latest last updated time.
         """
         if isinstance(obj, ParamData):
             return obj.last_updated
         if isinstance(obj, Iterable) and not isinstance(obj, str):
-            # Recursively search through any iterable type, since they could contain
-            # ParamData objects. Exclude strings since they do not contain ParamData
-            # objects and lead to infinite recursion. For mappings, search through
-            # values.
+            # Strings are excluded because they will never contain ParamData and contain
+            # strings, leading to infinite recursion.
             values = obj.values() if isinstance(obj, Mapping) else obj
             return max(
                 filter(None, (self._get_last_updated(v) for v in values)),

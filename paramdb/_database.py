@@ -14,7 +14,7 @@ from sqlalchemy.orm import (
     mapped_column,
 )
 from paramdb._param_data import ParamData, get_param_class
-from paramdb._exceptions import EmptyDatabaseError
+from paramdb._exceptions import CommitNotFoundError
 
 
 _T = TypeVar("_T", bound=Any)
@@ -62,10 +62,12 @@ def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamDa
     return json_dict
 
 
+# pylint: disable-next=too-few-public-methods
 class _Base(MappedAsDataclass, DeclarativeBase):
     """Base class for defining SQLAlchemy declarative mapping classes."""
 
 
+# pylint: disable-next=too-few-public-methods
 class _Snapshot(_Base):
     """Snapshot of the database."""
 
@@ -89,9 +91,8 @@ class CommitEntry:
 class ParamDB(Generic[_T]):
     """Parameter database."""
 
-    def __init__(self, path: str, echo: bool = False):
-        db_url = URL.create("sqlite+pysqlite", database=path)
-        self._engine = create_engine(db_url, echo=echo)
+    def __init__(self, path: str):
+        self._engine = create_engine(URL.create("sqlite+pysqlite", database=path))
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
 
@@ -111,12 +112,11 @@ class ParamDB(Generic[_T]):
         `EmptyDatabaseError` if there are no commits to load from.
         """
         with self._Session() as session:
-            # TODO: Measure performance with many commits, possibly create an index
             data = session.scalar(
                 select(_Snapshot.data).order_by(desc(_Snapshot.id)).limit(1)
             )
         if data is None:
-            raise EmptyDatabaseError(
+            raise CommitNotFoundError(
                 "Cannot load parameter because database"
                 f" '{self._engine.url.database}' has no commits."
             )
