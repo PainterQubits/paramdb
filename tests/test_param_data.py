@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data module."""
 
-from paramdb._param_data import ParamData, Struct, Param, _param_classes
+from paramdb._param_data import ParamData, Struct, Param
 
 
 def test_create_struct() -> None:
