@@ -89,10 +89,7 @@ class CommitEntry:
 
 
 class ParamDB(Generic[_T]):
-    """
-    Parameter database. A SQLite database is created at the given path, which can also
-    be `":memory:"` to create an in-memory database.
-    """
+    """Parameter database. The database is created in a file at the given path."""
 
     def __init__(self, path: str):
         self._engine = create_engine(URL.create("sqlite+pysqlite", database=path))

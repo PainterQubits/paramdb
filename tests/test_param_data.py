@@ -5,8 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import pytest
-from pytest import FixtureRequest
+from pytest import fixture, FixtureRequest
 from paramdb._param_data import ParamData, Struct, Param, get_param_class
 
 
@@ -67,19 +66,19 @@ def update_param_and_assert_struct_last_updated_changed(
     assert struct.last_updated is not None and start < struct.last_updated < end
 
 
-@pytest.fixture(name="number")
+@fixture(name="number")
 def fixture_number() -> float:
     """Number used to initialize parameter data."""
     return 1.23
 
 
-@pytest.fixture(name="string")
+@fixture(name="string")
 def fixture_string() -> str:
     """String used to initialize parameter data."""
     return "test"
 
 
-@pytest.fixture(name="param_data", params=[CustomStruct, CustomParam])
+@fixture(name="param_data", params=[CustomStruct, CustomParam])
 def fixture_param_data(
     request: FixtureRequest, number: float, string: str
 ) -> CustomStruct | CustomParam:
@@ -88,7 +87,7 @@ def fixture_param_data(
     return param_data_class(number=number, string=string)
 
 
-@pytest.fixture(name="complex_struct")
+@fixture(name="complex_struct")
 def fixture_complex_struct() -> CustomStruct:
     """Structure that contains parameters, structures, lists, and dictionaries."""
     return CustomStruct(
