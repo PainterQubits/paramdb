@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from time import sleep
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import pytest
 from pytest import FixtureRequest
-from paramdb._param_data import Struct, Param
+from paramdb._param_data import ParamData, Struct, Param, get_param_class
 
-SLEEP_TIME = 0.01
+
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
 
@@ -38,21 +38,33 @@ class CustomParam(Param):
     string: str = DEFAULT_STRING
 
 
+def sleep_for_datetime() -> None:
+    """
+    Wait for a short amount of time so that following calls to `datetime.now()` are
+    different than those that come before.
+
+    This is necessary because a `datetime` object is only precise to microseconds (see
+    https://docs.python.org/3/library/datetime.html#datetime-objects), whereas modern
+    computers execute instructions faster than this. So without waiting, it is difficult
+    to ensure that something is using `datetime.now()`.
+    """
+    time.sleep(0.001)  # Wait for one millisecond
+
+
 def update_param_and_assert_struct_last_updated_changed(
     param: CustomParam, struct: CustomStruct
 ) -> None:
     """
-    Helper function for the following tests.
-
     Update the given parameter (assumed to exist within the given structure) and assert
     that the structure's last updated time correctly reflects that something was
     just updated.
     """
-    sleep(SLEEP_TIME)  # Wait so following datetimes are different than previous ones
     start = datetime.now()
+    sleep_for_datetime()
     param.number += 1
+    sleep_for_datetime()
     end = datetime.now()
-    assert struct.last_updated is not None and start <= struct.last_updated <= end
+    assert struct.last_updated is not None and start < struct.last_updated < end
 
 
 @pytest.fixture(name="number")
@@ -91,8 +103,20 @@ def fixture_complex_struct() -> CustomStruct:
     )
 
 
+def test_is_param_data(param_data: CustomParam | CustomStruct) -> None:
+    """Parameter data object is an instance of the `ParamData` class."""
+    assert isinstance(param_data, ParamData)
+
+
+def test_get_param_class(param_data: CustomParam | CustomStruct) -> None:
+    """Parameter classes can be retrieved by name."""
+    param_class = param_data.__class__
+    param_class_name = param_data.__class__.__name__
+    assert get_param_class(param_class_name) is param_class
+
+
 def test_property_access(
-    number: float, string: str, param_data: CustomParam | CustomStruct
+    param_data: CustomParam | CustomStruct, number: float, string: str
 ) -> None:
     """Parameter data properties can be accessed via dot notation and index brackets."""
     assert param_data.number == number
@@ -102,7 +126,7 @@ def test_property_access(
 
 
 def test_struct_property_update(
-    number: float, param_data: CustomParam | CustomStruct
+    param_data: CustomParam | CustomStruct, number: float
 ) -> None:
     """Parameter data properties can be updated via dot notation and index brackets."""
     param_data.number += 1
@@ -136,18 +160,21 @@ def test_param_update_last_updated() -> None:
     """
     # Dot notation access
     param = CustomParam()
-    sleep(SLEEP_TIME)  # Wait so following datetimes are different than previous ones
     start = datetime.now()
+    sleep_for_datetime()
     param.number += 1
+    sleep_for_datetime()
     end = datetime.now()
-    assert start <= param.last_updated <= end
+    assert start < param.last_updated < end
 
     # Index bracket access
-    sleep(SLEEP_TIME)  # Wait so following datetimes are different than previous ones
+    param = CustomParam()
     start = datetime.now()
+    sleep_for_datetime()
     param["number"] += 1
+    sleep_for_datetime()
     end = datetime.now()
-    assert start <= param.last_updated <= end
+    assert start < param.last_updated < end
 
 
 def test_struct_no_last_updated() -> None:
