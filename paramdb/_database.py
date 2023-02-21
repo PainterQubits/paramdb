@@ -79,7 +79,7 @@ class _Snapshot(_Base):
     timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.now)
 
 
-@dataclass
+@dataclass(frozen=True)
 class CommitEntry:
     """Entry for a commit."""
 
@@ -89,7 +89,10 @@ class CommitEntry:
 
 
 class ParamDB(Generic[_T]):
-    """Parameter database."""
+    """
+    Parameter database. A SQLite database is created at the given path, which can also
+    be `":memory:"` to create an in-memory database.
+    """
 
     def __init__(self, path: str):
         self._engine = create_engine(URL.create("sqlite+pysqlite", database=path))
