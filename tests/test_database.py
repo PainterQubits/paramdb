@@ -8,15 +8,6 @@ from paramdb import CommitNotFoundError
 from paramdb._database import ParamDB
 
 
-def isolated_commit(db_path: str, message: str, data: Any) -> None:
-    """
-    Open an isolated connection to the database and commit the given data and message.
-    This is useful to simulate committing in a separate program.
-    """
-    param_db = ParamDB[Any](db_path)
-    param_db.commit(message, data)
-
-
 @fixture(name="db_path")
 def fixture_db_path(tmp_path: Path) -> str:
     """Return a path to use for a `ParamDB`."""
