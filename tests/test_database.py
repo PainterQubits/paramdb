@@ -37,17 +37,6 @@ def test_commit_multiple(db_path: str, complex_struct: CustomStruct) -> None:
         param_db.commit(f"Commit {i}", complex_struct)
 
 
-def test_fail_to_load_empty(db_path: str) -> None:
-    """Loading from an empty DB raises an exception."""
-    param_db = ParamDB[Any](db_path)
-    with raises(CommitNotFoundError) as exc_info:
-        param_db.load()
-        assert (
-            str(exc_info.value)
-            == f"Cannot load parameter because database '{db_path}' has no commits."
-        )
-
-
 def test_load(db_path: str, param_data: CustomStruct | CustomParam) -> None:
     """Can load parameters and structures from the database."""
     test_commit(db_path, param_data)
@@ -59,3 +48,14 @@ def test_load(db_path: str, param_data: CustomStruct | CustomParam) -> None:
 def test_load_complex(db_path: str, complex_struct: CustomStruct) -> None:
     """Can load a complex structure from the database."""
     test_load(db_path, complex_struct)
+
+
+def test_fail_to_load_empty(db_path: str) -> None:
+    """Loading from an empty DB raises an exception."""
+    param_db = ParamDB[Any](db_path)
+    with raises(CommitNotFoundError) as exc_info:
+        param_db.load()
+        assert (
+            str(exc_info.value)
+            == f"Cannot load parameter because database '{db_path}' has no commits."
+        )
