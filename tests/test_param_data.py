@@ -1,40 +1,9 @@
 """Tests for the paramdb._param_data module."""
 
-from __future__ import annotations
-
 import time
-from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from pytest import fixture, FixtureRequest
-from paramdb._param_data import ParamData, Struct, Param, get_param_class
-
-
-DEFAULT_NUMBER = 1.23
-DEFAULT_STRING = "test"
-
-
-@dataclass
-class CustomStruct(Struct):
-    """Custom parameter structure."""
-
-    number: float = DEFAULT_NUMBER
-    string: str = DEFAULT_STRING
-    param: CustomParam | None = None
-    struct: CustomStruct | None = None
-    param_list: list[CustomParam | list[CustomParam] | dict[str, CustomParam]] = field(
-        default_factory=list
-    )
-    param_dict: dict[
-        str, CustomParam | list[CustomParam] | dict[str, CustomParam]
-    ] = field(default_factory=dict)
-
-
-@dataclass
-class CustomParam(Param):
-    """Custom parameter."""
-
-    number: float = DEFAULT_NUMBER
-    string: str = DEFAULT_STRING
+from tests.conftest import CustomStruct, CustomParam
+from paramdb._param_data import ParamData, get_param_class
 
 
 def sleep_for_datetime() -> None:
@@ -66,48 +35,12 @@ def update_param_and_assert_struct_last_updated_changed(
     assert struct.last_updated is not None and start < struct.last_updated < end
 
 
-@fixture(name="number")
-def fixture_number() -> float:
-    """Number used to initialize parameter data."""
-    return 1.23
-
-
-@fixture(name="string")
-def fixture_string() -> str:
-    """String used to initialize parameter data."""
-    return "test"
-
-
-@fixture(name="param_data", params=[CustomStruct, CustomParam])
-def fixture_param_data(
-    request: FixtureRequest, number: float, string: str
-) -> CustomStruct | CustomParam:
-    """Parameter data object, either a parameter or structure."""
-    param_data_class: type[CustomStruct | CustomParam] = request.param
-    return param_data_class(number=number, string=string)
-
-
-@fixture(name="complex_struct")
-def fixture_complex_struct() -> CustomStruct:
-    """Structure that contains parameters, structures, lists, and dictionaries."""
-    return CustomStruct(
-        param=CustomParam(),
-        struct=CustomStruct(param=CustomParam()),
-        param_list=[CustomParam(), [CustomParam()], {"p1": CustomParam()}],
-        param_dict={
-            "param": CustomParam(),
-            "list": [CustomParam()],
-            "dict": {"p1": CustomParam()},
-        },
-    )
-
-
-def test_is_param_data(param_data: CustomParam | CustomStruct) -> None:
+def test_is_param_data(param_data: CustomStruct | CustomParam) -> None:
     """Parameter data object is an instance of the `ParamData` class."""
     assert isinstance(param_data, ParamData)
 
 
-def test_get_param_class(param_data: CustomParam | CustomStruct) -> None:
+def test_get_param_class(param_data: CustomStruct | CustomParam) -> None:
     """Parameter classes can be retrieved by name."""
     param_class = param_data.__class__
     param_class_name = param_data.__class__.__name__
@@ -115,7 +48,7 @@ def test_get_param_class(param_data: CustomParam | CustomStruct) -> None:
 
 
 def test_property_access(
-    param_data: CustomParam | CustomStruct, number: float, string: str
+    param_data: CustomStruct | CustomParam, number: float, string: str
 ) -> None:
     """Parameter data properties can be accessed via dot notation and index brackets."""
     assert param_data.number == number
@@ -125,7 +58,7 @@ def test_property_access(
 
 
 def test_struct_property_update(
-    param_data: CustomParam | CustomStruct, number: float
+    param_data: CustomStruct | CustomParam, number: float
 ) -> None:
     """Parameter data properties can be updated via dot notation and index brackets."""
     param_data.number += 1
@@ -270,7 +203,7 @@ def test_struct_last_updated_from_dict_in_dict(complex_struct: CustomStruct) -> 
     )
 
 
-def test_to_and_from_dict(param_data: CustomParam | CustomStruct) -> None:
+def test_to_and_from_dict(param_data: CustomStruct | CustomParam) -> None:
     """Parameter data can be converted to and from a dictionary."""
     param_data_dict = param_data.to_dict()
     assert isinstance(param_data_dict, dict)

@@ -4,11 +4,14 @@
 # Misc
 .DS_Store
 
+# Build
+dist/
+
 # Python
 __pycache__/
 .mypy_cache/
 .coverage
-
+.pytest_cache/
 
 # Data files
 *.db
