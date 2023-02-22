@@ -25,10 +25,8 @@ jobs:
           python-version: "3.10"
           cache: poetry
 
-      - run: poetry env info
+      - name: Install dependencies
+        run: poetry install
 
-      # - name: Install dependencies
-      #   run: poetry install
-
-      # - name: Lint
-      #   run: poetry run pylint paramdb tests
+      - name: Lint
+        run: poetry run pylint paramdb tests
