@@ -37,14 +37,21 @@ jobs:
       - name: Lint (Pylint)
         run: poetry run pylint paramdb tests
 
-      - name: Mypy cache
-        uses: actions/cache
+      - name: Restore Mypy cache
+        id: restore-mypy-cache
+        uses: actions/cache/restore@v3
         with:
           path: .mypy_cache
-          key: mypy-cache-${{ runner.os }}-python-3.10-poetry-${{ hashFiles('package-lock.json') }}
+          key: mypy-cache-${{ runner.os }}-python-3.10
 
       - name: Type Check (Mypy)
         run: poetry run mypy paramdb tests
+
+      - name: Save Mypy cache
+        uses: actions/cache/save@v3
+        with:
+          path: .mypy_cache
+          key: ${{ steps.restore-mypy-cache.outputs.cache-primary-key }}
 
       - name: Test (Pytest)
         run: poetry run pytest paramdb tests
