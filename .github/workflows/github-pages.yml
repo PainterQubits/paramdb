@@ -39,12 +39,6 @@ jobs:
       # - name: Create index.html for _site/releases/paramdb
       #   run: |
       #     cat > _site/releases/paramdb/index.html
-<!DOCTYPE html>
-<html>
-  <body>
-    <a href="qpuview/">qpuview</a>
-  </body>
-</html>
 
       - name: Move package files into _site/releases/paramdb
         run: mv dist/* _site/releases/paramdb
