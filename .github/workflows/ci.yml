@@ -16,17 +16,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Set up Python with pip cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: pip
+
       - name: Install Poetry
-        run: pipx install poetry==1.3.2
+        run: pipx install poetry==1.3.2 --python $(which python)
 
       - run: which poetry
       - run: pipx --help
 
-      # - name: Set up Python with Poetry cache
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: "3.10"
-      #     cache: poetry
+      - name: Set up Python with Poetry cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: poetry
 
       # - name: Install dependencies
       #   run: poetry install
