@@ -18,6 +18,11 @@ pylint = "^2.16.2"
 flake8 = "^6.0.0"
 mypy = "^1.0.0"
 black = "^23.1.0"
+coverage = "^7.1.0"
+
+[tool.pytest.ini_options]
+# See https://docs.pytest.org/en/latest/explanation/goodpractices.html#tests-outside-application-code
+addopts = ["--import-mode=importlib"]
 
 [tool.pylint.basic]
 # Allow one and two character variable names (e.g. "id").
