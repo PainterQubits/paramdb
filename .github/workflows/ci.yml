@@ -16,28 +16,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Check Python version
-        run: python --version
-
-      - name: Check pip version
-        run: pip --version
-
-      - name: Check pipx version
-        run: pipx --version
+      - run: which pipx
+      - run: echo $PIPX_DEFAULT_PYTHON
+      - run: which python
 
       - name: Set up Python with Poetry cache
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Check Python version
-        run: python --version
-
-      - name: Check pip version
-        run: pip --version
-
-      - name: Check pipx version
-        run: pipx --version
+      - run: which pipx
+      - run: echo $PIPX_DEFAULT_PYTHON
+      - run: which python
 
       # - name: Install Poetry
       #   run: pipx install poetry==1.3.2
