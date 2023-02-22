@@ -29,12 +29,12 @@ jobs:
       - name: Create index.html for _site/releases
         run: |
           cat > _site/releases/index.html
-<!DOCTYPE html>
-<html>
-  <body>
-    <a href="qpuview/">qpuview</a>
-  </body>
-</html>
+          <!DOCTYPE html>
+          <html>
+            <body>
+              <a href="qpuview/">qpuview</a>
+            </body>
+          </html>
 
       - name: Create index.html for _site/releases/paramdb
         run: |
