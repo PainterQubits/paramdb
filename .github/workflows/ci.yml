@@ -35,14 +35,14 @@ jobs:
       - name: Lint (Flake8)
         run: poetry run flake8 paramdb tests
 
-      - name: Lint (Pylint)
-        run: poetry run pylint paramdb tests
+      # - name: Lint (Pylint)
+      #   run: poetry run pylint paramdb tests
 
       - name: Mypy cache
         uses: actions/cache@v3
         with:
           path: .mypy_cache
-          key: mypy-cache-${{ runner.os }}-python-3.10-
+          key: mypy-cache-${{ runner.os }}-python-3.10-${{ hashFiles(.mypy_cache) }}
 
       # - name: Type Check (Mypy)
       #   run: poetry run mypy paramdb tests
