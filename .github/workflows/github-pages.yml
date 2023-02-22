@@ -36,9 +36,9 @@ jobs:
             </body>
           </html>
 
-      - name: Create index.html for _site/releases/paramdb
-        run: |
-          cat > _site/releases/paramdb/index.html
+      # - name: Create index.html for _site/releases/paramdb
+      #   run: |
+      #     cat > _site/releases/paramdb/index.html
 <!DOCTYPE html>
 <html>
   <body>
