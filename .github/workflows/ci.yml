@@ -42,8 +42,8 @@ jobs:
         with:
           path: .mypy_cache
           key: mypy-cache-${{ runner.os }}-python-3.10-${{ github.sha }}
-          restore-keys:
-            - mypy-cache-${{ runner.os }}-python-3.10-
+          restore-keys: |
+            mypy-cache-${{ runner.os }}-python-3.10-
 
       - name: Type Check (Mypy)
         run: poetry run mypy paramdb tests
