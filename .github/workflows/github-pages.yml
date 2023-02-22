@@ -1,7 +1,6 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch
   push:
     branches:
       - \#3-add-documentation-website
