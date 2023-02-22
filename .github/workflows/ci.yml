@@ -16,14 +16,37 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Check Python version
+        run: python --version
+
+      - name: Check pip version
+        run: pip --version
+
+      - name: Check pipx version
+        run: pipx --version
+
       - name: Set up Python with Poetry cache
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
-          cache: poetry
 
-      - name: Install Poetry
-        run: pipx install poetry==1.3.2
+      - name: Check Python version
+        run: python --version
 
-      - name: Lint
-        run: poetry run pylint paramdb tests
+      - name: Check pip version
+        run: pip --version
+
+      - name: Check pipx version
+        run: pipx --version
+
+      # - name: Install Poetry
+      #   run: pipx install poetry==1.3.2
+
+      # - name: Set up Python with Poetry cache
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: "3.10"
+      #     cache: poetry
+
+      # - name: Lint
+      #   run: poetry run pylint paramdb tests
