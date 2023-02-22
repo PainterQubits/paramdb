@@ -37,6 +37,12 @@ jobs:
       - name: Lint (Pylint)
         run: poetry run pylint paramdb tests
 
+      - name: Mypy cache
+        uses: actions/cache
+        with:
+          path: .mypy_cache
+          key: mypy-cache-${{ runner.os }}-python-3.10-poetry-${{ hashFiles('package-lock.json') }}
+
       - name: Type Check (Mypy)
         run: poetry run mypy paramdb tests
 
