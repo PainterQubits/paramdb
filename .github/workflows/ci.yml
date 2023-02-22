@@ -16,27 +16,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - run: which pipx
-      - run: echo $PIPX_DEFAULT_PYTHON
-      - run: which python
+      - name: Install Poetry
+        run: pipx install poetry==1.3.2
 
       - name: Set up Python with Poetry cache
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+          cache: poetry
 
-      - run: which pipx
-      - run: echo $PIPX_DEFAULT_PYTHON
-      - run: which python
-
-      # - name: Install Poetry
-      #   run: pipx install poetry==1.3.2
-
-      # - name: Set up Python with Poetry cache
-      #   uses: actions/setup-python@v4
-      #   with:
-      #     python-version: "3.10"
-      #     cache: poetry
-
-      # - name: Lint
-      #   run: poetry run pylint paramdb tests
+      - name: Lint
+        run: poetry run pylint paramdb tests
