@@ -58,7 +58,7 @@ def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamDa
         param_class = get_param_class(class_name)
         if param_class is not None:
             return cast(ParamData, param_class.from_dict(json_dict))
-        raise ValueError(f"{class_name} is not a known class")
+        raise ValueError(f"'{class_name}' is not a known class")
     return json_dict
 
 

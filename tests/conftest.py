@@ -7,8 +7,10 @@ Called automatically by Pytest before running tests.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import Path
 from pytest import fixture, FixtureRequest
 from paramdb import Struct, Param
+
 
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
@@ -38,21 +40,23 @@ class CustomParam(Param):
     string: str = DEFAULT_STRING
 
 
-@fixture(name="number")
-def fixture_number() -> float:
+@fixture
+def number() -> float:
     """Number used to initialize parameter data."""
     return DEFAULT_NUMBER
 
 
-@fixture(name="string")
-def fixture_string() -> str:
+@fixture
+def string() -> str:
     """String used to initialize parameter data."""
     return DEFAULT_STRING
 
 
-@fixture(name="param_data", params=[CustomStruct, CustomParam])
-def fixture_param_data(
-    request: FixtureRequest, number: float, string: str
+@fixture(params=[CustomStruct, CustomParam])
+def param_data(
+    request: FixtureRequest,
+    number: float,  # pylint: disable=redefined-outer-name
+    string: str,  # pylint: disable=redefined-outer-name
 ) -> CustomStruct | CustomParam:
     """Parameter data object, either a parameter or structure."""
     param_data_class: type[CustomStruct | CustomParam] = request.param
@@ -72,3 +76,9 @@ def fixture_complex_struct() -> CustomStruct:
             "dict": {"p1": CustomParam()},
         },
     )
+
+
+@fixture
+def db_path(tmp_path: Path) -> str:
+    """Return a path to use for a `ParamDB`."""
+    return str(tmp_path / "param.db")
