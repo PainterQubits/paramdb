@@ -42,10 +42,10 @@ jobs:
           echo '<!DOCTYPE html>
           <html>
             <body>
-              <a href="paramdb-${{ PARAMDB_VERSION }}-py3-none-any.whl">
-                paramdb-${{ PARAMDB_VERSION }}-py3-none-any.whl
+              <a href="paramdb-${{ env.PARAMDB_VERSION }}-py3-none-any.whl">
+                paramdb-${{ env.PARAMDB_VERSION }}-py3-none-any.whl
               </a>
-              <a href="paramdb-${{ PARAMDB_VERSION }}.tar.gz">paramdb-${{ PARAMDB_VERSION }}.tar.gz</a>
+              <a href="paramdb-${{ env.PARAMDB_VERSION }}.tar.gz">paramdb-${{ env.PARAMDB_VERSION }}.tar.gz</a>
             </body>
           </html>' > _site/releases/paramdb/index.html
 
