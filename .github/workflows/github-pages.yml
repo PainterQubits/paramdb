@@ -1,9 +1,6 @@
 name: Deploy to GitHub Pages
 
-on:
-  push:
-    branches:
-      - \#3-add-documentation-website
+on: workflow_dispatch
 
 env:
   POETRY_VERSION: "1.3.2"
@@ -37,9 +34,17 @@ jobs:
             </body>
           </html>' > _site/releases/index.html
 
-      # - name: Create index.html for _site/releases/paramdb
-      #   run: |
-      #     cat > _site/releases/paramdb/index.html
+      - name: Create index.html for _site/releases/paramdb
+        run: |
+          echo '<!DOCTYPE html>
+          <html>
+            <body>
+              <a href="paramdb-${{ PARAMDB_VERSION }}-py3-none-any.whl">
+                paramdb-${{ PARAMDB_VERSION }}-py3-none-any.whl
+              </a>
+              <a href="paramdb-${{ PARAMDB_VERSION }}.tar.gz">paramdb-${{ PARAMDB_VERSION }}.tar.gz</a>
+            </body>
+          </html>' > _site/releases/paramdb/index.html
 
       - name: Move package files into _site/releases/paramdb
         run: mv dist/* _site/releases/paramdb
@@ -47,16 +52,16 @@ jobs:
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v1
 
-  # deploy:
-  #   needs: build
-  #   permissions:
-  #     pages: write
-  #     id-token: write
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v1
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
