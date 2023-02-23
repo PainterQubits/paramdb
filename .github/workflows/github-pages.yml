@@ -30,13 +30,12 @@ jobs:
 
       - name: Create index.html for _site/releases
         run: |
-          cat > _site/releases/index.html
-          <!DOCTYPE html>
+          echo '<!DOCTYPE html>
           <html>
             <body>
-              <a href="qpuview/">qpuview</a>
+              <a href="paramdb/">paramdb</a>
             </body>
-          </html>
+          </html>' > _site/releases/index.html
 
       # - name: Create index.html for _site/releases/paramdb
       #   run: |
