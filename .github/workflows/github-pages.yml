@@ -19,6 +19,15 @@ jobs:
       - name: Install Poetry
         run: pipx install poetry==$POETRY_VERSION
 
+      - name: Set up Python with Poetry cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+
+      - name: Install dependencies
+        run: poetry install
+
       - name: Build package
         run: poetry build
 
