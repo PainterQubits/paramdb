@@ -6,12 +6,12 @@
 
 ParamDB has two main components:
 
-- [Parameter Data](#parameter-data): Base classes that are used to defined the structure of parameter
-  data, which consists of parameters ({py:class}`Param`) and groups of
+- [Parameter Data](#parameter-data): Base classes that are used to defined the structure
+  of parameter data, which consists of parameters ({py:class}`Param`) and groups of
   parameters, called structures ({py:class}`Struct`).
 
-- [Database](#database): A database object ({py:class}`Param`) that commits and loads parameter data to
-  a persistent file.
+- [Database](#database): A database object ({py:class}`ParamDB`) that commits and loads
+  parameter data to a persistent file.
 
 The usage of each of these components is explained in more detail below.
 
@@ -48,7 +48,7 @@ using the
 function.
 ```
 
-Parameters also track when any of their properties was last updated in the read-only
+Parameters track when any of their properties was last updated in the read-only
 {py:attr}`Param.last_updated` property.
 
 ### Structures
@@ -74,8 +74,40 @@ custom_struct = CustomStruct(
 )
 ```
 
-Structures also have a {py:attr}`Struct.last_updated` that computes the most recent last
-updated time from any of its child parameters (including those within structures, lists,
-and dictionaries).
+Structures also have a {py:attr}`Struct.last_updated` property that computes the most
+recent last updated time from any of its child parameters (including those within
+structures, lists, and dictionaries).
 
 ## Database
+
+The database is represented by a {py:class}`ParamDB` object. A path is passed, and a new
+database file is created if it does not already exist. We can parameterize the class with
+the root data type in order for its methods (e.g. {py:meth}`ParamDB.commit`) work properly
+with type checking. For example:
+
+```python
+from paramdb import ParamDB
+
+param_db = ParamDB[CustomStruct]("path/to/param.db")
+```
+
+```{note}
+The {py:class}`ParamDB` object should be created once per project and imported by other
+files that access the database.
+```
+
+Data can then be committed and loaded as follows:
+
+```python
+param_db.commit("Initial commit", custom_struct)
+
+custom_struct_loaded = param_db.load()
+```
+
+```{warning}
+Simulataneous database operations have not been tested yet. Simultaneous read operations
+(e.g. calls to {py:meth}`ParamDB.load`) are likely ok, but simultaneous write operations
+(e.g. calls to {py:meth}`ParamDB.commit`) may raise an error.
+```
+
+We can get a list of commits using the {py:meth}`ParamDB.commit_history` method.

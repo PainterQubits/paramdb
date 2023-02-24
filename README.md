@@ -22,19 +22,18 @@ The `extra-index-url` parameter is needed since ParamDB is not published to PyPI
 
 ## Usage
 
-<!-- start usage -->
-
 ParamDB has two main components:
 
-1. **Parameted Data**: Base classes that are used to defined the structure of parameter
-   data, which consists of parameters (`Param`) and groups of parameters, called
-   structures (`Struct`).
+- **Parameted Data**: Base classes that are used to defined the structure of parameter
+  data, which consists of parameters
+  ([`Param`](https://painterqubits.github.io/qpuview/api-reference#paramdb.Param)) and
+  groups of parameters, called structures
+  ([`Struct`](https://painterqubits.github.io/qpuview/api-reference#paramdb.Struct)).
 
-2. **Database**: A database object (`ParamDB`) that commits and loads parameter data to
-   a persistent file.
-
-<!-- end usage -->
+- **Database**: A database object
+  ([`ParamDB`](https://painterqubits.github.io/qpuview/api-reference#paramdb.ParamDB))
+  that commits and loads parameter data to a persistent file.
 
 See the [usage page](https://painterqubits.github.io/qpuview/usage) on the documentation
-website for examples. Also see the
+website for examples and more information. Also see the
 [api reference](https://painterqubits.github.io/qpuview/api-reference).
