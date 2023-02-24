@@ -22,14 +22,12 @@ jobs:
       - name: Build package
         run: poetry build
 
-      - name: Create site directories
-        run: |
-          mkdir _site
-          mkdir _site/releases
-          mkdir _site/releases/paramdb
+      - name: Build documentation website
+        run: poetry run sphinx-build docs _site
 
-      - name: Create index.html for _site/releases
+      - name: Create _site/releases/index.html
         run: |
+          mkdir _site/releases
           echo '<!DOCTYPE html>
           <html>
             <body>
@@ -37,8 +35,9 @@ jobs:
             </body>
           </html>' > _site/releases/index.html
 
-      - name: Create index.html for _site/releases/paramdb
+      - name: Create _site/releases/paramdb/index.html
         run: |
+          mkdir _site/releases/paramdb
           echo '<!DOCTYPE html>
           <html>
             <body>
