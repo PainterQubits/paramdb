@@ -90,9 +90,9 @@ class CommitEntry:
 
 class ParamDB(Generic[T]):
     """
-    Parameter database. The database is created in a file at the given path if it does not
-    exist. To work with type checking, this class can be parameterized with a root data
-    type ``T``. For example::
+    Parameter database. The database is created in a file at the given path if it does
+    not exist. To work with type checking, this class can be parameterized with a root
+    data type ``T``. For example::
 
         from paramdb import Struct, ParamDB
 
