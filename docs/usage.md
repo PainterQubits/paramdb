@@ -61,12 +61,12 @@ store parameters and lists and dictionaries of parameters. For example:
 from paramdb import Struct
 
 @dataclass
-class CustomStruct(Param):
+class CustomStruct(Struct):
     param: CustomParam
     param_dict: dict[str, CustomParam]
 
 custom_struct = CustomStruct(
-    param = CustomParam(value=1.23)
+    param = CustomParam(value=1.23),
     param_dict = {
         "p1": CustomParam(value=4.56),
         "p2": CustomParam(value=7.89),
