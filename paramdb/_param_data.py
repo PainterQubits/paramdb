@@ -14,7 +14,7 @@ _param_classes: WeakValueDictionary[str, _ParamClass] = WeakValueDictionary()
 
 
 def get_param_class(class_name: str) -> _ParamClass | None:
-    """Get a parameter class given its name, or None if the class does not exist."""
+    """Get a parameter class given its name, or ``None`` if the class does not exist."""
     return _param_classes[class_name] if class_name in _param_classes else None
 
 
@@ -49,7 +49,15 @@ class _ParamClass(ABCMeta):
 
 @dataclass
 class ParamData(metaclass=_ParamClass):
-    """Base class for all parameter data."""
+    """
+    Abstract base class for all parameter data. The base classes :py:class:`Struct` and
+    :py:class:`Param` are subclasses of this class.
+
+    Custom parameter data classes are intended to be dataclasses. If they are not
+    dataclasses, then custom :py:meth:`to_dict` and ``__init__`` methods should be
+    defined so that the parameter data object can be properly converted to and from
+    JSON. See :py:meth:`to_dict` for more information.
+    """
 
     @property
     @abstractmethod
@@ -61,11 +69,13 @@ class ParamData(metaclass=_ParamClass):
 
     def to_dict(self) -> dict[str, Any]:
         """
-        Convert the given object into a dictionary, usually to be passed to
-        `json.dumps`.
+        Convert this parameter data object into a dictionary to be passed to
+        ``json.dumps``. This dictionary will later be passed to the subclass's
+        ``__init__`` function to reconstruct the object. By default, the dictionary maps
+        from Python dataclass fields to values.
 
         Note that objects within the dictionary do not need to be JSON serializable,
-        since they will be recursively processed by `json.dumps`.
+        since they will be recursively processed by ``json.dumps``.
         """
         return {f.name: getattr(self, f.name) for f in fields(self)}
 
@@ -79,16 +89,34 @@ class ParamData(metaclass=_ParamClass):
 
 
 class Struct(ParamData):
-    """Base class for parameter structures."""
+    """
+    Base class for parameter structures. Custom structures should be subclasses of this
+    class and are intended to be dataclasses. For example::
+
+        from dataclasses import dataclass
+        from paramdb import Struct
+
+        @dataclass
+        class CustomStruct(Struct):
+            custom_param: CustomParam  # CustomParam class is defined somewhere else
+
+    A structure can contain any data, but it is intended to store parameters and lists
+    and dictionaries of parameters.
+    """
 
     @property
     def last_updated(self) -> datetime | None:
+        """
+        When any parameter within this structure (including those nested within lists,
+        dictionaries, and other structures) was last updated, or ``None`` if this
+        structure contains no parameters.
+        """
         return self._get_last_updated(getattr(self, f.name) for f in fields(self))
 
     def _get_last_updated(self, obj: Any) -> datetime | None:
         """
-        Get the last updated time from a `ParamData` object, or recursively search
-        through any iterable type to find the latest last updated time.
+        Get the last updated time from a :py:class:`ParamData` object, or recursively
+        search through any iterable type to find the latest last updated time.
         """
         if isinstance(obj, ParamData):
             return obj.last_updated
@@ -105,7 +133,17 @@ class Struct(ParamData):
 
 @dataclass(kw_only=True)
 class Param(ParamData):
-    """Base class for parameters."""
+    """
+    Base class for parameters. Custom parameters should be subclasses of this class and
+    are intended to be dataclasses. For example::
+
+        from dataclasses import dataclass
+        from paramdb import Param
+
+        @dataclass
+        class CustomParam(Param):
+            value: float
+    """
 
     _last_updated: datetime = field(default_factory=datetime.now)
 
@@ -118,6 +156,7 @@ class Param(ParamData):
 
     @property
     def last_updated(self) -> datetime:
+        """When this parameter was last updated."""
         return self._last_updated
 
     def __setattr__(self, name: str, value: Any) -> None:
