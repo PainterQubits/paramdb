@@ -26,14 +26,14 @@ ParamDB has two main components:
 
 - **Parameted Data**: Base classes that are used to defined the structure of parameter
   data, which consists of parameters
-  ([`Param`](https://painterqubits.github.io/qpuview/api-reference#paramdb.Param)) and
+  ([`Param`](https://painterqubits.github.io/paramdb/api-reference#paramdb.Param)) and
   groups of parameters, called structures
-  ([`Struct`](https://painterqubits.github.io/qpuview/api-reference#paramdb.Struct)).
+  ([`Struct`](https://painterqubits.github.io/paramdb/api-reference#paramdb.Struct)).
 
 - **Database**: A database object
-  ([`ParamDB`](https://painterqubits.github.io/qpuview/api-reference#paramdb.ParamDB))
+  ([`ParamDB`](https://painterqubits.github.io/paramdb/api-reference#paramdb.ParamDB))
   that commits and loads parameter data to a persistent file.
 
-See the [usage page](https://painterqubits.github.io/qpuview/usage) on the documentation
+See the [usage page](https://painterqubits.github.io/paramdb/usage) on the documentation
 website for examples and more information. Also see the
-[api reference](https://painterqubits.github.io/qpuview/api-reference).
+[api reference](https://painterqubits.github.io/paramdb/api-reference).
