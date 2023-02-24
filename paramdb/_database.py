@@ -17,7 +17,7 @@ from paramdb._param_data import ParamData, get_param_class
 from paramdb._exceptions import CommitNotFoundError
 
 
-_T = TypeVar("_T", bound=Any)
+T = TypeVar("T", bound=Any)
 
 
 def _compress(text: str) -> bytes:
@@ -81,23 +81,34 @@ class _Snapshot(_Base):
 
 @dataclass(frozen=True)
 class CommitEntry:
-    """Entry for a commit."""
+    """Entry for a commit given commit containing the ID, message, and timestamp."""
 
-    id: int
-    message: str
-    timestamp: datetime
+    id: int  #: Commit ID
+    message: str  #: Message for this commit
+    timestamp: datetime  #: When this commit was created
 
 
-class ParamDB(Generic[_T]):
-    """Parameter database. The database is created in a file at the given path."""
+class ParamDB(Generic[T]):
+    """
+    Parameter database. The database is created in a file at the given path if it does
+    not exist. To work with type checking, this class can be parameterized with a root
+    data type ``T``. For example::
+
+        from paramdb import Struct, ParamDB
+
+        class Root(Struct):
+            pass
+
+        param_db = ParamDB[Root]("path/to/param.db")
+    """
 
     def __init__(self, path: str):
         self._engine = create_engine(URL.create("sqlite+pysqlite", database=path))
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
 
-    def commit(self, message: str, data: _T) -> None:
-        """Commit the current data to the database."""
+    def commit(self, message: str, data: T) -> None:
+        """Commit the current data to the database with the given message."""
         with self._Session.begin() as session:
             session.add(
                 _Snapshot(
@@ -106,10 +117,10 @@ class ParamDB(Generic[_T]):
                 )
             )
 
-    def load(self) -> _T:
+    def load(self) -> T:
         """
         Load and return the current parameters from the database. Raises an
-        `EmptyDatabaseError` if there are no commits to load from.
+        :py:exc:`CommitNotFoundError` if there are no commits to load from.
         """
         with self._Session() as session:
             data = session.scalar(
@@ -120,10 +131,10 @@ class ParamDB(Generic[_T]):
                 "Cannot load parameter because database"
                 f" '{self._engine.url.database}' has no commits."
             )
-        return cast(_T, json.loads(_decompress(data), object_hook=_from_dict))
+        return cast(T, json.loads(_decompress(data), object_hook=_from_dict))
 
     def commit_history(self) -> list[CommitEntry]:
-        """Retrieve the commit history."""
+        """Retrieve the commit history as a list of :py:class:`CommitEntry`."""
         with self._Session() as session:
             history_entries = session.execute(
                 select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp).order_by(

@@ -6,6 +6,7 @@
 
 # Build
 dist/
+build/
 
 # Python
 __pycache__/

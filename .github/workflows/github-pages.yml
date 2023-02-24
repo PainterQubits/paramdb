@@ -1,0 +1,75 @@
+name: Deploy to GitHub Pages
+
+on: workflow_dispatch
+
+env:
+  POETRY_VERSION: "1.3.2"
+  PARAMDB_VERSION: "0.1.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Poetry
+        run: pipx install poetry==$POETRY_VERSION
+
+      - name: Set up Python with Poetry cache
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Build documentation website to _site
+        run: poetry run sphinx-build docs _site
+
+      - name: Build package
+        run: poetry build
+
+      - name: Create _site/releases/index.html
+        run: |
+          mkdir _site/releases
+          echo '<!DOCTYPE html>
+          <html>
+            <body>
+              <a href="paramdb/">paramdb</a>
+            </body>
+          </html>' > _site/releases/index.html
+
+      - name: Create _site/releases/paramdb/index.html
+        run: |
+          mkdir _site/releases/paramdb
+          echo '<!DOCTYPE html>
+          <html>
+            <body>
+              <a href="paramdb-${{ env.PARAMDB_VERSION }}-py3-none-any.whl">
+                paramdb-${{ env.PARAMDB_VERSION }}-py3-none-any.whl
+              </a>
+              <a href="paramdb-${{ env.PARAMDB_VERSION }}.tar.gz">paramdb-${{ env.PARAMDB_VERSION }}.tar.gz</a>
+            </body>
+          </html>' > _site/releases/paramdb/index.html
+
+      - name: Move package files into _site/releases/paramdb
+        run: mv dist/* _site/releases/paramdb
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v1
+
+  deploy:
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
