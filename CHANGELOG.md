@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Implement loading data from a specified commit ID
+
 ## [0.1.0] (Feb 24 2023)
 
 - Create parameter data classes (`Param` and `Struct`)

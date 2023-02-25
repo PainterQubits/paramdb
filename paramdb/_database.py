@@ -119,12 +119,12 @@ class ParamDB(Generic[T]):
 
     def load(self, commit_id: int | None = None) -> T:
         """
-        Load and return data from the database. If a commit id is given, load from that
+        Load and return data from the database. If a commit ID is given, load from that
         commit; otherwise, load from the most recent commit. Raise a
         :py:exc:`CommitNotFoundError` if the specified commit does not exist or if the
         database is empty.
 
-        Note that commit ids begin at 1.
+        Note that commit IDs begin at 1.
         """
         select_stmt = select(_Snapshot.data)
         select_stmt = (
