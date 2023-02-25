@@ -58,7 +58,7 @@ def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamDa
         param_class = get_param_class(class_name)
         if param_class is not None:
             return cast(ParamData, param_class.from_dict(json_dict))
-        raise ValueError(f"'{class_name}' is not a known class")
+        raise ValueError(f"class '{class_name}' is not known to paramdb")
     return json_dict
 
 
@@ -117,19 +117,30 @@ class ParamDB(Generic[T]):
                 )
             )
 
-    def load(self) -> T:
+    def load(self, commit_id: int | None = None) -> T:
         """
-        Load and return the current parameters from the database. Raises an
-        :py:exc:`CommitNotFoundError` if there are no commits to load from.
+        Load and return data from the database. If a commit ID is given, load from that
+        commit; otherwise, load from the most recent commit. Raise a
+        :py:exc:`CommitNotFoundError` if the specified commit does not exist or if the
+        database is empty.
+
+        Note that commit IDs begin at 1.
         """
+        select_stmt = select(_Snapshot.data)
+        select_stmt = (
+            select_stmt.order_by(desc(_Snapshot.id)).limit(1)  # Most recent commit
+            if commit_id is None
+            else select_stmt.where(_Snapshot.id == commit_id)  # Specified commit
+        )
         with self._Session() as session:
-            data = session.scalar(
-                select(_Snapshot.data).order_by(desc(_Snapshot.id)).limit(1)
-            )
+            data = session.scalar(select_stmt)
         if data is None:
             raise CommitNotFoundError(
-                "Cannot load parameter because database"
-                f" '{self._engine.url.database}' has no commits."
+                f"cannot load most recent data because database"
+                f" '{self._engine.url.database}' has no commits"
+                if commit_id is None
+                else f"commit {commit_id} does not exist in database"
+                f" '{self._engine.url.database}'"
             )
         return cast(T, json.loads(_decompress(data), object_hook=_from_dict))
 

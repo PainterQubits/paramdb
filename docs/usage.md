@@ -96,12 +96,14 @@ The {py:class}`ParamDB` object should be created once per project and imported b
 files that access the database.
 ```
 
-Data can then be committed and loaded as follows:
+Data can be committed using {py:meth}`ParamDB.commit` and loaded using
+{py:meth}`ParamDB.load`. Note that commit IDs start from 1. For example:
 
 ```python
 param_db.commit("Initial commit", custom_struct)
 
-custom_struct_loaded = param_db.load()
+custom_struct_most_recent = param_db.load()
+custom_struct_commit_1 = param_db.load(1)
 ```
 
 ```{warning}
