@@ -27,7 +27,7 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
     data = NotJSONSerializable()
     with raises(TypeError) as exc_info:
         param_db.commit("Initial commit", data)
-        assert str(exc_info.value) == f"{repr(data)} is not JSON serializable"
+    assert str(exc_info.value) == f"{repr(data)} is not JSON serializable"
 
 
 def test_load_unknown_class_fails(db_path: str) -> None:
@@ -49,26 +49,44 @@ def test_load_unknown_class_fails(db_path: str) -> None:
     param_db.commit("Initial commit", data)
     with raises(ValueError) as exc_info:
         param_db.load()
-        assert str(exc_info.value) == f"'{Unknown.__name__}' is not a known class"
+    assert str(exc_info.value) == f"class '{Unknown.__name__}' is not known to paramdb"
 
 
-def test_empty_load_fails(db_path: str) -> None:
+def test_load_empty_fails(db_path: str) -> None:
     """Fails to loading from an empty database."""
     param_db = ParamDB[Any](db_path)
     with raises(CommitNotFoundError) as exc_info:
         param_db.load()
-        assert (
-            str(exc_info.value)
-            == f"Cannot load parameter because database '{db_path}' has no commits."
-        )
+    assert (
+        str(exc_info.value)
+        == f"cannot load most recent data because database '{db_path}' has no commits"
+    )
+
+
+def test_load_nonexistent_commit_fails(db_path: str) -> None:
+    """Fails to loading a commit that does not exist."""
+    param_db = ParamDB[Any](db_path)
+    with raises(CommitNotFoundError) as exc_info:
+        param_db.load(1)
+    assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
+    param_db.commit("Initial commit", {})
+    with raises(CommitNotFoundError) as exc_info:
+        param_db.load(100)
+    assert str(exc_info.value) == f"commit 100 does not exist in database '{db_path}'"
 
 
 def test_commit_load(db_path: str, param_data: CustomStruct | CustomParam) -> None:
     """Can commit and load parameters and structures."""
     param_db = ParamDB[CustomStruct | CustomParam](db_path)
     param_db.commit("Initial commit", param_data)
-    param_data_loaded = param_db.load()
-    assert param_data == param_data_loaded
+
+    # Can load the most recent commit
+    param_data_loaded_most_recent = param_db.load()
+    assert param_data_loaded_most_recent == param_data
+
+    # Can load by commit ID
+    param_data_loaded_first_commit = param_db.load(1)
+    assert param_data_loaded_first_commit == param_data_loaded_most_recent
 
 
 def test_commit_load_complex(db_path: str, complex_struct: CustomStruct) -> None:
@@ -76,14 +94,32 @@ def test_commit_load_complex(db_path: str, complex_struct: CustomStruct) -> None
     test_commit_load(db_path, complex_struct)
 
 
+def test_commit_load_multiple(db_path: str) -> None:
+    """Can commit multiple times and load previous commits."""
+    param_db = ParamDB[CustomParam](db_path)
+
+    # Commit several different parameters
+    params = [CustomParam(number=i + 1) for i in range(10)]
+    for i, param in enumerate(params):
+        param_db.commit(f"Commit {i + 1}", param)
+
+    # Load them back
+    for i, param in enumerate(params):
+        param_loaded = param_db.load(i + 1)
+        assert param_loaded == param
+
+
 def test_separate_connections(db_path: str, complex_struct: CustomStruct) -> None:
     """
     Can commit and load using separate connections. This simulates committing to the
     database in one program and loading in another program at a later time.
     """
+    # Commit using one connection
     param_db1 = ParamDB[CustomStruct](db_path)
     param_db1.commit("Initial commit", complex_struct)
     del param_db1
+
+    # Load back using another connection
     param_db2 = ParamDB[CustomStruct](db_path)
     complex_struct_loaded = param_db2.load()
     assert complex_struct == complex_struct_loaded
