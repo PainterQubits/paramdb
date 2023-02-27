@@ -4,6 +4,18 @@
 
 ```
 
+<!-- Jupyter Sphinx setup -->
+
+```{jupyter-execute}
+:hide-code:
+
+import os
+from tempfile import TemporaryDirectory
+tmp_dir = TemporaryDirectory()
+os.chdir(tmp_dir.name)
+os.makedirs("path/to")
+```
+
 ParamDB has two main components:
 
 - [Parameter Data](#parameter-data): Base classes that are used to defined the structure
@@ -21,12 +33,12 @@ The usage of each of these components is explained in more detail below.
 
 A parameter is defined from the base class {py:class}`Param`. This custom class is
 intended to be defined using the
-[`@dataclasses.dataclass`](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass)
+[`@dataclass`](https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass)
 decorator, meaning that class variables with type annotations are automatically become
 object properties, and the corresponding `__init__` function is generated. An example of
 a defining a custom parameter is shown below.
 
-```python
+```{jupyter-execute}
 from paramdb import Param
 from dataclasses import dataclass
 
@@ -34,7 +46,7 @@ from dataclasses import dataclass
 class CustomParam(Param):
     value: float
 
-custom_param = CustomParam(value=1.23)
+param = CustomParam(value=1.23)
 ```
 
 ```{tip}
@@ -51,13 +63,17 @@ function.
 Parameters track when any of their properties was last updated in the read-only
 {py:attr}`Param.last_updated` property.
 
+```{jupyter-execute}
+param.last_updated
+```
+
 ### Structures
 
 A structure is defined from the base class {py:class}`Struct` and is intended
 to be defined as a dataclass. A structure can contain any data, but it is intended to
 store parameters and lists and dictionaries of parameters. For example:
 
-```python
+```{jupyter-execute}
 from paramdb import Struct
 
 @dataclass
@@ -65,8 +81,8 @@ class CustomStruct(Struct):
     param: CustomParam
     param_dict: dict[str, CustomParam]
 
-custom_struct = CustomStruct(
-    param = CustomParam(value=1.23),
+struct = CustomStruct(
+    param = param,
     param_dict = {
         "p1": CustomParam(value=4.56),
         "p2": CustomParam(value=7.89),
@@ -78,6 +94,10 @@ Structures also have a {py:attr}`Struct.last_updated` property that computes the
 recent last updated time from any of its child parameters (including those within
 structures, lists, and dictionaries).
 
+```{jupyter-execute}
+struct.last_updated
+```
+
 ## Database
 
 The database is represented by a {py:class}`ParamDB` object. A path is passed, and a new
@@ -85,7 +105,7 @@ database file is created if it does not already exist. We can parameterize the c
 the root data type in order for its methods (e.g. {py:meth}`ParamDB.commit`) work properly
 with type checking. For example:
 
-```python
+```{jupyter-execute}
 from paramdb import ParamDB
 
 param_db = ParamDB[CustomStruct]("path/to/param.db")
@@ -99,17 +119,29 @@ files that access the database.
 Data can be committed using {py:meth}`ParamDB.commit` and loaded using
 {py:meth}`ParamDB.load`. Note that commit IDs start from 1. For example:
 
-```python
-param_db.commit("Initial commit", custom_struct)
+```{jupyter-execute}
+param_db.commit("Initial commit", struct)
 
-custom_struct_most_recent = param_db.load()
-custom_struct_commit_1 = param_db.load(1)
+param_db.load() == struct
 ```
 
 ```{warning}
-Simulataneous database operations have not been tested yet. Simultaneous read operations
+Simultaneous database operations have not been tested yet. Simultaneous read operations
 (e.g. calls to {py:meth}`ParamDB.load`) are likely ok, but simultaneous write operations
 (e.g. calls to {py:meth}`ParamDB.commit`) may raise an error.
 ```
 
 We can get a list of commits using the {py:meth}`ParamDB.commit_history` method.
+
+```{jupyter-execute}
+param_db.commit_history()
+```
+
+<!-- Jupyter Sphinx cleanup -->
+
+```{jupyter-execute}
+:hide-code:
+
+# Gets ride of PermissionError on Windows
+param_db._engine.dispose()
+```

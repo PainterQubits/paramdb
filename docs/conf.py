@@ -11,14 +11,17 @@ release = "0.1.0"
 
 # General configuration
 extensions = [
+    "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "myst_parser",
+    "sphinx_rtd_theme",
     "sphinx_copybutton",
+    "jupyter_sphinx",
 ]
 
 # HTML output options
-html_theme = "furo"
+html_theme = "sphinx_rtd_theme"
+html_theme_options = {"navigation_depth": 3}
 
 # MyST options
 myst_heading_anchors = 3

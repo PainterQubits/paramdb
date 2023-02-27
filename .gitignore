@@ -7,12 +7,14 @@
 # Build
 dist/
 build/
+jupyter_execute/
 
 # Python
 __pycache__/
 .mypy_cache/
 .coverage
 .pytest_cache/
+.ipynb_checkpoints/
 
 # Data files
 *.db
