@@ -10,7 +10,7 @@ repository = "https://github.com/PainterQubits/paramdb"
 [tool.poetry.dependencies]
 python = "^3.10"
 sqlalchemy = "^2.0.3"
-zstandard = "^0.19.0"
+zstandard = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
