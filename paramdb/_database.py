@@ -144,12 +144,14 @@ class ParamDB(Generic[T]):
             )
         return cast(T, json.loads(_decompress(data), object_hook=_from_dict))
 
-    def commit_history(self) -> list[CommitEntry]:
+    def commit_history(
+        self, number: int | None = None, *, start: int | None = None
+    ) -> list[CommitEntry]:
         """Retrieve the commit history as a list of :py:class:`CommitEntry`."""
         with self._Session() as session:
             history_entries = session.execute(
-                select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp).order_by(
-                    _Snapshot.id
-                )
+                select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp)
+                .order_by(desc(_Snapshot.id))
+                .limit(number)
             ).mappings()
         return [CommitEntry(**row_mapping) for row_mapping in history_entries]
