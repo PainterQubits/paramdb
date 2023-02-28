@@ -184,5 +184,6 @@ def test_to_and_from_dict(param_data: CustomParam | CustomStruct) -> None:
     """Parameter data can be converted to and from a dictionary."""
     param_data_dict = param_data.to_dict()
     assert isinstance(param_data_dict, dict)
+    sleep_for_datetime()
     param_data_from_dict = param_data.__class__.from_dict(param_data_dict)
     assert param_data_from_dict == param_data
