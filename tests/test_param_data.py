@@ -1,21 +1,34 @@
 """Tests for the paramdb._param_data module."""
 
 from datetime import datetime, timedelta
-from tests.conftest import CustomStruct, CustomParam
-from tests.helpers import (
-    sleep_for_datetime,
-    update_param_and_assert_last_updated_changed,
-)
+from tests.param_data import CustomStruct, CustomParam
+from tests.helpers import sleep_for_datetime
 from paramdb import ParamData
 from paramdb._param_data import get_param_class
 
 
-def test_is_param_data(param_data: CustomStruct | CustomParam) -> None:
+def update_param_and_assert_last_updated_changed(
+    param: CustomParam, param_data: CustomParam | CustomStruct
+) -> None:
+    """
+    Update the given parameter (assumed to be or exist within the given parameter data)
+    and assert that the structure's last updated time correctly reflects that something
+    was just updated.
+    """
+    start = datetime.now()
+    sleep_for_datetime()
+    param.number += 1
+    sleep_for_datetime()
+    end = datetime.now()
+    assert param_data.last_updated is not None and start < param_data.last_updated < end
+
+
+def test_is_param_data(param_data: CustomParam | CustomStruct) -> None:
     """Parameter data object is an instance of the `ParamData` class."""
     assert isinstance(param_data, ParamData)
 
 
-def test_get_param_class(param_data: CustomStruct | CustomParam) -> None:
+def test_get_param_class(param_data: CustomParam | CustomStruct) -> None:
     """Parameter classes can be retrieved by name."""
     param_class = param_data.__class__
     param_class_name = param_data.__class__.__name__
@@ -23,7 +36,7 @@ def test_get_param_class(param_data: CustomStruct | CustomParam) -> None:
 
 
 def test_property_access(
-    param_data: CustomStruct | CustomParam, number: float, string: str
+    param_data: CustomParam | CustomStruct, number: float, string: str
 ) -> None:
     """Parameter data properties can be accessed via dot notation and index brackets."""
     assert param_data.number == number
@@ -33,7 +46,7 @@ def test_property_access(
 
 
 def test_struct_property_update(
-    param_data: CustomStruct | CustomParam, number: float
+    param_data: CustomParam | CustomStruct, number: float
 ) -> None:
     """Parameter data properties can be updated via dot notation and index brackets."""
     param_data.number += 1
@@ -167,7 +180,7 @@ def test_struct_last_updated_from_dict_in_dict(complex_struct: CustomStruct) -> 
     update_param_and_assert_last_updated_changed(param_in_dict_in_list, complex_struct)
 
 
-def test_to_and_from_dict(param_data: CustomStruct | CustomParam) -> None:
+def test_to_and_from_dict(param_data: CustomParam | CustomStruct) -> None:
     """Parameter data can be converted to and from a dictionary."""
     param_data_dict = param_data.to_dict()
     assert isinstance(param_data_dict, dict)

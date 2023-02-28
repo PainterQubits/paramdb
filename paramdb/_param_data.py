@@ -1,7 +1,6 @@
 """Base classes for parameter data, including structures and parameters."""
 
 from __future__ import annotations
-
 from typing import Any
 from collections.abc import Iterable, Mapping
 from abc import ABCMeta, abstractmethod
@@ -48,7 +47,6 @@ class _ParamClass(ABCMeta):
         return cls(**json_dict)
 
 
-@dataclass
 class ParamData(metaclass=_ParamClass):
     """
     Abstract base class for all parameter data. The base classes :py:class:`Struct` and
@@ -59,6 +57,17 @@ class ParamData(metaclass=_ParamClass):
     defined so that the parameter data object can be properly converted to and from
     JSON. See :py:meth:`to_dict` for more information.
     """
+
+    _initialized = False
+
+    # Most recently initialized structure that contains this parameter data
+    _parent: Struct | None = None
+
+    def __post_init__(self) -> None:
+        """Register that this object is done initializing."""
+        # Use the superclass setattr method to avoid updating _last_updated if this is
+        # a parameter
+        super().__setattr__("_initialized", True)
 
     @property
     @abstractmethod
@@ -89,6 +98,7 @@ class ParamData(metaclass=_ParamClass):
         return setattr(self, name, value)
 
 
+@dataclass
 class Struct(ParamData):
     """
     Base class for parameter structures. Custom structures should be subclasses of this
@@ -104,6 +114,14 @@ class Struct(ParamData):
     A structure can contain any data, but it is intended to store parameters and lists
     and dictionaries of parameters.
     """
+
+    def __post_init__(self) -> None:
+        """Set `_parent` attributes on parameter data this object contains."""
+        for f in fields(self):
+            child = getattr(self, f.name)
+            if isinstance(child, ParamData):
+                child._parent = self  # pylint: disable=protected-access
+        super().__post_init__()
 
     @property
     def last_updated(self) -> datetime | None:
@@ -147,13 +165,6 @@ class Param(ParamData):
     """
 
     _last_updated: datetime = field(default_factory=datetime.now)
-
-    _initialized = False
-
-    def __post_init__(self) -> None:
-        """Register that the object is done initializing."""
-        # Use the superclass setattr method to avoid updating _last_updated.
-        super().__setattr__("_initialized", True)
 
     @property
     def last_updated(self) -> datetime:

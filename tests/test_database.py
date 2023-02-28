@@ -3,11 +3,18 @@
 from typing import Any
 import os
 from datetime import datetime
-from pytest import raises
-from tests.conftest import CustomStruct, CustomParam
+from pathlib import Path
+import pytest
+from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import Struct, ParamDB, CommitEntry, CommitNotFoundError
 from paramdb._param_data import _param_classes
+
+
+@pytest.fixture(name="db_path")
+def fixture_db_path(tmp_path: Path) -> str:
+    """Return a path to use for a `ParamDB`."""
+    return str(tmp_path / "param.db")
 
 
 def test_create(db_path: str) -> None:
@@ -25,7 +32,7 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
 
     param_db = ParamDB[NotJSONSerializable](db_path)
     data = NotJSONSerializable()
-    with raises(TypeError) as exc_info:
+    with pytest.raises(TypeError) as exc_info:
         param_db.commit("Initial commit", data)
     assert str(exc_info.value) == f"{repr(data)} is not JSON serializable"
 
@@ -47,7 +54,7 @@ def test_load_unknown_class_fails(db_path: str) -> None:
     param_db = ParamDB[Unknown](db_path)
     data = Unknown()
     param_db.commit("Initial commit", data)
-    with raises(ValueError) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         param_db.load()
     assert str(exc_info.value) == f"class '{Unknown.__name__}' is not known to paramdb"
 
@@ -55,7 +62,7 @@ def test_load_unknown_class_fails(db_path: str) -> None:
 def test_load_empty_fails(db_path: str) -> None:
     """Fails to loading from an empty database."""
     param_db = ParamDB[Any](db_path)
-    with raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(CommitNotFoundError) as exc_info:
         param_db.load()
     assert (
         str(exc_info.value)
@@ -66,18 +73,18 @@ def test_load_empty_fails(db_path: str) -> None:
 def test_load_nonexistent_commit_fails(db_path: str) -> None:
     """Fails to loading a commit that does not exist."""
     param_db = ParamDB[Any](db_path)
-    with raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(CommitNotFoundError) as exc_info:
         param_db.load(1)
     assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
     param_db.commit("Initial commit", {})
-    with raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(CommitNotFoundError) as exc_info:
         param_db.load(100)
     assert str(exc_info.value) == f"commit 100 does not exist in database '{db_path}'"
 
 
-def test_commit_load(db_path: str, param_data: CustomStruct | CustomParam) -> None:
+def test_commit_load(db_path: str, param_data: CustomParam | CustomStruct) -> None:
     """Can commit and load parameters and structures."""
-    param_db = ParamDB[CustomStruct | CustomParam](db_path)
+    param_db = ParamDB[CustomParam | CustomStruct](db_path)
     param_db.commit("Initial commit", param_data)
 
     # Can load the most recent commit
@@ -87,11 +94,6 @@ def test_commit_load(db_path: str, param_data: CustomStruct | CustomParam) -> No
     # Can load by commit ID
     param_data_loaded_first_commit = param_db.load(1)
     assert param_data_loaded_first_commit == param_data_loaded_most_recent
-
-
-def test_commit_load_complex(db_path: str, complex_struct: CustomStruct) -> None:
-    """Can commit and load a complex structure."""
-    test_commit_load(db_path, complex_struct)
 
 
 def test_commit_load_multiple(db_path: str) -> None:
