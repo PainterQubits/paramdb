@@ -9,6 +9,7 @@ from weakref import WeakValueDictionary
 from datetime import datetime
 from dataclasses import dataclass, field, fields
 
+
 # Stores weak references to existing parameter classes
 _param_classes: WeakValueDictionary[str, _ParamClass] = WeakValueDictionary()
 

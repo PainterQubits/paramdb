@@ -17,7 +17,7 @@ from paramdb._param_data import ParamData, get_param_class
 from paramdb._exceptions import CommitNotFoundError
 
 
-T = TypeVar("T", bound=Any)
+T = TypeVar("T")
 
 
 def _compress(text: str) -> bytes:
