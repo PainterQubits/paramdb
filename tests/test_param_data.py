@@ -1,10 +1,11 @@
 """Tests for the paramdb._param_data module."""
 
+from copy import deepcopy
 from datetime import datetime, timedelta
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import ParamData
-from paramdb._param_data import get_param_class
+from paramdb._param_data import get_param_data_class
 
 
 def update_param_and_assert_last_updated_changed(
@@ -32,7 +33,7 @@ def test_get_param_class(param_data: CustomParam | CustomStruct) -> None:
     """Parameter classes can be retrieved by name."""
     param_class = param_data.__class__
     param_class_name = param_data.__class__.__name__
-    assert get_param_class(param_class_name) is param_class
+    assert get_param_data_class(param_class_name) is param_class
 
 
 def test_property_access(
@@ -180,10 +181,22 @@ def test_struct_last_updated_from_dict_in_dict(complex_struct: CustomStruct) -> 
     update_param_and_assert_last_updated_changed(param_in_dict_in_list, complex_struct)
 
 
+def test_child_does_not_change(simple_param: CustomParam) -> None:
+    """
+    Including a parameter object as a child within a parent structure does not change
+    the parameter in terms of equality comparison (i.e. public properties, importantly
+    last_updated, have not changed).
+    """
+    simple_param_original = deepcopy(simple_param)
+    sleep_for_datetime()
+    _ = CustomStruct(param=simple_param)
+    assert simple_param == simple_param_original
+
+
 def test_to_and_from_dict(param_data: CustomParam | CustomStruct) -> None:
     """Parameter data can be converted to and from a dictionary."""
     param_data_dict = param_data.to_dict()
     assert isinstance(param_data_dict, dict)
     sleep_for_datetime()
-    param_data_from_dict = param_data.__class__.from_dict(param_data_dict)
+    param_data_from_dict = param_data.from_dict(param_data_dict)
     assert param_data_from_dict == param_data

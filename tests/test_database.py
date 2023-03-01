@@ -8,7 +8,7 @@ import pytest
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import Struct, ParamDB, CommitEntry, CommitNotFoundError
-from paramdb._param_data import _param_classes
+from paramdb._param_data import _param_data_classes
 
 
 @pytest.fixture(name="db_path")
@@ -50,7 +50,7 @@ def test_load_unknown_class_fails(db_path: str) -> None:
         param class dictionary when created, but on the next line we manually delete it.
         """
 
-    del _param_classes[Unknown.__name__]
+    del _param_data_classes[Unknown.__name__]
     param_db = ParamDB[Unknown](db_path)
     data = Unknown()
     param_db.commit("Initial commit", data)
