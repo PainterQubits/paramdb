@@ -4,6 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from paramdb import Struct, Param
 
+
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
 

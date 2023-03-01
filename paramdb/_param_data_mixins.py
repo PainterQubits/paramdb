@@ -2,13 +2,13 @@
 
 from typing import TypeVar, Generic, cast
 from paramdb._param_data import Struct
-from paramdb._exceptions import ParamDataNotIntializedError, NoParentError
 
 
 ST = TypeVar("ST", bound=Struct)
 
 
-class ParentMixin(Generic[ST]):  # pylint: disable=too-few-public-methods
+# pylint: disable-next=too-few-public-methods
+class ParentMixin(Generic[ST]):
     """
     Mixin that provides access to the parent structure by adding the `parent`
     property. Intended to be used with parameter data classes (e.g. subclasses of
@@ -35,19 +35,17 @@ class ParentMixin(Generic[ST]):  # pylint: disable=too-few-public-methods
             # This will occur if we try to access this object's parent within the
             # __init__ or __post_init__ functions, in which case the parent will not be
             # initialized yet. We throw an error since `_parent` will be inaccurate.
-            raise ParamDataNotIntializedError(
-                f"cannot access parent of '{self.__class__.__name__}' before it is done"
-                " initializing"
+            raise ValueError(
+                f"cannot access parent of '{self.__class__.__name__}' object before it"
+                " is done initializing"
             )
         if self._parent is None:
-            raise NoParentError(
-                f"'{self.__class__.__name__}' object has no parent, or its parent has"
-                " not been initialized yet."
-            )
+            raise ValueError(f"'{self.__class__.__name__}' object has no parent")
         return cast(ST, self._parent)
 
 
-class RootMixin(Generic[ST]):  # pylint: disable=too-few-public-methods
+# pylint: disable-next=too-few-public-methods
+class RootMixin(Generic[ST]):
     """
     Mixin that provides access to the root structure by adding the `root` property,
     where the root structure is the first parent of this object that has no parent.
@@ -75,7 +73,7 @@ class RootMixin(Generic[ST]):  # pylint: disable=too-few-public-methods
             # This will occur if we try to access the root within the __init__ or
             # __post_init__ functions, in which case this object's parent will not be
             # initialized yet. We throw an error since `_parent` will be inaccurate.
-            raise ParamDataNotIntializedError(
+            raise ValueError(
                 f"cannot access root of '{self.__class__.__name__}' before it is done"
                 " initializing"
             )

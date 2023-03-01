@@ -29,7 +29,3 @@
 ```{eval-rst}
 .. autoclass:: CommitEntry
 ```
-
-```{eval-rst}
-.. autoclass:: CommitNotFoundError
-```

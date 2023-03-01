@@ -128,7 +128,7 @@ param_db.load() == struct
 ```{warning}
 Simultaneous database operations have not been tested yet. Simultaneous read operations
 (e.g. calls to {py:meth}`ParamDB.load`) are likely ok, but simultaneous write operations
-(e.g. calls to {py:meth}`ParamDB.commit`) may raise an error.
+(e.g. calls to {py:meth}`ParamDB.commit`) may raise an exception.
 ```
 
 We can get a list of commits using the {py:meth}`ParamDB.commit_history` method.

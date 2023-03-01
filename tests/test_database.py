@@ -27,7 +27,8 @@ def test_create(db_path: str) -> None:
 def test_commit_not_json_serializable_fails(db_path: str) -> None:
     """Fails to commit a class that ParamDB does not know how to convert to JSON."""
 
-    class NotJSONSerializable:  # pylint: disable=too-few-public-methods
+    # pylint: disable-next=too-few-public-methods
+    class NotJSONSerializable:
         """Class that ParamDB does not know how to serialize as JSON."""
 
     param_db = ParamDB[NotJSONSerializable](db_path)
@@ -44,7 +45,8 @@ def test_load_unknown_class_fails(db_path: str) -> None:
     defined.
     """
 
-    class Unknown(Struct):  # pylint: disable=too-few-public-methods
+    # pylint: disable-next=too-few-public-methods
+    class Unknown(Struct):
         """
         Class that is unknown to ParamDB. By default, it will get added to the private
         param class dictionary when created, but on the next line we manually delete it.
@@ -62,22 +64,22 @@ def test_load_unknown_class_fails(db_path: str) -> None:
 def test_load_empty_fails(db_path: str) -> None:
     """Fails to loading from an empty database."""
     param_db = ParamDB[Any](db_path)
-    with pytest.raises(KeyError) as exc_info:
+    with pytest.raises(IndexError) as exc_info:
         param_db.load()
     assert (
         str(exc_info.value)
-        == f"cannot load most recent data because database '{db_path}' has no commits"
+        == f"cannot load most recent commit because database '{db_path}' has no commits"
     )
 
 
 def test_load_nonexistent_commit_fails(db_path: str) -> None:
     """Fails to loading a commit that does not exist."""
     param_db = ParamDB[Any](db_path)
-    with pytest.raises(KeyError) as exc_info:
+    with pytest.raises(IndexError) as exc_info:
         param_db.load(1)
     assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
     param_db.commit("Initial commit", {})
-    with pytest.raises(KeyError) as exc_info:
+    with pytest.raises(IndexError) as exc_info:
         param_db.load(100)
     assert str(exc_info.value) == f"commit 100 does not exist in database '{db_path}'"
 

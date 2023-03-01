@@ -119,8 +119,8 @@ class ParamDB(Generic[T]):
     def load(self, commit_id: int | None = None) -> T:
         """
         Load and return data from the database. If a commit ID is given, load from that
-        commit; otherwise, load from the most recent commit. Raise a ``KeyError`` if
-        the specified commit does not exist or  if the database is empty.
+        commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
+        the specified commit does not exist.
 
         Note that commit IDs begin at 1.
         """
@@ -133,8 +133,8 @@ class ParamDB(Generic[T]):
         with self._Session() as session:
             data = session.scalar(select_stmt)
         if data is None:
-            raise KeyError(
-                f"cannot load most recent data because database"
+            raise IndexError(
+                f"cannot load most recent commit because database"
                 f" '{self._engine.url.database}' has no commits"
                 if commit_id is None
                 else f"commit {commit_id} does not exist in database"
