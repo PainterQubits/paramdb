@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
-from paramdb import Struct, ParamDB, CommitEntry, CommitNotFoundError
+from paramdb import Struct, ParamDB, CommitEntry
 from paramdb._param_data import _param_data_classes
 
 
@@ -62,7 +62,7 @@ def test_load_unknown_class_fails(db_path: str) -> None:
 def test_load_empty_fails(db_path: str) -> None:
     """Fails to loading from an empty database."""
     param_db = ParamDB[Any](db_path)
-    with pytest.raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(KeyError) as exc_info:
         param_db.load()
     assert (
         str(exc_info.value)
@@ -73,11 +73,11 @@ def test_load_empty_fails(db_path: str) -> None:
 def test_load_nonexistent_commit_fails(db_path: str) -> None:
     """Fails to loading a commit that does not exist."""
     param_db = ParamDB[Any](db_path)
-    with pytest.raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(KeyError) as exc_info:
         param_db.load(1)
     assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
     param_db.commit("Initial commit", {})
-    with pytest.raises(CommitNotFoundError) as exc_info:
+    with pytest.raises(KeyError) as exc_info:
         param_db.load(100)
     assert str(exc_info.value) == f"commit 100 does not exist in database '{db_path}'"
 

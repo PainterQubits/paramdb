@@ -8,7 +8,6 @@ from paramdb._param_data_mixins import ParentMixin, RootMixin
 from paramdb._exceptions import (
     ParamDataNotIntializedError,
     NoParentError,
-    CommitNotFoundError,
 )
 
 __version__ = "0.1.0"
@@ -24,5 +23,4 @@ __all__ = [
     "RootMixin",
     "ParamDataNotIntializedError",
     "NoParentError",
-    "CommitNotFoundError",
 ]

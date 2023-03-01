@@ -7,7 +7,3 @@ class ParamDataNotIntializedError(Exception):
 
 class NoParentError(Exception):
     """Parameter data has no parent."""
-
-
-class CommitNotFoundError(Exception):
-    """Commit does not exist in the database."""
