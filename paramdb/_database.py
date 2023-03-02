@@ -13,7 +13,7 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._param_data import ParamData, get_param_data_class
+from paramdb._param_data import ParamData, get_param_class
 
 
 T = TypeVar("T")
@@ -54,9 +54,9 @@ def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamDa
         class_name = json_dict.pop("__class__")
         if class_name == datetime.__name__:
             return datetime.fromisoformat(json_dict["isoformat"])
-        param_data_class = get_param_data_class(class_name)
-        if param_data_class is not None:
-            return param_data_class.from_dict(json_dict)
+        param_class = get_param_class(class_name)
+        if param_class is not None:
+            return param_class.from_dict(json_dict)
         raise ValueError(f"class '{class_name}' is not known to paramdb")
     return json_dict
 

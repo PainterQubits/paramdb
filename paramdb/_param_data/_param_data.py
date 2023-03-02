@@ -11,17 +11,15 @@ from typing_extensions import Self
 
 
 # Stores weak references to existing parameter data classes
-_param_data_classes: WeakValueDictionary[str, type[ParamData]] = WeakValueDictionary()
+_param_classes: WeakValueDictionary[str, type[ParamData]] = WeakValueDictionary()
 
 
-def get_param_data_class(class_name: str) -> type[ParamData] | None:
+def get_param_class(class_name: str) -> type[ParamData] | None:
     """Get a parameter class given its name, or ``None`` if the class does not exist."""
-    return (
-        _param_data_classes[class_name] if class_name in _param_data_classes else None
-    )
+    return _param_classes[class_name] if class_name in _param_classes else None
 
 
-class _ParamDataClass(ABCMeta):
+class _ParamClass(ABCMeta):
     """
     Metaclass for all parameter data classes. Inherits from ABCMeta to allow for
     abstract methods.
@@ -33,7 +31,7 @@ class _ParamDataClass(ABCMeta):
         bases: tuple[type, ...],
         namespace: dict[str, Any],
         **kwargs: Any,
-    ) -> _ParamDataClass:
+    ) -> _ParamClass:
         """
         Construct a new parameter data class and add it to the dictionary of parameter
         classes.
@@ -41,11 +39,11 @@ class _ParamDataClass(ABCMeta):
         param_class = cast(
             "type[ParamData]", super().__new__(mcs, name, bases, namespace, **kwargs)
         )
-        _param_data_classes[name] = param_class
+        _param_classes[name] = param_class
         return param_class
 
 
-class ParamData(metaclass=_ParamDataClass):
+class ParamData(metaclass=_ParamClass):
     """
     Abstract base class for all parameter data. The base classes :py:class:`Struct` and
     :py:class:`Param` are subclasses of this class.
@@ -59,7 +57,7 @@ class ParamData(metaclass=_ParamDataClass):
     _initialized = False
 
     # Most recently initialized structure that contains this parameter data
-    _parent: Struct | None = None
+    _parent: ParamData | None = None
 
     def __post_init__(self) -> None:
         # Register that this object is done initializing
@@ -70,9 +68,9 @@ class ParamData(metaclass=_ParamDataClass):
         # Enable getting attributes via indexing
         return getattr(self, name)
 
-    def __setitem__(self, name: str, value: Any) -> Any:
+    def __setitem__(self, name: str, value: Any) -> None:
         # Enable setting attributes via indexing
-        return setattr(self, name, value)
+        setattr(self, name, value)
 
     def _set_parent(self, new_parent: Struct) -> None:
         # Use superclass __setattr__ to avoid updating _last_updated
@@ -124,9 +122,9 @@ class Param(ParamData):
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Set the given attribute and update the last updated time
-        super().__setattr__(name, value)
         if self._initialized:
             super().__setattr__("_last_updated", datetime.now())
+        super().__setattr__(name, value)
 
     @property
     def last_updated(self) -> datetime:

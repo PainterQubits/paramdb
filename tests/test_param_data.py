@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import ParamData
-from paramdb._param_data import get_param_data_class
+from paramdb._param_data import get_param_class
 
 
 def update_param_and_assert_last_updated_changed(
@@ -33,7 +33,7 @@ def test_get_param_class(param_data: ParamData) -> None:
     """Parameter classes can be retrieved by name."""
     param_class = param_data.__class__
     param_class_name = param_data.__class__.__name__
-    assert get_param_data_class(param_class_name) is param_class
+    assert get_param_class(param_class_name) is param_class
 
 
 def test_property_access(

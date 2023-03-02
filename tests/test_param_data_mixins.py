@@ -142,6 +142,11 @@ def test_gets_most_recent_parent(with_parent_class: WithParentClass) -> None:
     parent_struct2 = CustomStruct(param_data=param_data)
     assert param_data.parent is parent_struct2
 
+    # Child can be added after parent is initialized
+    parent_struct3 = CustomStruct()
+    parent_struct3.param_data = param_data
+    assert param_data.parent is parent_struct3
+
 
 def test_gets_most_recent_root(with_root_class: WithRootClass) -> None:
     """
@@ -159,3 +164,16 @@ def test_gets_most_recent_root(with_root_class: WithRootClass) -> None:
     # Parent of object's parent is the root
     root_struct = CustomStruct(struct=parent_struct)
     assert param_data.root is root_struct
+
+
+# def test_gets_most_recent_parent(with_parent_class: WithParentClass) -> None:
+#     """
+#     Parameter data object with the parent mixin can get its most recent parent object.
+#     """
+#     param_data = with_parent_class()
+#     parent_struct1 = CustomStruct(param_data=param_data)
+#     assert param_data.parent is parent_struct1
+
+#     # Parent refers to the most recent parent
+#     parent_struct2 = CustomStruct(param_data=param_data)
+#     assert param_data.parent is parent_struct2

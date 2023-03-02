@@ -3,15 +3,15 @@
 from __future__ import annotations
 from typing import TypeVar, Generic, Any, cast
 from typing_extensions import Self
-from paramdb._param_data import ParamData, Struct
+from paramdb._param_data import ParamData
 
 
-ST = TypeVar("ST", bound=Struct)
+PD = TypeVar("PD", bound=ParamData)
 
 
 class _MixinBase:
     _initialized: bool
-    _parent: Struct | None
+    _parent: ParamData | None
     _mixin_name: str
 
     def __new__(cls, *_args: Any, **_kwargs: Any) -> Self:
@@ -30,7 +30,7 @@ class _MixinBase:
         return super().__new__(cls)
 
 
-class ParentMixin(_MixinBase, Generic[ST]):
+class ParentMixin(_MixinBase, Generic[PD]):
     """
     Mixin that provides access to the parent structure by adding the :py:attr:`parent`
     property. Intended to be used with parameter data classes (e.g. subclasses of
@@ -40,13 +40,13 @@ class ParentMixin(_MixinBase, Generic[ST]):
         class CustomParam(ParentMixin[ParentStruct], Param):
             value: float
 
-    The type parameter ``ST`` must be a structure and is used as the type of the
-    returned parent. Note that if the parent actually has a different type, the type
+    The type parameter ``PD`` must be a parameter data type and is used as the type of
+    the returned parent. Note that if the parent actually has a different type, the type
     hint will be incorrect.
     """
 
     @property
-    def parent(self) -> ST:
+    def parent(self) -> PD:
         """
         Parent of this parameter data, cast to the type `ParentMixin` was parameterized
         with. Note that if the parent actually has a different type, the return type
@@ -65,10 +65,10 @@ class ParentMixin(_MixinBase, Generic[ST]):
             )
         if self._parent is None:
             raise ValueError(f"'{self.__class__.__name__}' object has no parent")
-        return cast(ST, self._parent)
+        return cast(PD, self._parent)
 
 
-class RootMixin(_MixinBase, Generic[ST]):
+class RootMixin(_MixinBase, Generic[PD]):
     """
     Mixin that provides access to the root structure by adding the :py:attr:`root`
     property, where the root structure is the first parent of this object that has no
@@ -79,13 +79,13 @@ class RootMixin(_MixinBase, Generic[ST]):
         class CustomParam(ParentMixin[RootStruct], Param):
             value: float
 
-    The type parameter ``ST`` must be a structure and is used as the type of the
-    returned root. Note that if the root actually has a different type, the type hint
-    will be incorrect.
+    The type parameter ``PD`` must be a parameter data type and is used as the type of
+    the returned root. Note that if the root actually has a different type, the type
+    hint will be incorrect.
     """
 
     @property
-    def root(self) -> ST:
+    def root(self) -> PD:
         """
         Root of this parameter data, cast to the type `RootMixin` was parameterized
         with. Note that if the root actually has a different type, the return type will
@@ -102,7 +102,7 @@ class RootMixin(_MixinBase, Generic[ST]):
                 f"cannot access root of '{self.__class__.__name__}' object before it is"
                 " done initializing"
             )
-        potential_root: RootMixin[ST] | Struct = self
+        potential_root: RootMixin[PD] | ParamData = self
         while potential_root._parent is not None:  # pylint: disable=protected-access
             potential_root = potential_root._parent  # pylint: disable=protected-access
-        return cast(ST, potential_root)
+        return cast(PD, potential_root)
