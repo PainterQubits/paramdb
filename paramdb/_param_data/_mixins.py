@@ -6,7 +6,7 @@ from typing_extensions import Self
 from paramdb._param_data import ParamData
 
 
-PD = TypeVar("PD", bound=ParamData)
+PT = TypeVar("PT", bound=ParamData)
 
 
 class _MixinBase:
@@ -30,7 +30,7 @@ class _MixinBase:
         return super().__new__(cls)
 
 
-class ParentMixin(_MixinBase, Generic[PD]):
+class ParentMixin(_MixinBase, Generic[PT]):
     """
     Mixin that provides access to the parent structure by adding the :py:attr:`parent`
     property. Intended to be used with parameter data classes (e.g. subclasses of
@@ -40,13 +40,13 @@ class ParentMixin(_MixinBase, Generic[PD]):
         class CustomParam(ParentMixin[ParentStruct], Param):
             value: float
 
-    The type parameter ``PD`` must be a parameter data type and is used as the type of
+    The type parameter ``PT`` must be a parameter data type and is used as the type of
     the returned parent. Note that if the parent actually has a different type, the type
     hint will be incorrect.
     """
 
     @property
-    def parent(self) -> PD:
+    def parent(self) -> PT:
         """
         Parent of this parameter data, cast to the type `ParentMixin` was parameterized
         with. Note that if the parent actually has a different type, the return type
@@ -65,10 +65,10 @@ class ParentMixin(_MixinBase, Generic[PD]):
             )
         if self._parent is None:
             raise ValueError(f"'{self.__class__.__name__}' object has no parent")
-        return cast(PD, self._parent)
+        return cast(PT, self._parent)
 
 
-class RootMixin(_MixinBase, Generic[PD]):
+class RootMixin(_MixinBase, Generic[PT]):
     """
     Mixin that provides access to the root structure by adding the :py:attr:`root`
     property, where the root structure is the first parent of this object that has no
@@ -79,13 +79,13 @@ class RootMixin(_MixinBase, Generic[PD]):
         class CustomParam(ParentMixin[RootStruct], Param):
             value: float
 
-    The type parameter ``PD`` must be a parameter data type and is used as the type of
+    The type parameter ``PT`` must be a parameter data type and is used as the type of
     the returned root. Note that if the root actually has a different type, the type
     hint will be incorrect.
     """
 
     @property
-    def root(self) -> PD:
+    def root(self) -> PT:
         """
         Root of this parameter data, cast to the type `RootMixin` was parameterized
         with. Note that if the root actually has a different type, the return type will
@@ -102,7 +102,7 @@ class RootMixin(_MixinBase, Generic[PD]):
                 f"cannot access root of '{self.__class__.__name__}' object before it is"
                 " done initializing"
             )
-        potential_root: RootMixin[PD] | ParamData = self
+        potential_root: RootMixin[PT] | ParamData = self
         while potential_root._parent is not None:  # pylint: disable=protected-access
             potential_root = potential_root._parent  # pylint: disable=protected-access
-        return cast(PD, potential_root)
+        return cast(PT, potential_root)
