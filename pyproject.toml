@@ -26,7 +26,9 @@ sphinx = "^5.3.0"
 sphinx-autobuild = "^2021.3.14"
 myst-parser = "^0.18.1"
 furo = "^2022.12.7"
+sphinx-copybutton = "^0.5.1"
 jupyter-sphinx = "^0.4.0"
+
 
 [tool.pytest.ini_options]
 # See https://docs.pytest.org/en/latest/explanation/goodpractices.html#tests-outside-application-code

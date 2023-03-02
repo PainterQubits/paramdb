@@ -14,11 +14,13 @@ extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "jupyter_sphinx",
 ]
 
 # HTML output options
 html_theme = "furo"
+html_static_path = ["_static"]
 
 # MyST options
 myst_heading_anchors = 3

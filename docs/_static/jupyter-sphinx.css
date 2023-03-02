@@ -1,0 +1,9 @@
+/* Override styles for Jupyter Sphinx. */
+
+.jupyter_container .cell_input > div {
+  margin-bottom: 0.4rem;
+}
+
+.jupyter_container .cell_output > div {
+  margin-top: 0;
+}

@@ -35,7 +35,7 @@ These properties can then be accessed and updated.
 
 ```{jupyter-execute}
 param.value += 0.004
-print(param.value)
+param.value
 ```
 
 ````{tip}
@@ -54,7 +54,7 @@ class ParamWithProperty(Param):
         return self.value ** 3
 
 param_with_property = ParamWithProperty(value=16)
-print(param_with_property.value_cubed)
+param_with_property.value_cubed
 ```
 ````
 
