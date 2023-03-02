@@ -61,12 +61,10 @@ def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamDa
     return json_dict
 
 
-# pylint: disable-next=too-few-public-methods
 class _Base(MappedAsDataclass, DeclarativeBase):
     """Base class for defining SQLAlchemy declarative mapping classes."""
 
 
-# pylint: disable-next=too-few-public-methods
 class _Snapshot(_Base):
     """Snapshot of the database."""
 

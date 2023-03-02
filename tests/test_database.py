@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
-from paramdb import Struct, ParamDB, CommitEntry
+from paramdb import ParamData, Struct, ParamDB, CommitEntry
 from paramdb._param_data import _param_data_classes
 
 
@@ -27,7 +27,6 @@ def test_create(db_path: str) -> None:
 def test_commit_not_json_serializable_fails(db_path: str) -> None:
     """Fails to commit a class that ParamDB does not know how to convert to JSON."""
 
-    # pylint: disable-next=too-few-public-methods
     class NotJSONSerializable:
         """Class that ParamDB does not know how to serialize as JSON."""
 
@@ -45,7 +44,6 @@ def test_load_unknown_class_fails(db_path: str) -> None:
     defined.
     """
 
-    # pylint: disable-next=too-few-public-methods
     class Unknown(Struct):
         """
         Class that is unknown to ParamDB. By default, it will get added to the private
@@ -84,9 +82,9 @@ def test_load_nonexistent_commit_fails(db_path: str) -> None:
     assert str(exc_info.value) == f"commit 100 does not exist in database '{db_path}'"
 
 
-def test_commit_load(db_path: str, param_data: CustomParam | CustomStruct) -> None:
+def test_commit_load(db_path: str, param_data: ParamData) -> None:
     """Can commit and load parameters and structures."""
-    param_db = ParamDB[CustomParam | CustomStruct](db_path)
+    param_db = ParamDB[ParamData](db_path)
     param_db.commit("Initial commit", param_data)
 
     # Can load the most recent commit

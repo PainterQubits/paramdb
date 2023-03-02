@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from dataclasses import dataclass, field
-from paramdb import Struct, Param
+from paramdb import ParamData, Struct, Param
 
 
 DEFAULT_NUMBER = 1.23
@@ -17,6 +17,7 @@ class CustomStruct(Struct):
     string: str = DEFAULT_STRING
     param: CustomParam | None = None
     struct: CustomStruct | None = None
+    param_data: ParamData | None = None
     param_list: list[CustomParam | list[CustomParam] | dict[str, CustomParam]] = field(
         default_factory=list
     )

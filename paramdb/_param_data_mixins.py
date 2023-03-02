@@ -7,12 +7,15 @@ from paramdb._param_data import Struct
 ST = TypeVar("ST", bound=Struct)
 
 
-# pylint: disable-next=too-few-public-methods
 class ParentMixin(Generic[ST]):
     """
     Mixin that provides access to the parent structure by adding the `parent`
     property. Intended to be used with parameter data classes (e.g. subclasses of
-    :py:class:`Struct` and :py:class:`Param`).
+    :py:class:`Struct` and :py:class:`Param`). For example::
+
+        @dataclass
+        class CustomStruct(ParentMixin[ParentStruct], Param):
+            value: float
 
     The type parameter is used as the type of the returned parent. Note that if the
     parent actually has a different type, the type hint will be incorrect.
@@ -44,7 +47,6 @@ class ParentMixin(Generic[ST]):
         return cast(ST, self._parent)
 
 
-# pylint: disable-next=too-few-public-methods
 class RootMixin(Generic[ST]):
     """
     Mixin that provides access to the root structure by adding the `root` property,
@@ -74,8 +76,8 @@ class RootMixin(Generic[ST]):
             # __post_init__ functions, in which case this object's parent will not be
             # initialized yet. We throw an error since `_parent` will be inaccurate.
             raise ValueError(
-                f"cannot access root of '{self.__class__.__name__}' before it is done"
-                " initializing"
+                f"cannot access root of '{self.__class__.__name__}' object before it is"
+                " done initializing"
             )
         potential_root: RootMixin[ST] | Struct = self
         while potential_root._parent is not None:  # pylint: disable=protected-access

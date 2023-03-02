@@ -109,18 +109,40 @@ class ParamData(metaclass=_ParamDataClass):
         return cls(**json_dict)
 
 
+@dataclass(kw_only=True)
+class Param(ParamData):
+    """
+    Base class for parameters. Custom parameters should be subclasses of this class and
+    are intended to be dataclasses. For example::
+
+        @dataclass
+        class CustomParam(Param):
+            value: float
+    """
+
+    _last_updated: datetime = field(default_factory=datetime.now)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        # Set the given attribute and update the last updated time
+        super().__setattr__(name, value)
+        if self._initialized:
+            super().__setattr__("_last_updated", datetime.now())
+
+    @property
+    def last_updated(self) -> datetime:
+        """When this parameter was last updated."""
+        return self._last_updated
+
+
 @dataclass
 class Struct(ParamData):
     """
     Base class for parameter structures. Custom structures should be subclasses of this
     class and are intended to be dataclasses. For example::
 
-        from dataclasses import dataclass
-        from paramdb import Struct
-
         @dataclass
         class CustomStruct(Struct):
-            custom_param: CustomParam  # CustomParam class is defined somewhere else
+            custom_param: CustomParam
 
     A structure can contain any data, but it is intended to store parameters and lists
     and dictionaries of parameters.
@@ -159,31 +181,3 @@ class Struct(ParamData):
         structure contains no parameters.
         """
         return self._get_last_updated(getattr(self, f.name) for f in fields(self))
-
-
-@dataclass(kw_only=True)
-class Param(ParamData):
-    """
-    Base class for parameters. Custom parameters should be subclasses of this class and
-    are intended to be dataclasses. For example::
-
-        from dataclasses import dataclass
-        from paramdb import Param
-
-        @dataclass
-        class CustomParam(Param):
-            value: float
-    """
-
-    _last_updated: datetime = field(default_factory=datetime.now)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        # Set the given attribute and update the last updated time
-        super().__setattr__(name, value)
-        if self._initialized:
-            super().__setattr__("_last_updated", datetime.now())
-
-    @property
-    def last_updated(self) -> datetime:
-        """When this parameter was last updated."""
-        return self._last_updated
