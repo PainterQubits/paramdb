@@ -1,8 +1,9 @@
 """Tests for the paramdb._param_data_mixin module."""
 
+from dataclasses import dataclass
 import pytest
 from tests.param_data import CustomParam, CustomStruct
-from paramdb import ParentMixin, RootMixin
+from paramdb import ParamData, ParentMixin, RootMixin
 
 
 class ParamWithParent(ParentMixin[CustomStruct], CustomParam):
@@ -21,27 +22,69 @@ class StructWithRoot(RootMixin[CustomStruct], CustomStruct):
     """Custom structure with a ``CustomStruct`` parent."""
 
 
-@pytest.fixture(name="with_parent_class", params=[ParamWithParent, StructWithParent])
-def fixture_with_parent_class(
-    request: pytest.FixtureRequest,
-) -> type[ParamWithParent | StructWithParent]:
+Mixin = type[ParentMixin[CustomStruct]] | type[RootMixin[CustomStruct]]
+WithParentClass = type[ParamWithParent] | type[StructWithParent]
+WithRootClass = type[ParamWithRoot] | type[StructWithRoot]
+
+
+@pytest.fixture(name="mixin", scope="module", params=[ParentMixin, RootMixin])
+def fixture_mixin(request: pytest.FixtureRequest) -> Mixin:
+    """Parent or root mixin."""
+    mixin: Mixin = request.param
+    return mixin
+
+
+@pytest.fixture(
+    name="with_parent_class", scope="module", params=[ParamWithParent, StructWithParent]
+)
+def fixture_with_parent_class(request: pytest.FixtureRequest) -> WithParentClass:
     """Parameter data class with the parent mixin."""
-    with_parent_class: type[ParamWithParent | StructWithParent] = request.param
+    with_parent_class: WithParentClass = request.param
     return with_parent_class
 
 
-@pytest.fixture(name="with_root_class", params=[ParamWithRoot, StructWithRoot])
-def fixture_with_root_class(
-    request: pytest.FixtureRequest,
-) -> type[ParamWithRoot | StructWithRoot]:
+@pytest.fixture(
+    name="with_root_class", scope="module", params=[ParamWithRoot, StructWithRoot]
+)
+def fixture_with_root_class(request: pytest.FixtureRequest) -> WithRootClass:
     """Parameter data class with the root mixin."""
-    with_root_class: type[ParamWithRoot | StructWithRoot] = request.param
+    with_root_class: WithRootClass = request.param
     return with_root_class
 
 
-def test_no_parent_fails(
-    with_parent_class: type[ParamWithParent | StructWithParent],
-) -> None:
+def test_instantiate_mixin_fails(mixin: Mixin) -> None:
+    """Fails to instantiate a mixin class directly."""
+    with pytest.raises(TypeError) as exc_info:
+        _ = mixin()
+    assert (
+        str(exc_info.value)
+        == f"only subclasses of {mixin.__name__} can be instantiated"
+    )
+
+
+def test_instantiate_mixin_non_param_data_fails(mixin: Mixin) -> None:
+    """Fails to instantiate a non-parameter-data class that uses a mixin."""
+
+    class NonParamData(mixin):  # type: ignore
+        """Not parameter data, but uses a mixin."""
+
+    # Test a dataclass as well, since it overrides __init__ and could be a common
+    # mistake since parameter data classes almost always use @dataclass
+    @dataclass
+    class NonParamDataDataclass(mixin):  # type: ignore
+        """Dataclass that is not parameter data, but uses a mixin."""
+
+    for non_param_data_class in [NonParamData, NonParamDataDataclass]:
+        with pytest.raises(TypeError) as exc_info:
+            _ = non_param_data_class()
+        assert (
+            str(exc_info.value)
+            == f"'{non_param_data_class.__name__}' uses {mixin.__name__} but is not a"
+            f" subclass of {ParamData.__name__}, so it cannot be instantiated"
+        )
+
+
+def test_no_parent_fails(with_parent_class: WithParentClass) -> None:
     """Fails to get the parent when there is no parent."""
     param_data = with_parent_class()
     with pytest.raises(ValueError) as exc_info:
@@ -49,9 +92,7 @@ def test_no_parent_fails(
     assert str(exc_info.value) == f"'{with_parent_class.__name__}' object has no parent"
 
 
-def test_not_initialized_parent_fails(
-    with_parent_class: type[ParamWithParent | StructWithParent],
-) -> None:
+def test_not_initialized_parent_fails(with_parent_class: WithParentClass) -> None:
     """Fails to get the parent before the object is done initializing."""
 
     class AccessParentBeforeInitialized(with_parent_class):  # type: ignore
@@ -70,9 +111,7 @@ def test_not_initialized_parent_fails(
     )
 
 
-def test_not_initialized_root_fails(
-    with_root_class: type[ParamWithRoot | StructWithRoot],
-) -> None:
+def test_not_initialized_root_fails(with_root_class: WithRootClass) -> None:
     """Fails to get the root before the object is done initializing."""
 
     class AccessRootBeforeInitialized(with_root_class):  # type: ignore
@@ -91,9 +130,7 @@ def test_not_initialized_root_fails(
     )
 
 
-def test_gets_most_recent_parent(
-    with_parent_class: type[ParamWithParent | StructWithParent],
-) -> None:
+def test_gets_most_recent_parent(with_parent_class: WithParentClass) -> None:
     """
     Parameter data object with the parent mixin can get its most recent parent object.
     """
@@ -106,9 +143,7 @@ def test_gets_most_recent_parent(
     assert param_data.parent is parent_struct2
 
 
-def test_gets_most_recent_root(
-    with_root_class: type[ParamWithRoot | StructWithRoot],
-) -> None:
+def test_gets_most_recent_root(with_root_class: WithRootClass) -> None:
     """
     Parameter data object with the root mixin can get the most recent root object,
     including when it has no parent, one parent, and a higher level parent.

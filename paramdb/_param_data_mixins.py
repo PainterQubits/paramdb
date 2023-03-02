@@ -16,7 +16,7 @@ class _MixinBase:
 
     def __new__(cls, *_args: Any, **_kwargs: Any) -> Self:
         if cls is _MixinBase or cls in _MixinBase.__subclasses__():
-            raise TypeError(f"only children of {cls.__name__} can be instantiated")
+            raise TypeError(f"only subclasses of {cls.__name__} can be instantiated")
         if not issubclass(cls, ParamData):
             mixin_class = next(
                 superclass
