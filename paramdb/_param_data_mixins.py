@@ -1,28 +1,49 @@
 """Mixins for parameter data, including parent and root mixins."""
 
-from typing import TypeVar, Generic, cast
-from paramdb._param_data import Struct
+from __future__ import annotations
+from typing import TypeVar, Generic, Any, cast
+from typing_extensions import Self
+from paramdb._param_data import ParamData, Struct
 
 
 ST = TypeVar("ST", bound=Struct)
 
 
-class ParentMixin(Generic[ST]):
+class _MixinBase:
+    _initialized: bool
+    _parent: Struct | None
+    _mixin_name: str
+
+    def __new__(cls, *_args: Any, **_kwargs: Any) -> Self:
+        if cls is _MixinBase or cls in _MixinBase.__subclasses__():
+            raise TypeError(f"only children of {cls.__name__} can be instantiated")
+        if not issubclass(cls, ParamData):
+            mixin_class = next(
+                superclass
+                for superclass in cls.mro()
+                if superclass in _MixinBase.__subclasses__()
+            )
+            raise TypeError(
+                f"'{cls.__name__}' uses {mixin_class.__name__} but is not a subclass of"
+                f" {ParamData.__name__}, so it cannot be instantiated"
+            )
+        return super().__new__(cls)
+
+
+class ParentMixin(_MixinBase, Generic[ST]):
     """
-    Mixin that provides access to the parent structure by adding the `parent`
+    Mixin that provides access to the parent structure by adding the :py:attr:`parent`
     property. Intended to be used with parameter data classes (e.g. subclasses of
     :py:class:`Struct` and :py:class:`Param`). For example::
 
         @dataclass
-        class CustomStruct(ParentMixin[ParentStruct], Param):
+        class CustomParam(ParentMixin[ParentStruct], Param):
             value: float
 
-    The type parameter is used as the type of the returned parent. Note that if the
-    parent actually has a different type, the type hint will be incorrect.
+    The type parameter ``ST`` must be a structure and is used as the type of the
+    returned parent. Note that if the parent actually has a different type, the type
+    hint will be incorrect.
     """
-
-    _initialized: bool
-    _parent: Struct | None
 
     @property
     def parent(self) -> ST:
@@ -47,19 +68,21 @@ class ParentMixin(Generic[ST]):
         return cast(ST, self._parent)
 
 
-class RootMixin(Generic[ST]):
+class RootMixin(_MixinBase, Generic[ST]):
     """
-    Mixin that provides access to the root structure by adding the `root` property,
-    where the root structure is the first parent of this object that has no parent.
-    Intended to be used with parameter data classes (e.g. subclasses of
-    :py:class:`Struct` and :py:class:`Param`).
+    Mixin that provides access to the root structure by adding the :py:attr:`root`
+    property, where the root structure is the first parent of this object that has no
+    parent. Intended to be used with parameter data classes (e.g. subclasses of
+    :py:class:`Struct` and :py:class:`Param`). For example::
 
-    The type parameter is used as the type of the returned root. Note that if the root
-    actually has a different type, the type hint will be incorrect.
+        @dataclass
+        class CustomParam(ParentMixin[RootStruct], Param):
+            value: float
+
+    The type parameter ``ST`` must be a structure and is used as the type of the
+    returned root. Note that if the root actually has a different type, the type hint
+    will be incorrect.
     """
-
-    _initialized: bool
-    _parent: Struct | None
 
     @property
     def root(self) -> ST:

@@ -11,7 +11,8 @@
 :maxdepth: 2
 
 installation
-usage
+parameter-data
+database
 api-reference
 changelog
 license

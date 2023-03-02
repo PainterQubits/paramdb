@@ -28,7 +28,7 @@ class _ParamDataClass(ABCMeta):
     """
 
     def __new__(
-        mcs: type[_ParamDataClass],
+        mcs,
         name: str,
         bases: tuple[type, ...],
         namespace: dict[str, Any],
