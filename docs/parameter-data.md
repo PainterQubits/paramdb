@@ -127,7 +127,7 @@ struct.param_dict["p2"].value += 1
 struct.last_updated
 ```
 
-## Parent and Root Mixins
+<!-- ## Parent and Root Mixins
 
 A parameter data class can access its parent using {py:class}`ParentMixin`, which adds the
 property {py:attr}`~ParentMixin.parent`. For example,
@@ -180,7 +180,7 @@ root_struct = RootStruct(
     ),
 )
 root_struct.struct.param.root is root_struct
-```
+``` -->
 
 [`@dataclass`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
 [`__init__`]: https://docs.python.org/3/reference/datamodel.html#object.__init__

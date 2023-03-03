@@ -21,11 +21,21 @@
 ```
 
 ```{eval-rst}
-.. autoclass:: ParentMixin
+.. autoclass:: ParamList
+   :show-inheritance:
 ```
 
 ```{eval-rst}
-.. autoclass:: RootMixin
+.. autoclass:: ParamDict
+   :show-inheritance:
+```
+
+```{eval-rst}
+.. autoclass:: ParentType
+```
+
+```{eval-rst}
+.. autoclass:: RootType
 ```
 
 ## Database

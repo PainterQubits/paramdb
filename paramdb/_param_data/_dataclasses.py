@@ -57,7 +57,7 @@ class Param(_ParamDataclass):
             value: float
     """
 
-    _last_updated: datetime = field(repr=False, default_factory=datetime.now)
+    _last_updated: datetime = field(default_factory=datetime.now)
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Set the given attribute and update the last updated time
