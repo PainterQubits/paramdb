@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import Any, cast
+from collections.abc import Iterable, Mapping
 from abc import ABCMeta, abstractmethod
 from weakref import WeakValueDictionary
 from datetime import datetime
@@ -47,17 +48,71 @@ class ParamData(metaclass=_ParamClass):
     # Most recently initialized structure that contains this parameter data
     _parent: ParamData | None = None
 
-    def _set_parent(self, new_parent: ParamData) -> None:
-        # Use superclass __setattr__ to avoid updating _last_updated
-        super().__setattr__("_parent", new_parent)
+    def _add_child(self, child: Any) -> None:
+        """Add the given object as a child, if it is ``ParamData``."""
+
+        if isinstance(child, ParamData):
+            # Use ParamData __setattr__ to avoid updating _last_updated
+            ParamData.__setattr__(child, "_parent", self)
+
+    def _remove_child(self, child: Any) -> None:
+        """Remove the given object as a child, if it is ``ParamData``."""
+
+        if isinstance(child, ParamData):
+            # Use ParamData __setattr__ to avoid updating _last_updated
+            ParamData.__setattr__(child, "_parent", None)
+
+    def _get_last_updated(self, obj: Any) -> datetime | None:
+        """
+        Get the last updated time from a :py:class:`ParamData` object, or recursively
+        search through any iterable type to find the latest last updated time.
+        """
+        if isinstance(obj, ParamData):
+            return obj.last_updated
+        if isinstance(obj, Iterable) and not isinstance(obj, str):
+            # Strings are excluded because they will never contain ParamData and contain
+            # strings, leading to infinite recursion.
+            values = obj.values() if isinstance(obj, Mapping) else obj
+            return max(
+                filter(None, (self._get_last_updated(v) for v in values)),
+                default=None,
+            )
+        return None
 
     @property
     @abstractmethod
     def last_updated(self) -> datetime | None:
         """
-        When this parameter data was last updated, or None if no last updated time
-        exists.
+        When any parameter within this parameter data was last updated, or ``None`` if
+        this parameter data contains no parameters.
         """
+
+    @property
+    def parent(self) -> ParamData:
+        """
+        Parent of this parameter data. Note that this is the parent object that most
+        recently had this object added as a child.
+
+        Raises a ``ValueError`` if there is currently no parent, which can occur if the
+        parent is still being initialized.
+        """
+        if self._parent is None:
+            raise ValueError(
+                f"'{self.__class__.__name__}' object has no parent, or its parent has"
+                " not been initialized yet"
+            )
+        return self._parent
+
+    @property
+    def root(self) -> ParamData:
+        """
+        Root of this parameter data. The root is defined to be the first object with no
+        parent when going up the chain of parents.
+        """
+        root = self
+        while root._parent is not None:  # pylint: disable=protected-access
+            root = root._parent  # pylint: disable=protected-access
+        return root
 
     @abstractmethod
     def to_dict(self) -> dict[str, Any]:
