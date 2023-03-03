@@ -1,5 +1,4 @@
-"""Base classes for parameter dataclasses, including structures and parameters."""
-
+"""Base classes for parameter dataclasses."""
 
 from __future__ import annotations
 from typing import Any

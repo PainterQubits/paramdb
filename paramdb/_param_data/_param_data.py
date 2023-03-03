@@ -90,8 +90,9 @@ class ParamData(metaclass=_ParamClass):
     @property
     def parent(self) -> ParamData:
         """
-        Parent of this parameter data. Note that this is the parent object that most
-        recently had this object added as a child.
+        Parent of this parameter data. The parent is defined to be the
+        :py:class:`ParamData` object that most recently had this object added as a
+        child.
 
         Raises a ``ValueError`` if there is currently no parent, which can occur if the
         parent is still being initialized.

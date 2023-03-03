@@ -1,4 +1,4 @@
-"""Mixins for parameter data, including parent and root mixins."""
+"""Type mixins for parameter data."""
 
 from __future__ import annotations
 from typing import TypeVar, Generic, cast

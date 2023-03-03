@@ -9,9 +9,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Ability to loading data from a specified commit ID
-- Mixins to access the parent and root of a parameter data object (`ParentMixin` and
-  `RootMixin`)
+- Ability to specify commit ID in `ParamDB.load()`
+- `ParamData.parent` and `ParamData.root` properties
+- Mixins `ParentType[PT]` and `RootType[PT]` to type cast parent and root
+- Parameter collection classes `ParamList` and `ParamDict`
 
 ### Changed
 
@@ -21,7 +22,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
-- Parameter data classes (`Param` and `Struct`)
+- Parameter data base class `ParamData`
+- Parameter base dataclasses (`Param` and `Struct`)
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 

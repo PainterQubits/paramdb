@@ -1,4 +1,4 @@
-"""Parameter data collection classes for lists and dictionaries."""
+"""Parameter data collection classes."""
 
 from typing import TypeVar, Generic, SupportsIndex, Any, overload
 from collections.abc import (
