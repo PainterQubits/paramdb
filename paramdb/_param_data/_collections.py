@@ -11,7 +11,7 @@ from collections.abc import (
 )
 from datetime import datetime
 from typing_extensions import Self
-from paramdb._param_data import ParamData
+from paramdb._param_data._param_data import ParamData
 
 
 T = TypeVar("T")

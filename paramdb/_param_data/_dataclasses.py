@@ -6,7 +6,7 @@ from abc import abstractmethod
 from datetime import datetime
 from dataclasses import dataclass, field, fields
 from typing_extensions import Self
-from paramdb._param_data import ParamData
+from paramdb._param_data._param_data import ParamData
 
 
 @dataclass

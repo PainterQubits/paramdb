@@ -13,7 +13,7 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._param_data import ParamData, get_param_class
+from paramdb._param_data._param_data import ParamData, get_param_class
 
 
 T = TypeVar("T")

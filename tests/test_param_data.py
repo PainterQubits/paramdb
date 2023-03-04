@@ -6,7 +6,7 @@ import pytest
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import ParamData
-from paramdb._param_data import get_param_class
+from paramdb._param_data._param_data import get_param_class
 
 
 def update_param_and_assert_last_updated_changed(
@@ -217,7 +217,7 @@ def test_no_parent_fails(param_data: ParamData) -> None:
 def test_not_initialized_parent_fails() -> None:
     """Fails to get the parent before the object is done initializing."""
 
-    class AccessParentBeforeInitialized(CustomParam):  # type: ignore
+    class AccessParentBeforeInitialized(CustomParam):
         """Class that tries to access the parent while initializing."""
 
         def __post_init__(self) -> None:
