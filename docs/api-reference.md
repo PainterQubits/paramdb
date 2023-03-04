@@ -12,22 +12,18 @@
 
 ```{eval-rst}
 .. autoclass:: Param
-   :show-inheritance:
 ```
 
 ```{eval-rst}
 .. autoclass:: Struct
-   :show-inheritance:
 ```
 
 ```{eval-rst}
 .. autoclass:: ParamList
-   :show-inheritance:
 ```
 
 ```{eval-rst}
 .. autoclass:: ParamDict
-   :show-inheritance:
 ```
 
 ```{eval-rst}

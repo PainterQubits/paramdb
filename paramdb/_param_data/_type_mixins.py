@@ -11,8 +11,14 @@ PT = TypeVar("PT", bound=ParamData)
 # pylint: disable-next=abstract-method
 class ParentType(ParamData, Generic[PT]):
     """
-    Mixin for :py:class:`ParamData` that casts :py:attr:`parent` to type parameter
-    ``PT``. Note that if the parent actually has a different type, the type hint will be
+    Mixin for :py:class:`ParamData` that sets the type hint for
+    :py:attr:`ParamData.parent` to type parameter ``PT``. For example::
+
+        @dataclass
+        class CustomParam(ParentType[ParentStruct], Param):
+            ...
+
+    Note that if the parent actually has a different type, the type hint will be
     incorrect.
     """
 
@@ -24,7 +30,13 @@ class ParentType(ParamData, Generic[PT]):
 # pylint: disable-next=abstract-method
 class RootType(ParamData, Generic[PT]):
     """
-    Mixin for :py:class:`ParamData` that casts :py:attr:`root` to type parameter ``PT``.
+    Mixin for :py:class:`ParamData` that sets the type hint for
+    :py:attr:`ParamData.root` to type parameter ``PT``. For example::
+
+        @dataclass
+        class CustomParam(RootType[RootStruct], Param):
+            ...
+
     Note that if the root actually has a different type, the type hint will be
     incorrect.
     """

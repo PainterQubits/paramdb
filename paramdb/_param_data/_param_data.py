@@ -64,8 +64,8 @@ class ParamData(metaclass=_ParamClass):
 
     def _get_last_updated(self, obj: Any) -> datetime | None:
         """
-        Get the last updated time from a :py:class:`ParamData` object, or recursively
-        search through any iterable type to find the latest last updated time.
+        Get the last updated time from a ``ParamData`` object, or recursively search
+        through any iterable type to find the latest last updated time.
         """
         if isinstance(obj, ParamData):
             return obj.last_updated
@@ -83,8 +83,8 @@ class ParamData(metaclass=_ParamClass):
     @abstractmethod
     def last_updated(self) -> datetime | None:
         """
-        When any parameter within this parameter data was last updated, or ``None`` if
-        this parameter data contains no parameters.
+        When any parameter within this parameter data were last updated, or ``None`` if
+        this object contains no parameters.
         """
 
     @property
