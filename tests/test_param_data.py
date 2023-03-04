@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime, timedelta
+import pytest
 from tests.param_data import CustomStruct, CustomParam
 from tests.helpers import sleep_for_datetime
 from paramdb import ParamData
@@ -200,3 +201,67 @@ def test_to_and_from_dict(param_data: ParamData) -> None:
     sleep_for_datetime()
     param_data_from_dict = param_data.from_dict(param_data_dict)
     assert param_data_from_dict == param_data
+
+
+def test_no_parent_fails(param_data: ParamData) -> None:
+    """Fails to get the parent when there is no parent."""
+    with pytest.raises(ValueError) as exc_info:
+        _ = param_data.parent
+    assert (
+        str(exc_info.value)
+        == f"'{param_data.__class__.__name__}' object has no parent, or its parent has"
+        " not been initialized yet"
+    )
+
+
+def test_not_initialized_parent_fails() -> None:
+    """Fails to get the parent before the object is done initializing."""
+
+    class AccessParentBeforeInitialized(CustomParam):  # type: ignore
+        """Class that tries to access the parent while initializing."""
+
+        def __post_init__(self) -> None:
+            _ = self.parent
+            super().__post_init__()
+
+    with pytest.raises(ValueError) as exc_info:
+        _ = AccessParentBeforeInitialized()
+    assert (
+        str(exc_info.value)
+        == f"'{AccessParentBeforeInitialized.__name__}' object has no parent, or its"
+        " parent has not been initialized yet"
+    )
+
+
+def test_gets_most_recent_parent(param_data: ParamData) -> None:
+    """
+    Parameter data object with the parent mixin can get its most recent parent object.
+    """
+    parent_struct1 = CustomStruct(param_data=param_data)
+    assert param_data.parent is parent_struct1
+
+    # Parent refers to the most recent parent
+    parent_struct2 = CustomStruct(param_data=param_data)
+    assert param_data.parent is parent_struct2
+
+    # Child can be added after parent is initialized
+    parent_struct3 = CustomStruct()
+    parent_struct3.param_data = param_data
+    assert param_data.parent is parent_struct3
+
+
+def test_gets_most_recent_root(param_data: ParamData) -> None:
+    """
+    Parameter data object with the root mixin can get the most recent root object,
+    including when it has no parent, one parent, and a higher level parent.
+    """
+    # Object is its own root
+    assert param_data.root is param_data
+
+    # Object's parent is the root
+    parent_struct = CustomStruct(param_data=param_data)
+    assert param_data.root is parent_struct
+
+    # Parent of object's parent is the root
+    root_struct = CustomStruct(struct=parent_struct)
+    assert param_data.root is root_struct

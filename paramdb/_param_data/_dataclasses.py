@@ -13,14 +13,6 @@ from paramdb._param_data import ParamData
 class _ParamDataclass(ParamData):
     """Base class for parameter dataclasses."""
 
-    # Whether this dataclass object is done initializing
-    _initialized = False
-
-    def __post_init__(self) -> None:
-        # Register that this object is done initializing
-        # Use superclass __setattr__ to avoid updating _last_updated if this is a Param
-        super().__setattr__("_initialized", True)
-
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing
         return getattr(self, name)
@@ -57,7 +49,13 @@ class Param(_ParamDataclass):
             value: float
     """
 
+    _initialized = False
     _last_updated: datetime = field(repr=False, default_factory=datetime.now)
+
+    def __post_init__(self) -> None:
+        # Register that this object is done initializing
+        # Use superclass __setattr__ to avoid updating _last_updated if this is a Param
+        super().__setattr__("_initialized", True)
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Set the given attribute and update the last updated time
@@ -87,7 +85,6 @@ class Struct(_ParamDataclass):
         """Add fields as children."""
         for f in fields(self):
             self._add_child(getattr(self, f.name))
-        super().__post_init__()
 
     @property
     def last_updated(self) -> datetime | None:
