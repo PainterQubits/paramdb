@@ -9,7 +9,7 @@ repository = "https://github.com/PainterQubits/paramdb"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-sqlalchemy = "^2.0.3"
+sqlalchemy = "^2.0.5"
 zstandard = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
