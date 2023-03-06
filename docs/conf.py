@@ -1,6 +1,3 @@
-# pylint: skip-file
-# type: ignore
-
 # See https://www.sphinx-doc.org/en/master/usage/configuration.html for all options
 
 # Project information
