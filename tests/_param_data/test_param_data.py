@@ -13,7 +13,13 @@ def test_is_param_data(param_data: ParamData) -> None:
     assert isinstance(param_data, ParamData)
 
 
-def test_update_param_data(
+def test_get_param_class(param_data: ParamData) -> None:
+    """Parameter classes can be retrieved by name."""
+    param_class = type(param_data)
+    assert get_param_class(param_class.__name__) is param_class
+
+
+def test_param_data_last_updated(
     updated_param_data: ParamData, start: datetime, end: datetime
 ) -> None:
     """Updating simple parameter data updates the last updated time."""
@@ -21,10 +27,26 @@ def test_update_param_data(
     assert start < updated_param_data.last_updated < end
 
 
-def test_get_param_class(param_data: ParamData) -> None:
-    """Parameter classes can be retrieved by name."""
-    param_class = type(param_data)
-    assert get_param_class(param_class.__name__) is param_class
+def test_list_or_dict_last_updated(
+    updated_param_data: ParamData, start: datetime, end: datetime
+) -> None:
+    """Can get last updated from a Python list or dictionary."""
+    # Can get last updated time from within a list
+    struct_with_list = CustomStruct(
+        list=[CustomStruct(), [updated_param_data, CustomStruct()]]
+    )
+    assert struct_with_list.last_updated is not None
+    assert start < struct_with_list.last_updated < end
+
+    # Can get last updated time from within a dictionary
+    struct_with_dict = CustomStruct(
+        dict={
+            "p1": CustomStruct(),
+            "p2": {"p1": updated_param_data, "p2": CustomStruct()},
+        }
+    )
+    assert struct_with_dict.last_updated is not None
+    assert start < struct_with_list.last_updated < end
 
 
 def test_child_does_not_change(param_data: ParamData) -> None:

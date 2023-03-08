@@ -167,7 +167,8 @@ param_list[1].parent == param_list
 
 Similarly, {py:class}`ParamDict` implements `MutableMapping` from [`collections.abc`],
 so it behaves similarly to a dictionary. Additionally, its items can be accessed via
-dot notation in addition to index brackets. For example,
+dot notation in addition to index brackets (unless they begin with an underscore). For
+example,
 
 ```{jupyter-execute}
 from paramdb import ParamDict
