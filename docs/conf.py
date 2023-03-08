@@ -1,6 +1,3 @@
-# pylint: skip-file
-# type: ignore
-
 # See https://www.sphinx-doc.org/en/master/usage/configuration.html for all options
 
 # Project information
@@ -14,14 +11,13 @@ extensions = [
     "myst_parser",
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
-    "sphinx_rtd_theme",
     "sphinx_copybutton",
     "jupyter_sphinx",
 ]
 
 # HTML output options
-html_theme = "sphinx_rtd_theme"
-html_theme_options = {"navigation_depth": 3}
+html_theme = "furo"
+html_static_path = ["_static"]
 
 # MyST options
 myst_heading_anchors = 3
@@ -29,12 +25,15 @@ myst_heading_anchors = 3
 # Autodoc options
 # See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 autodoc_default_options = {"members": True, "member-order": "bysource"}
+autodoc_inherit_docstrings = False
 
 
 # Autodoc custom signature and return annotation processing
 def process_signature(app, what, name, obj, options, signature, return_annotation):
     if isinstance(signature, str):
         signature = signature.replace("~", "")
+        signature = signature.replace("collections.abc.", "")
+        signature = signature.replace("paramdb._param_data._collections.", "")
         signature = signature.replace("paramdb._database.", "")
     if isinstance(return_annotation, str):
         return_annotation = return_annotation.replace("paramdb._database.", "")

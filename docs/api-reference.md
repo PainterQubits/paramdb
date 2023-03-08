@@ -11,13 +11,27 @@
 ```
 
 ```{eval-rst}
-.. autoclass:: Struct
-   :show-inheritance:
+.. autoclass:: Param
 ```
 
 ```{eval-rst}
-.. autoclass:: Param
-   :show-inheritance:
+.. autoclass:: Struct
+```
+
+```{eval-rst}
+.. autoclass:: ParamList
+```
+
+```{eval-rst}
+.. autoclass:: ParamDict
+```
+
+```{eval-rst}
+.. autoclass:: ParentType
+```
+
+```{eval-rst}
+.. autoclass:: RootType
 ```
 
 ## Database
@@ -28,8 +42,4 @@
 
 ```{eval-rst}
 .. autoclass:: CommitEntry
-```
-
-```{eval-rst}
-.. autoclass:: CommitNotFoundError
 ```
