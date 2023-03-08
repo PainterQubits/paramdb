@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] (Mar 8 2023)
+
 ### Added
 
 - Ability to specify commit ID in `ParamDB.load()`
@@ -29,5 +31,6 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.1.0...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.2.0...main
+[0.2.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.2.0
 [0.1.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.1.0
