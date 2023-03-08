@@ -16,7 +16,18 @@ Install the latest version of ParamDB using pip:
 pip install -U paramdb --extra-index-url https://painterqubits.github.io/paramdb/releases
 ```
 
-The `extra-index-url` parameter is needed since ParamDB is not published to PyPI yet.
+The `extra-index-url` parameter is needed since ParamDB is not published to PyPI yet. If
+you are using a Python package manager, add
+`https://painterqubits.github.io/paramdb/releases` as a secondary source. For example, for
+[Poetry] the command is
+
+```
+poetry source add --secondary paramdb https://painterqubits.github.io/paramdb/releases
+```
+
+Then the package can be installed like any other (e.g. `poetry add paramdb`).
+
+[poetry]: https://python-poetry.org
 
 <!-- end installation -->
 
@@ -24,16 +35,14 @@ The `extra-index-url` parameter is needed since ParamDB is not published to PyPI
 
 ParamDB has two main components:
 
-- **Parameted Data**: Base classes that are used to defined the structure of parameter
-  data, which consists of parameters
-  ([`Param`](https://painterqubits.github.io/paramdb/api-reference#paramdb.Param)) and
-  groups of parameters, called structures
-  ([`Struct`](https://painterqubits.github.io/paramdb/api-reference#paramdb.Struct)).
+- [**Parameter Data**]: Base classes that are used to defined the structure and
+  functionality of parameter data.
 
-- **Database**: A database object
-  ([`ParamDB`](https://painterqubits.github.io/paramdb/api-reference#paramdb.ParamDB))
-  that commits and loads parameter data to a persistent file.
+- [**Database**]: A database object that commits and loads parameter data to a persistent
+  file.
 
-See the [usage page](https://painterqubits.github.io/paramdb/usage) on the documentation
-website for examples and more information. Also see the
-[api reference](https://painterqubits.github.io/paramdb/api-reference).
+See the [api reference] for more information.
+
+[**parameter data**]: https://painterqubits.github.io/paramdb/parameter-data.html
+[**database**]: https://painterqubits.github.io/paramdb/database.html
+[api reference]: https://painterqubits.github.io/paramdb/api-reference
