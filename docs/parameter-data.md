@@ -116,9 +116,10 @@ from paramdb import Struct, ParamDict
 
 @dataclass
 class CustomStruct(Struct):
+    value: float
     param: CustomParam
 
-struct = CustomStruct(param=CustomParam(value=1.23))
+struct = CustomStruct(value=1.23, param=CustomParam(value=4.56))
 struct.last_updated
 ```
 
@@ -209,7 +210,7 @@ class ParentStruct(Struct):
     param: Child
 
 @dataclass
-class ChildParam(Param, ParentType[CustomStruct]):
+class ChildParam(Param, ParentType[ParentStruct]):
     value: float
 
 struct = ParentStruct(param=ChildParam(value=1.23))
@@ -217,61 +218,6 @@ struct = ParentStruct(param=ChildParam(value=1.23))
 
 This does nothing to the functionality, but static type checkers will now know that
 `struct.param.parent` in the example above is a `ParentStruct` object.
-
-<!-- ## Parent and Root Mixins
-
-A parameter data class can access its parent using {py:class}`ParentMixin`, which adds the
-property {py:attr}`~ParentMixin.parent`. For example,
-
-```{jupyter-execute}
-from paramdb import ParentMixin
-
-@dataclass
-class ParentStruct(Struct):
-    param: ParamWithParent
-
-@dataclass
-class ParamWithParent(ParentMixin[CustomStruct], Param):
-    value: float
-
-parent_struct = ParentStruct(
-    param=ParamWithParent(value=1.23),
-)
-parent_struct.param.parent is parent_struct
-```
-
-```{warning}
-Type checkers will assume that the type of {py:attr}`~ParentMixin.parent` or
-{py:attr}`~RootMixin.root` is the type parameter passed to the corresponding mixin, even
-if it is not. This feature is included for convenience, but be careful not to use a
-parent of the wrong type.
-```
-
-Similarly, {py:class}`RootMixin` allows the root of the structure to be accessed via the
-property {py:attr}`~RootMixin.root`. For example,
-
-```{jupyter-execute}
-from paramdb import RootMixin
-
-@dataclass
-class RootStruct(Struct):
-    struct: ParentStruct
-
-@dataclass
-class ParentStruct(Struct):
-    param: ParamWithRoot
-
-@dataclass
-class ParamWithRoot(RootMixin[RootStruct], Param):
-    value: float
-
-root_struct = RootStruct(
-    struct=ParentStruct(
-        param=ParamWithRoot(value=1.23),
-    ),
-)
-root_struct.struct.param.root is root_struct
-``` -->
 
 [`datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
 [`@dataclass`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
