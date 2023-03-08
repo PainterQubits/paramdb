@@ -13,10 +13,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `ParamData.parent` and `ParamData.root` properties
 - Mixins `ParentType[PT]` and `RootType[PT]` to type cast parent and root
 - Parameter collection classes `ParamList` and `ParamDict`
+- Database now ignores dataclass fields where `init` is `False`
 
-### Changed
+### Removed
 
-- Replaced `CommitNotFoundError` with built-in `IndexError`
+- `CommitNotFoundError` (replaced with built-in `IndexError`)
+- Private `_last_updated` dataclass field in parameter dataclasses
 
 ## [0.1.0] (Feb 24 2023)
 

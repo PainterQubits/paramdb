@@ -68,6 +68,7 @@ def test_to_and_from_dict(param_data: ParamData) -> None:
     sleep_for_datetime()
     param_data_from_dict = param_data.from_dict(param_data_dict)
     assert param_data_from_dict == param_data
+    assert param_data_from_dict.last_updated == param_data.last_updated
 
 
 def test_no_parent_fails(param_data: ParamData) -> None:

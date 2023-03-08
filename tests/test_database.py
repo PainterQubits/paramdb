@@ -105,12 +105,19 @@ def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
     param_db.commit("Initial commit", param_data)
 
     # Can load the most recent commit
+    sleep_for_datetime()
     param_data_loaded_most_recent = param_db.load()
     assert param_data_loaded_most_recent == param_data
+    assert param_data_loaded_most_recent.last_updated == param_data.last_updated
 
     # Can load by commit ID
+    sleep_for_datetime()
     param_data_loaded_first_commit = param_db.load(1)
     assert param_data_loaded_first_commit == param_data_loaded_most_recent
+    assert (
+        param_data_loaded_first_commit.last_updated
+        == param_data_loaded_most_recent.last_updated
+    )
 
 
 # pylint: disable-next=too-many-arguments

@@ -1,7 +1,7 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytest
 from tests.helpers import CustomParam, CustomStruct, sleep_for_datetime
 from paramdb import ParamData
@@ -47,16 +47,6 @@ def test_param_default_last_updated() -> None:
     sleep_for_datetime()
     end = datetime.now()
     assert start < param.last_updated < end
-
-
-def test_param_initialize_last_updated() -> None:
-    """
-    Parameter object initializes the last updated time to the given value instead of the
-    current time.
-    """
-    last_updated = datetime.now() - timedelta(days=1)
-    param = CustomParam(_last_updated=last_updated)
-    assert param.last_updated == last_updated
 
 
 def test_struct_no_last_updated() -> None:
