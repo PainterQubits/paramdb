@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 from abc import abstractmethod
 from datetime import datetime
-from dataclasses import dataclass, field, fields
+from dataclasses import dataclass, fields
 from typing_extensions import Self
 from paramdb._param_data._param_data import ParamData
 
@@ -27,14 +27,14 @@ class _ParamDataclass(ParamData):
         ...
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: getattr(self, f.name) for f in fields(self)}
+        return {f.name: getattr(self, f.name) for f in fields(self) if f.init}
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self:
         return cls(**json_dict)
 
 
-@dataclass(kw_only=True)
+@dataclass
 class Param(_ParamDataclass):
     """
     Base class for parameters. Custom parameters should be subclasses of this class and
@@ -45,24 +45,31 @@ class Param(_ParamDataclass):
             value: float
     """
 
-    _initialized = False
-    _last_updated: datetime = field(repr=False, default_factory=datetime.now)
-
     def __post_init__(self) -> None:
-        # Register that this object is done initializing
-        # Use superclass __setattr__ to avoid updating _last_updated if this is a Param
-        super().__setattr__("_initialized", True)
+        self.__last_updated = datetime.now()
 
     def __setattr__(self, name: str, value: Any) -> None:
-        # Set the given attribute and update the last updated time
+        # Set the given attribute and update the last updated time if the object is
+        # initialized and the variable name does not have a double underscore in it (to
+        # exclude private variables, like __initialized, and dunder variables).
         super().__setattr__(name, value)
-        if self._initialized:
-            super().__setattr__("_last_updated", datetime.now())
+        if "__" not in name:
+            self.__last_updated = datetime.now()
 
     @property
     def last_updated(self) -> datetime:
         """When this parameter was last updated."""
-        return self._last_updated
+        return self.__last_updated
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"__last_updated": self.__last_updated} | super().to_dict()
+
+    @classmethod
+    def from_dict(cls, json_dict: dict[str, Any]) -> Self:
+        last_updated = json_dict.pop("__last_updated")
+        obj = cls(**json_dict)
+        obj.__last_updated = last_updated  # pylint: disable=unused-private-member
+        return obj
 
 
 @dataclass

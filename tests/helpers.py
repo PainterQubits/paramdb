@@ -15,6 +15,7 @@ class CustomParam(Param):
     """Custom parameter."""
 
     number: float = DEFAULT_NUMBER
+    number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     string: str = DEFAULT_STRING
 
 
@@ -24,6 +25,7 @@ class CustomStruct(Struct):
     """Custom parameter structure."""
 
     number: float = DEFAULT_NUMBER
+    number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     string: str = DEFAULT_STRING
     list: list[Any] = field(default_factory=list)
     dict: dict[str, Any] = field(default_factory=dict)
@@ -52,4 +54,4 @@ def sleep_for_datetime() -> None:
     computers execute instructions faster than this. So without waiting, it is difficult
     to ensure that something is using `datetime.now()`.
     """
-    time.sleep(0.001)  # Wait for one millisecond
+    time.sleep(100e-6)  # Wait for 100 microseconds
