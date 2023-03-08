@@ -13,11 +13,12 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._param_data import ParamData, get_param_class
-from paramdb._exceptions import CommitNotFoundError
+from paramdb._param_data._param_data import ParamData, get_param_class
 
+T = TypeVar("T")
 
-T = TypeVar("T", bound=Any)
+# Name of the key storing the class name of a JSON-encoded object
+CLASS_NAME_KEY = "__type"
 
 
 def _compress(text: str) -> bytes:
@@ -37,37 +38,41 @@ def _to_dict(obj: Any) -> Any:
     Note that objects within the dictionary do not need to be JSON serializable,
     since they will be recursively processed by `json.dumps`.
     """
-    class_name_dict = {"__class__": obj.__class__.__name__}
+    class_name = type(obj).__name__
+    class_name_dict = {CLASS_NAME_KEY: class_name}
     if isinstance(obj, datetime):
         return class_name_dict | {"isoformat": obj.isoformat()}
     if isinstance(obj, ParamData):
         return class_name_dict | obj.to_dict()
-    raise TypeError(f"{repr(obj)} is not JSON serializable")
+    raise TypeError(
+        f"'{class_name}' object {repr(obj)} is not JSON serializable, so the commit"
+        " failed"
+    )
 
 
 def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamData:
     """
-    If the given dictionary created by `json.loads` has the key __class__, attempt to
-    construct an object of the named class from it. Otherwise, return the dictionary
-    unchanged.
+    If the given dictionary created by `json.loads` has the key `CLASS_NAME_KEY`,
+    attempt to construct an object of the named type from it. Otherwise, return the
+    dictionary unchanged.
     """
-    if "__class__" in json_dict:
-        class_name = json_dict.pop("__class__")
+    if CLASS_NAME_KEY in json_dict:
+        class_name = json_dict.pop(CLASS_NAME_KEY)
         if class_name == datetime.__name__:
             return datetime.fromisoformat(json_dict["isoformat"])
         param_class = get_param_class(class_name)
         if param_class is not None:
-            return cast(ParamData, param_class.from_dict(json_dict))
-        raise ValueError(f"class '{class_name}' is not known to paramdb")
+            return param_class.from_dict(json_dict)
+        raise ValueError(
+            f"class '{class_name}' is not known to ParamDB, so the load failed"
+        )
     return json_dict
 
 
-# pylint: disable-next=too-few-public-methods
 class _Base(MappedAsDataclass, DeclarativeBase):
     """Base class for defining SQLAlchemy declarative mapping classes."""
 
 
-# pylint: disable-next=too-few-public-methods
 class _Snapshot(_Base):
     """Snapshot of the database."""
 
@@ -120,9 +125,8 @@ class ParamDB(Generic[T]):
     def load(self, commit_id: int | None = None) -> T:
         """
         Load and return data from the database. If a commit ID is given, load from that
-        commit; otherwise, load from the most recent commit. Raise a
-        :py:exc:`CommitNotFoundError` if the specified commit does not exist or if the
-        database is empty.
+        commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
+        the specified commit does not exist.
 
         Note that commit IDs begin at 1.
         """
@@ -135,8 +139,8 @@ class ParamDB(Generic[T]):
         with self._Session() as session:
             data = session.scalar(select_stmt)
         if data is None:
-            raise CommitNotFoundError(
-                f"cannot load most recent data because database"
+            raise IndexError(
+                f"cannot load most recent commit because database"
                 f" '{self._engine.url.database}' has no commits"
                 if commit_id is None
                 else f"commit {commit_id} does not exist in database"

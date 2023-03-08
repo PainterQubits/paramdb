@@ -7,14 +7,30 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Implement loading data from a specified commit ID
+## [0.2.0] (Mar 8 2023)
+
+### Added
+
+- Ability to specify commit ID in `ParamDB.load()`
+- `ParamData.parent` and `ParamData.root` properties
+- Mixins `ParentType[PT]` and `RootType[PT]` to type cast parent and root
+- Parameter collection classes `ParamList` and `ParamDict`
+- Database now ignores dataclass fields where `init` is `False`
+
+### Removed
+
+- `CommitNotFoundError` (replaced with built-in `IndexError`)
+- Private `_last_updated` dataclass field in parameter dataclasses
 
 ## [0.1.0] (Feb 24 2023)
 
-- Create parameter data classes (`Param` and `Struct`)
-- Create database class `ParamDB` to store parameters in a SQLite file
-- Add ability to retrieve the commit history as `CommitEntry` objects
-- Create [documentation website](https://painterqubits.github.io/paramdb)
+### Added
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.1.0...main
+- Parameter data base class `ParamData`
+- Parameter base dataclasses (`Param` and `Struct`)
+- Database class `ParamDB` to store parameters in a SQLite file
+- Ability to retrieve the commit history as `CommitEntry` objects
+
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.2.0...main
+[0.2.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.2.0
 [0.1.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.1.0
