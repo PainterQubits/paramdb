@@ -371,7 +371,7 @@ def test_param_dict_set_parent(
         _ = param_data.parent
 
 
-def test_param_dict_del_brackets(
+def test_param_dict_del(
     param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
 ) -> None:
     """Can delete items from a parameter dictionary."""
