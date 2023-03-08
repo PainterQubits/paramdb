@@ -15,8 +15,10 @@ from sqlalchemy.orm import (
 )
 from paramdb._param_data._param_data import ParamData, get_param_class
 
-
 T = TypeVar("T")
+
+# Name of the key storing the class name of a JSON-encoded object
+CLASS_NAME_KEY = "__type"
 
 
 def _compress(text: str) -> bytes:
@@ -36,28 +38,34 @@ def _to_dict(obj: Any) -> Any:
     Note that objects within the dictionary do not need to be JSON serializable,
     since they will be recursively processed by `json.dumps`.
     """
-    class_name_dict = {"__class__": obj.__class__.__name__}
+    class_name = type(obj).__name__
+    class_name_dict = {CLASS_NAME_KEY: class_name}
     if isinstance(obj, datetime):
         return class_name_dict | {"isoformat": obj.isoformat()}
     if isinstance(obj, ParamData):
         return class_name_dict | obj.to_dict()
-    raise TypeError(f"{repr(obj)} is not JSON serializable")
+    raise TypeError(
+        f"'{class_name}' object {repr(obj)} is not JSON serializable, so the commit"
+        " failed"
+    )
 
 
 def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamData:
     """
-    If the given dictionary created by `json.loads` has the key __class__, attempt to
-    construct an object of the named class from it. Otherwise, return the dictionary
-    unchanged.
+    If the given dictionary created by `json.loads` has the key `CLASS_NAME_KEY`,
+    attempt to construct an object of the named type from it. Otherwise, return the
+    dictionary unchanged.
     """
-    if "__class__" in json_dict:
-        class_name = json_dict.pop("__class__")
+    if CLASS_NAME_KEY in json_dict:
+        class_name = json_dict.pop(CLASS_NAME_KEY)
         if class_name == datetime.__name__:
             return datetime.fromisoformat(json_dict["isoformat"])
         param_class = get_param_class(class_name)
         if param_class is not None:
             return param_class.from_dict(json_dict)
-        raise ValueError(f"class '{class_name}' is not known to paramdb")
+        raise ValueError(
+            f"class '{class_name}' is not known to ParamDB, so the load failed"
+        )
     return json_dict
 
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import TypeVar, Generic, cast
 from paramdb._param_data._param_data import ParamData
 
-
 PT = TypeVar("PT", bound=ParamData)
 
 

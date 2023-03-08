@@ -21,10 +21,6 @@ class _ParamDataclass(ParamData):
         # Enable setting attributes via indexing
         setattr(self, name, value)
 
-    def __setattr__(self, name: str, value: Any) -> None:
-        super().__setattr__(name, value)
-        self._add_child(value)
-
     @property
     @abstractmethod
     def last_updated(self) -> datetime | None:
@@ -82,9 +78,15 @@ class Struct(_ParamDataclass):
     """
 
     def __post_init__(self) -> None:
-        """Add fields as children."""
+        # Add fields as children.
         for f in fields(self):
             self._add_child(getattr(self, f.name))
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        old_value = getattr(self, name) if hasattr(self, name) else None
+        super().__setattr__(name, value)
+        self._remove_child(old_value)
+        self._add_child(value)
 
     @property
     def last_updated(self) -> datetime | None:

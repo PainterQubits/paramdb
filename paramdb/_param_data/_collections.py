@@ -19,15 +19,23 @@ T = TypeVar("T")
 
 # pylint: disable-next=abstract-method
 class _ParamCollection(ParamData):
-    """Base class for parameter data collections."""
+    """Base class for parameter collections."""
 
     _contents: Collection[Any]
 
     def __len__(self) -> int:
         return len(self._contents)
 
+    def __eq__(self, other: Any) -> bool:
+        # Equal if they have are of the same class and their contents are equal
+        return (
+            isinstance(other, _ParamCollection)
+            and type(other) is type(self)
+            and self._contents == other._contents
+        )
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self._contents})"
+        return f"{type(self).__name__}({self._contents})"
 
     @property
     def last_updated(self) -> datetime | None:
@@ -64,17 +72,22 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
     def __setitem__(self, index: slice, value: Iterable[T]) -> None:
         ...
 
-    def __setitem__(self, index: Any, value: T | Iterable[T]) -> None:
+    def __setitem__(self, index: SupportsIndex | slice, value: Any) -> None:
+        old_value: Any = self._contents[index]
         self._contents[index] = value
-        if isinstance(value, Iterable):
+        if isinstance(index, slice):
+            for item in old_value:
+                self._remove_child(item)
             for item in value:
                 self._add_child(item)
         else:
+            self._remove_child(old_value)
             self._add_child(value)
 
     def __delitem__(self, index: SupportsIndex | slice) -> None:
-        self._remove_child(self._contents[index])
+        old_value = self._contents[index]
         del self._contents[index]
+        self._remove_child(old_value)
 
     def insert(self, index: SupportsIndex, value: T) -> None:
         self._contents.insert(index, value)
@@ -89,13 +102,17 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
 
 
 class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
-    """Mutable mapping that is also parameter data."""
+    """
+    Mutable mapping that is also parameter data.
+
+    Keys that do not beginning with an underscore can be set via dot notation.
+    """
 
     _contents: dict[str, T]
 
     def __init__(self, mapping: Mapping[str, T] | None = None):
         # Use superclass __setattr__ to set actual attribute, not dictionary item
-        super().__setattr__("_contents", {} if mapping is None else dict(mapping))
+        self._contents = {} if mapping is None else dict(mapping)
         if mapping is not None:
             for item in self._contents.values():
                 self._add_child(item)
@@ -104,23 +121,50 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
         return self._contents[key]
 
     def __setitem__(self, key: str, value: T) -> None:
+        old_value = self._contents[key] if key in self._contents else None
         self._contents[key] = value
+        self._remove_child(old_value)
         self._add_child(value)
 
     def __delitem__(self, key: str) -> None:
-        self._remove_child(key)
+        old_value = self._contents[key] if key in self._contents else None
         del self._contents[key]
+        self._remove_child(old_value)
 
     def __iter__(self) -> Iterator[str]:
         yield from self._contents
 
-    def __getattr__(self, key: str) -> T:
+    def __getattr__(self, name: str) -> T:
         # Enable accessing items via dot notation
-        return self[key]
+        if self._is_attribute(name):
+            # It is important to raise an attribute error rather than a key error for
+            # attribute names. For example, this allows deepcopy to work properly.
+            raise AttributeError(
+                f"'{type(self).__name__}' object has no attribute '{name}'"
+            )
+        return self[name]
 
-    def __setattr__(self, key: str, value: T) -> None:
+    def __setattr__(self, name: str, value: T) -> None:
         # Enable setting items via dot notation
-        self[key] = value
+        if self._is_attribute(name):
+            super().__setattr__(name, value)
+        else:
+            self[name] = value
+
+    def __delattr__(self, name: str) -> None:
+        # Enable deleting items via dot notation
+        if self._is_attribute(name):
+            super().__delattr__(name)
+        else:
+            del self[name]
+
+    def _is_attribute(self, name: str) -> bool:
+        """
+        Names beginning with underscores are considered to be attributes when accessed
+        via dot notation. This is both to allow internal Python variables to be set
+        (i.e. dunder variables), and to allow for true attributes to be used if needed.
+        """
+        return len(name) > 0 and name[0] == "_"
 
     def to_dict(self) -> dict[str, T]:
         return self._contents

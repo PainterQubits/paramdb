@@ -8,7 +8,6 @@ from weakref import WeakValueDictionary
 from datetime import datetime
 from typing_extensions import Self
 
-
 # Stores weak references to existing parameter classes
 _param_classes: WeakValueDictionary[str, type[ParamData]] = WeakValueDictionary()
 
@@ -99,8 +98,8 @@ class ParamData(metaclass=_ParamClass):
         """
         if self._parent is None:
             raise ValueError(
-                f"'{self.__class__.__name__}' object has no parent, or its parent has"
-                " not been initialized yet"
+                f"'{type(self).__name__}' object has no parent, or its parent has not"
+                " been initialized yet"
             )
         return self._parent
 
