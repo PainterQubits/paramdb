@@ -166,6 +166,7 @@ def test_commit_and_load_complex(
     param_db.commit("Initial commit", root)
     root_loaded = param_db.load()
     assert root_loaded == root
+    assert root_loaded.last_updated == root.last_updated
 
 
 def test_commit_load_multiple(db_path: str) -> None:
@@ -181,6 +182,7 @@ def test_commit_load_multiple(db_path: str) -> None:
     for i, param in enumerate(params):
         param_loaded = param_db.load(i + 1)
         assert param_loaded == param
+        assert param_loaded.last_updated == param.last_updated
 
 
 def test_separate_connections(db_path: str, param: CustomParam) -> None:
@@ -195,22 +197,45 @@ def test_separate_connections(db_path: str, param: CustomParam) -> None:
 
     # Load back using another connection
     param_db2 = ParamDB[CustomParam](db_path)
-    simple_param_loaded = param_db2.load()
-    assert param == simple_param_loaded
+    param_loaded = param_db2.load()
+    assert param == param_loaded
+    assert param.last_updated == param_loaded.last_updated
+
+
+def test_empty_num_commits(db_path: str) -> None:
+    """An empty database has no commits according to num_commits."""
+    param_db = ParamDB[CustomStruct](db_path)
+    assert param_db.num_commits == 0
+
+
+def test_num_commits(db_path: str, param: CustomParam) -> None:
+    """A database with multiple commits has the correct value for num_commits."""
+    param_db = ParamDB[CustomParam](db_path)
+    for i in range(10):
+        param_db.commit(f"Commit {i}", param)
+    assert param_db.num_commits == 10
 
 
 def test_empty_commit_history(db_path: str) -> None:
     """Loads an empty commit history from an empty database."""
     param_db = ParamDB[CustomStruct](db_path)
-    commit_history = param_db.commit_history()
-    assert commit_history == []
+    assert param_db.commit_history() == []
+
+
+def test_empty_commit_history_slice(db_path: str) -> None:
+    """Correctly slices an empty commit history."""
+    param_db = ParamDB[CustomStruct](db_path)
+    assert param_db.commit_history(0) == []
+    assert param_db.commit_history(0, 10) == []
+    assert param_db.commit_history(-10) == []
+    assert param_db.commit_history(-10, -5) == []
 
 
 def test_commit_history(db_path: str, param: CustomParam) -> None:
     """Loads the correct commit history for a series of commits."""
+    param_db = ParamDB[CustomParam](db_path)
     starts = []
     ends = []
-    param_db = ParamDB[CustomParam](db_path)
 
     # Make 10 commits
     for i in range(10):
@@ -226,3 +251,50 @@ def test_commit_history(db_path: str, param: CustomParam) -> None:
         assert isinstance(commit_entry, CommitEntry)
         assert commit_entry.message == f"Commit {i}"
         assert start < commit_entry.timestamp < end
+
+
+def test_commit_history_slice(db_path: str, param: CustomParam) -> None:
+    """Loads the correct commit history for a series of commits."""
+    param_db = ParamDB[CustomParam](db_path)
+
+    # Make 10 commits
+    for i in range(10):
+        param_db.commit(f"Commit {i}", param)
+
+    # Load slices of commit history
+    commit_history = param_db.commit_history()
+    start_ends = [
+        (None, None),
+        (0, None),
+        (3, None),
+        (9, None),
+        (10, None),
+        (20, None),
+        (-1, None),
+        (-3, None),
+        (-10, None),
+        (-20, None),
+        (None, 10),
+        (None, 7),
+        (None, 1),
+        (None, 0),
+        (None, 20),
+        (None, -1),
+        (None, -3),
+        (None, -9),
+        (None, -10),
+        (None, -20),
+        (0, 10),
+        (0, 7),
+        (0, 20),
+        (3, 10),
+        (3, 7),
+        (3, 20),
+        (-20, 7),
+        (-20, 20),
+        (7, 3),
+        (-6, -3),
+        (-3, -6),
+    ]
+    for start, end in start_ends:
+        assert param_db.commit_history(start, end) == commit_history[start:end]
