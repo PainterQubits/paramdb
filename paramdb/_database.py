@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import json
 from zstandard import ZstdCompressor, ZstdDecompressor
-from sqlalchemy import URL, create_engine, select, desc
+from sqlalchemy import URL, create_engine, select, func
 from sqlalchemy.orm import (
     sessionmaker,
     MappedAsDataclass,
@@ -132,7 +132,7 @@ class ParamDB(Generic[T]):
         """
         select_stmt = select(_Snapshot.data)
         select_stmt = (
-            select_stmt.order_by(desc(_Snapshot.id)).limit(1)  # Most recent commit
+            select_stmt.order_by(_Snapshot.id.desc()).limit(1)  # Most recent commit
             if commit_id is None
             else select_stmt.where(_Snapshot.id == commit_id)  # Specified commit
         )
@@ -148,14 +148,35 @@ class ParamDB(Generic[T]):
             )
         return cast(T, json.loads(_decompress(data), object_hook=_from_dict))
 
-    def commit_history(
-        self, number: int | None = None, *, start: int | None = None
-    ) -> list[CommitEntry]:
-        """Retrieve the commit history as a list of :py:class:`CommitEntry`."""
+    @property
+    def num_commits(self) -> int:
+        """Number of commits in the database."""
+        count_func = func.count()  # pylint: disable=not-callable
+        select_stmt = select(count_func).select_from(_Snapshot)
         with self._Session() as session:
-            history_entries = session.execute(
+            count = session.execute(select_stmt).scalar()
+        return count if count is not None else 0
+
+    def commit_history(
+        self,
+        start: int | None = None,
+        end: int | None = None,
+    ) -> list[CommitEntry]:
+        """
+        Retrieve the commit history as a list of :py:class:`CommitEntry` between the
+        provided start and end indices, which work like slicing a Python list.
+        """
+        num_commits = self.num_commits
+        start = 0 if start is None else start
+        end = num_commits if end is None else end
+        start = max(start + num_commits, 0) if start < 0 else start
+        end = max(end + num_commits, 0) if end < 0 else end
+        with self._Session() as session:
+            select_stmt = (
                 select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp)
-                .order_by(desc(_Snapshot.id))
-                .limit(number)
-            ).mappings()
+                .order_by(_Snapshot.id)
+                .offset(start)
+                .limit(max(end - start, 0))
+            )
+            history_entries = session.execute(select_stmt).mappings()
         return [CommitEntry(**row_mapping) for row_mapping in history_entries]
