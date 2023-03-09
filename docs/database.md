@@ -55,9 +55,10 @@ commit ID. Note that commit IDs start from 1. For example:
 
 ```{jupyter-execute}
 root = Root(param=CustomParam(value=1.23))
-param_db.commit("Initial commit", root)
-root.param.value += 1
-param_db.commit("Increment param value", root)
+param_db.commit(f"Initial commit", root)
+for _ in range(10):
+    root.param.value += 1
+    param_db.commit(f"Increment param value to {root.param.value}", root)
 ```
 
 We can then load the most recent commit:
@@ -69,7 +70,7 @@ param_db.load()
 Or a specific previous commit:
 
 ```{jupyter-execute}
-param_db.load(1)
+param_db.load(5)
 ```
 
 ```{warning}
@@ -85,6 +86,25 @@ We can get a list of commits (as {py:class}`CommitEntry` objects) using the
 
 ```{jupyter-execute}
 param_db.commit_history()
+```
+
+A specific range can also be requested by passing in start and/or end indices to
+{py:meth}`ParamDB.commit_history`, which function like Python list slicing, where the
+start index is inclusive and the end is exclusive. For example:
+
+```{jupyter-execute}
+param_db.commit_history(3, 6)
+```
+
+Note that the indices passed in are list indices, and do not necessarily correspond
+to commit IDs, whereas {py:meth}`ParamDB.load` takes in a specific commit ID.
+
+Negative indices also are allowed and function like Python list slicing. For example, to
+get the last three commits, we can pass in `-3` for the start and leave the end as
+`None`.
+
+```{jupyter-execute}
+param_db.commit_history(start=-3)
 ```
 
 <!-- Jupyter Sphinx cleanup -->

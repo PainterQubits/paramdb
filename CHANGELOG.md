@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Ability to specify start and end indices in `ParamDB.commit_history()`
+
 ## [0.2.0] (Mar 8 2023)
 
 ### Added
