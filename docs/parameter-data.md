@@ -174,11 +174,11 @@ example,
 ```{jupyter-execute}
 from paramdb import ParamDict
 
-param_dict = ParamDict({
-    "p1": CustomParam(value=1.23),
-    "p2": CustomParam(value=4.56),
-    "p3": CustomParam(value=7.89),
-})
+param_dict = ParamDict(
+    p1=CustomParam(value=1.23),
+    p2=CustomParam(value=4.56),
+    p3=CustomParam(value=7.89),
+)
 param_dict.p2.root == param_dict
 ```
 

@@ -43,7 +43,10 @@ class _ParamCollection(ParamData):
 
 
 class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
-    """Mutable sequence that is also parameter data."""
+    """
+    Mutable sequence that is also parameter data. It can be initialized from any
+    iterable (like builtin ``list``).
+    """
 
     _contents: list[T]
 
@@ -103,19 +106,21 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
 
 class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     """
-    Mutable mapping that is also parameter data.
+    Mutable mapping that is also parameter data. It can be initialized from any mapping
+    or using key word arguments (like builtin ``dict``).
 
     Keys that do not beginning with an underscore can be set via dot notation.
     """
 
     _contents: dict[str, T]
 
-    def __init__(self, mapping: Mapping[str, T] | None = None):
-        # Use superclass __setattr__ to set actual attribute, not dictionary item
-        self._contents = {} if mapping is None else dict(mapping)
-        if mapping is not None:
-            for item in self._contents.values():
-                self._add_child(item)
+    def __init__(self, __mapping: Mapping[str, T] | None = None, **kwargs: T):
+        # Double underscore in front of __mapping appeases Mypy when doing
+        # ParamDict(**kwargs) and allows for the key "mapping" to be assigned via a key
+        # word argument without errors.
+        self._contents = ({} if __mapping is None else dict(__mapping)) | kwargs
+        for item in self._contents.values():
+            self._add_child(item)
 
     def __getitem__(self, key: str) -> T:
         return self._contents[key]
@@ -138,7 +143,8 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
         # Enable accessing items via dot notation
         if self._is_attribute(name):
             # It is important to raise an attribute error rather than a key error for
-            # attribute names. For example, this allows deepcopy to work properly.
+            # names considered to be attributes. For example, this allows deepcopy to
+            # work properly.
             raise AttributeError(
                 f"'{type(self).__name__}' object has no attribute '{name}'"
             )
