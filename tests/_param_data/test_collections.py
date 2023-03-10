@@ -89,7 +89,7 @@ def test_param_list_init(
             assert item.parent is param_list
 
 
-def test_param_dict_init(
+def test_param_dict_init_from_dict(
     param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
 ) -> None:
     """
@@ -100,6 +100,31 @@ def test_param_dict_init(
     for item in param_dict.values():
         if isinstance(item, ParamData):
             assert item.parent is param_dict
+
+
+def test_param_dict_init_from_kwargs(param_dict_contents: dict[str, Any]) -> None:
+    """
+    Can initialize a parameter dictionary from key word arguments, and its children
+    correctly identify it as the parent.
+    """
+    param_dict = ParamDict(**deepcopy(param_dict_contents))
+    assert dict(param_dict) == param_dict_contents
+    for item in param_dict.values():
+        if isinstance(item, ParamData):
+            assert item.parent is param_dict
+
+
+def test_param_dict_init_from_dict_and_kwargs(
+    param_dict_contents: dict[str, Any], number: float
+) -> None:
+    """
+    Can initialize a parameter dictionary from a combination of a dictionary and key
+    word arguments. This should not usually be done, but ensures that ``ParamDict``
+    handles this combination in the same way as builtin ``dict``.
+    """
+    param_dict = ParamDict(param_dict_contents, number=number * 2)
+    contents = dict(param_dict_contents, number=number * 2)
+    assert dict(param_dict) == contents
 
 
 def test_param_collection_len_empty(
