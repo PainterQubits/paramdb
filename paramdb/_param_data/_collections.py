@@ -1,6 +1,5 @@
 """Parameter data collection classes."""
 
-from __future__ import annotations
 from typing import TypeVar, Generic, SupportsIndex, Any, overload
 from collections.abc import (
     Iterator,
