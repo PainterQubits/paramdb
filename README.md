@@ -16,6 +16,13 @@ Install the latest version of ParamDB using pip:
 pip install -U paramdb --extra-index-url https://painterqubits.github.io/paramdb/releases
 ```
 
+To install along with [Astropy] for support for storing [`astropy.units.Quantity`]
+objects in the database, ParamDB can be installed with the `astropy` extra:
+
+```
+pip install -U paramdb[astropy] --extra-index-url https://painterqubits.github.io/paramdb/releases
+```
+
 The `extra-index-url` parameter is needed since ParamDB is not published to PyPI yet. If
 you are using a Python package manager, add
 `https://painterqubits.github.io/paramdb/releases` as a secondary source. For example, for
@@ -43,6 +50,8 @@ ParamDB has two main components:
 
 See the [api reference] for more information.
 
+[astropy]: https://docs.astropy.org/en/stable/install.html
+[`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
 [**parameter data**]: https://painterqubits.github.io/paramdb/parameter-data.html
 [**database**]: https://painterqubits.github.io/paramdb/database.html
 [api reference]: https://painterqubits.github.io/paramdb/api-reference

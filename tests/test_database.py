@@ -43,8 +43,8 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
         param_db.commit("Initial commit", data)
     assert (
         str(exc_info.value)
-        == f"'{NotJSONSerializable.__name__}' object {repr(data)} is not JSON"
-        " serializable, so the commit failed"
+        == f"'{NotJSONSerializable.__module__}.{NotJSONSerializable.__name__}' object"
+        f" {repr(data)} is not JSON serializable, so the commit failed"
     )
 
 

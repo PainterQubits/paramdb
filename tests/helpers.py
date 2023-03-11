@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 from dataclasses import dataclass, field
 import time
+from astropy.units import Quantity  # type: ignore
 from paramdb import ParamData, Param, Struct, ParamList, ParamDict
 
 DEFAULT_NUMBER = 1.23
@@ -16,6 +17,7 @@ class CustomParam(Param):
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
+    number_with_units: Quantity = Quantity(12, "m")
     string: str = DEFAULT_STRING
 
 

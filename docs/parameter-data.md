@@ -23,9 +23,9 @@ All of the classes described on this page are subclasses of {py:class}`ParamData
 
 ```{important}
 Any data that is going to be stored in a ParamDB database must be a JSON serializable
-type (`str`, `int`, `float`, `bool`, `None`, `dict`, or `list`), a [`datetime`], or an
-instance of a {py:class}`ParamData` subclass. Otherwise, a `TypeError` will be raised
-when they are committed to the database.
+type (`str`, `int`, `float`, `bool`, `None`, `dict`, or `list`), a [`datetime`], an
+[`astropy.units.Quantity`], or an instance of a {py:class}`ParamData` subclass. Otherwise,
+a `TypeError` will be raised when they are committed to the database.
 ```
 
 ## Parameters
@@ -220,6 +220,7 @@ This does nothing to the functionality, but static type checkers will now know t
 `struct.param.parent` in the example above is a `ParentStruct` object.
 
 [`datetime`]: https://docs.python.org/3/library/datetime.html#datetime-objects
+[`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
 [`@dataclass`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
 [`__init__`]: https://docs.python.org/3/reference/datamodel.html#object.__init__
 [`@property`]: https://docs.python.org/3/library/functions.html#property
