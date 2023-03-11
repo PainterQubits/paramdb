@@ -97,9 +97,9 @@ class _Snapshot(_Base):
 
     __tablename__ = "snapshot"
 
+    message: Mapped[str]
+    data: Mapped[bytes]
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    message: Mapped[str]  # type: ignore
-    data: Mapped[bytes]  # type: ignore
     timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.now)
 
 
