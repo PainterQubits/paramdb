@@ -15,6 +15,13 @@ from sqlalchemy.orm import (
 )
 from paramdb._param_data._param_data import ParamData, get_param_class
 
+try:
+    from astropy.units import Quantity  # type: ignore
+
+    ASTROPY_INSTALLED = True
+except ImportError:
+    ASTROPY_INSTALLED = False
+
 T = TypeVar("T")
 
 # Name of the key storing the class name of a JSON-encoded object
@@ -31,6 +38,14 @@ def _decompress(compressed_text: bytes) -> str:
     return ZstdDecompressor().decompress(compressed_text).decode()
 
 
+def _full_class_name(cls: type) -> str:
+    """
+    Return the full name of the given class, including the module. Used to convert
+    non-parameter-data objects to and from JSON.
+    """
+    return f"{cls.__module__}.{cls.__name__}"
+
+
 def _to_dict(obj: Any) -> Any:
     """
     Convert the given object into a dictionary to be passed to `json.dumps`.
@@ -38,35 +53,39 @@ def _to_dict(obj: Any) -> Any:
     Note that objects within the dictionary do not need to be JSON serializable,
     since they will be recursively processed by `json.dumps`.
     """
-    class_name = type(obj).__name__
-    class_name_dict = {CLASS_NAME_KEY: class_name}
+    class_full_name = _full_class_name(type(obj))
+    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
     if isinstance(obj, datetime):
-        return class_name_dict | {"isoformat": obj.isoformat()}
+        return class_full_name_dict | {"isoformat": obj.isoformat()}
+    if ASTROPY_INSTALLED and isinstance(obj, Quantity):
+        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
     if isinstance(obj, ParamData):
-        return class_name_dict | obj.to_dict()
+        return {CLASS_NAME_KEY: type(obj).__name__} | obj.to_dict()
     raise TypeError(
-        f"'{class_name}' object {repr(obj)} is not JSON serializable, so the commit"
-        " failed"
+        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
+        " commit failed"
     )
 
 
-def _from_dict(json_dict: dict[str, Any]) -> dict[str, Any] | datetime | ParamData:
+def _from_dict(json_dict: dict[str, Any]) -> Any:
     """
     If the given dictionary created by `json.loads` has the key `CLASS_NAME_KEY`,
     attempt to construct an object of the named type from it. Otherwise, return the
     dictionary unchanged.
     """
-    if CLASS_NAME_KEY in json_dict:
-        class_name = json_dict.pop(CLASS_NAME_KEY)
-        if class_name == datetime.__name__:
-            return datetime.fromisoformat(json_dict["isoformat"])
-        param_class = get_param_class(class_name)
-        if param_class is not None:
-            return param_class.from_dict(json_dict)
-        raise ValueError(
-            f"class '{class_name}' is not known to ParamDB, so the load failed"
-        )
-    return json_dict
+    if CLASS_NAME_KEY not in json_dict:
+        return json_dict
+    class_name = json_dict.pop(CLASS_NAME_KEY)
+    if class_name == _full_class_name(datetime):
+        return datetime.fromisoformat(json_dict["isoformat"])
+    if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
+        return Quantity(**json_dict)
+    param_class = get_param_class(class_name)
+    if param_class is not None:
+        return param_class.from_dict(json_dict)
+    raise ValueError(
+        f"class '{class_name}' is not known to ParamDB, so the load failed"
+    )
 
 
 class _Base(MappedAsDataclass, DeclarativeBase):
@@ -78,9 +97,9 @@ class _Snapshot(_Base):
 
     __tablename__ = "snapshot"
 
-    id: Mapped[int] = mapped_column(init=False, primary_key=True)
     message: Mapped[str]
     data: Mapped[bytes]
+    id: Mapped[int] = mapped_column(init=False, primary_key=True)
     timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.now)
 
 
@@ -117,8 +136,8 @@ class ParamDB(Generic[T]):
         with self._Session.begin() as session:
             session.add(
                 _Snapshot(
-                    message=message,
-                    data=_compress(json.dumps(data, default=_to_dict)),
+                    message=message,  # type: ignore
+                    data=_compress(json.dumps(data, default=_to_dict)),  # type: ignore
                 )
             )
 

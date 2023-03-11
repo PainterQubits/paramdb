@@ -10,6 +10,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Ability to specify start and end indices in `ParamDB.commit_history()`
+- Support for scalar [`astropy.units.Quantity`] objects
 
 ### Changed
 
@@ -42,3 +43,4 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 [unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.2.0...main
 [0.2.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.2.0
 [0.1.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.1.0
+[`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
