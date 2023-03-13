@@ -1,9 +1,9 @@
 """Base class for all parameter data."""
 
 from __future__ import annotations
-from typing import Any, cast
+from typing import Any
 from collections.abc import Iterable, Mapping
-from abc import ABCMeta, abstractmethod
+from abc import ABC, abstractmethod
 from weakref import WeakValueDictionary
 from datetime import datetime
 from typing_extensions import Self
@@ -17,35 +17,16 @@ def get_param_class(class_name: str) -> type[ParamData] | None:
     return _param_classes[class_name] if class_name in _param_classes else None
 
 
-class _ParamClass(ABCMeta):
-    """
-    Metaclass for all parameter data classes. Inherits from ABCMeta to allow for
-    abstract methods.
-    """
-
-    def __new__(
-        mcs,
-        name: str,
-        bases: tuple[type, ...],
-        namespace: dict[str, Any],
-        **kwargs: Any,
-    ) -> _ParamClass:
-        """
-        Construct a new parameter data class and add it to the dictionary of parameter
-        classes.
-        """
-        param_class = cast(
-            "type[ParamData]", super().__new__(mcs, name, bases, namespace, **kwargs)
-        )
-        _param_classes[name] = param_class
-        return param_class
-
-
-class ParamData(metaclass=_ParamClass):
+class ParamData(ABC):
     """Abstract base class for all parameter data."""
 
     # Most recently initialized structure that contains this parameter data
     _parent: ParamData | None = None
+
+    def __init_subclass__(cls) -> None:
+        # Add subclass to dictionary of parameter data classes
+        _param_classes[cls.__name__] = cls
+        super().__init_subclass__()
 
     def _add_child(self, child: Any) -> None:
         """Add the given object as a child, if it is ``ParamData``."""

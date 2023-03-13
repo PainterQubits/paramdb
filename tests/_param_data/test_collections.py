@@ -104,7 +104,7 @@ def test_param_dict_init_from_dict(
 
 def test_param_dict_init_from_kwargs(param_dict_contents: dict[str, Any]) -> None:
     """
-    Can initialize a parameter dictionary from key word arguments, and its children
+    Can initialize a parameter dictionary from keyword arguments, and its children
     correctly identify it as the parent.
     """
     param_dict = ParamDict(**deepcopy(param_dict_contents))

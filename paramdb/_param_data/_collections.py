@@ -107,18 +107,15 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
 class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     """
     Mutable mapping that is also parameter data. It can be initialized from any mapping
-    or using key word arguments (like builtin ``dict``).
+    or using keyword arguments (like builtin ``dict``).
 
     Keys that do not beginning with an underscore can be set via dot notation.
     """
 
     _contents: dict[str, T]
 
-    def __init__(self, __mapping: Mapping[str, T] | None = None, **kwargs: T):
-        # Double underscore in front of __mapping appeases Mypy when doing
-        # ParamDict(**kwargs) and allows for the key "mapping" to be assigned via a key
-        # word argument without errors.
-        self._contents = ({} if __mapping is None else dict(__mapping)) | kwargs
+    def __init__(self, mapping: Mapping[str, T] | None = None, /, **kwargs: T):
+        self._contents = ({} if mapping is None else dict(mapping)) | kwargs
         for item in self._contents.values():
             self._add_child(item)
 

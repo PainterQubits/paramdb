@@ -14,7 +14,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
-- `ParamDict` can be initialized from key word arguments in addition to dictionaries
+- `ParamDict` can be initialized from keyword arguments in addition to dictionaries
+- Parameter dataclass bases (`Param` and `Struct`) automatically convert subclasses into
+  dataclasses, so the `@dataclass` decorator should no longer be used
 
 ## [0.2.0] (Mar 8 2023)
 
@@ -36,7 +38,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Parameter data base class `ParamData`
-- Parameter base dataclasses (`Param` and `Struct`)
+- Parameter dataclass bases (`Param` and `Struct`)
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 

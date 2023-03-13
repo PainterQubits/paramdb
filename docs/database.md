@@ -23,14 +23,11 @@ the root data type in order for its methods (e.g. {py:meth}`ParamDB.commit`) wor
 with type checking. For example:
 
 ```{jupyter-execute}
-from dataclasses import dataclass
 from paramdb import Struct, Param, ParamDB
 
-@dataclass
 class Root(Struct):
     param: CustomParam
 
-@dataclass
 class CustomParam(Param):
     value: float
 

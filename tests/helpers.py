@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from typing import Any
-from dataclasses import dataclass, field
+from dataclasses import field
 import time
 from astropy.units import Quantity  # type: ignore
 from paramdb import ParamData, Param, Struct, ParamList, ParamDict
@@ -11,7 +11,6 @@ DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
 
 
-@dataclass
 class CustomParam(Param):
     """Custom parameter."""
 
@@ -21,8 +20,6 @@ class CustomParam(Param):
     string: str = DEFAULT_STRING
 
 
-@dataclass
-# pylint: disable-next=too-many-instance-attributes
 class CustomStruct(Struct):
     """Custom parameter structure."""
 
