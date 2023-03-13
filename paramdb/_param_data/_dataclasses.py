@@ -4,14 +4,19 @@ from __future__ import annotations
 from typing import Any
 from abc import abstractmethod
 from datetime import datetime
-from dataclasses import dataclass, fields
-from typing_extensions import Self
+from dataclasses import dataclass, is_dataclass, fields
+from typing_extensions import Self, dataclass_transform
 from paramdb._param_data._param_data import ParamData
 
 
-@dataclass
+@dataclass_transform()
 class _ParamDataclass(ParamData):
     """Base class for parameter dataclasses."""
+
+    def __init_subclass__(cls, /, **kwargs: Any) -> None:
+        # Convert subclasses into dataclasses
+        super().__init_subclass__()
+        dataclass(cls, **kwargs)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing
@@ -27,20 +32,20 @@ class _ParamDataclass(ParamData):
         ...
 
     def to_dict(self) -> dict[str, Any]:
-        return {f.name: getattr(self, f.name) for f in fields(self) if f.init}
+        if is_dataclass(self):
+            return {f.name: getattr(self, f.name) for f in fields(self) if f.init}
+        return {}
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self:
         return cls(**json_dict)
 
 
-@dataclass
 class Param(_ParamDataclass):
     """
-    Base class for parameters. Custom parameters should be subclasses of this class and
-    are intended to be dataclasses. For example::
+    Base class for parameters. Subclasses are automatically converted to dataclasses.
+    For example::
 
-        @dataclass
         class CustomParam(Param):
             value: float
     """
@@ -72,13 +77,11 @@ class Param(_ParamDataclass):
         return obj
 
 
-@dataclass
 class Struct(_ParamDataclass):
     """
-    Base class for parameter structures. Custom structures should be subclasses of this
-    class and are intended to be dataclasses. For example::
+    Base class for parameter structures. Subclasses are automatically converted to
+    dataclasses. For example::
 
-        @dataclass
         class CustomStruct(Struct):
             value: float
             custom_param: CustomParam

@@ -1,7 +1,6 @@
 """Tests for the paramdb._database module."""
 
 from typing import Any
-from dataclasses import dataclass
 from copy import deepcopy
 import os
 from datetime import datetime
@@ -134,8 +133,6 @@ def test_commit_and_load_complex(
 ) -> None:
     """Can commit and load a complex parameter structure."""
 
-    @dataclass
-    # pylint: disable-next=too-many-instance-attributes
     class Root(Struct):
         """Complex root structure to test the database."""
 
