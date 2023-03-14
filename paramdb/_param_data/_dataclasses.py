@@ -17,7 +17,6 @@ class _ParamDataclass(ParamData):
         # Convert subclasses into dataclasses
         super().__init_subclass__()
         dataclass(kw_only=kw_only, **kwargs)(cls)
-        dataclass_transform(kw_only_default=True)(cls)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing
