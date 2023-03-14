@@ -13,10 +13,11 @@ from paramdb._param_data._param_data import ParamData
 class _ParamDataclass(ParamData):
     """Base class for parameter dataclasses."""
 
-    def __init_subclass__(cls, /, kw_only=True, **kwargs: Any) -> None:
+    def __init_subclass__(cls, /, kw_only: bool = True, **kwargs: Any) -> None:
         # Convert subclasses into dataclasses
         super().__init_subclass__()
-        dataclass(cls, kw_only=kw_only, **kwargs)
+        dataclass(kw_only=kw_only, **kwargs)(cls)
+        dataclass_transform(kw_only_default=True)(cls)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing
