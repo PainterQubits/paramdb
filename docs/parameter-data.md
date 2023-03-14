@@ -97,6 +97,12 @@ param_custom_init = ParamCustomInit()
 ```
 ````
 
+```{tip}
+Since the base class of all parameter classes, {py:class}`ParamData`, is an abstract class
+that inherits from [`abc.ABC`], you can use abstract decorators in parameter and structure
+classes without inheriting from [`abc.ABC`] again.
+```
+
 Parameters track when any of their properties was last updated in the read-only
 {py:attr}`~Param.last_updated` property. For example:
 
@@ -233,4 +239,5 @@ This does nothing to the functionality, but static type checkers will now know t
 [`__init__`]: https://docs.python.org/3/reference/datamodel.html#object.__init__
 [`@property`]: https://docs.python.org/3/library/functions.html#property
 [`__post_init__`]: https://docs.python.org/3/library/dataclasses.html#post-init-processing
+[`abc.abc`]: https://docs.python.org/3/library/abc.html#abc.ABC
 [`collections.abc`]: https://docs.python.org/3/library/collections.abc.html
