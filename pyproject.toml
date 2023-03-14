@@ -33,7 +33,6 @@ furo = "^2022.12.7"
 sphinx-copybutton = "^0.5.1"
 jupyter-sphinx = "^0.4.0"
 
-
 [tool.pytest.ini_options]
 # See https://docs.pytest.org/en/latest/explanation/goodpractices.html#tests-outside-application-code
 addopts = ["--import-mode=importlib"]
