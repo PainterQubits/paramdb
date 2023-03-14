@@ -9,14 +9,14 @@ from typing_extensions import Self, dataclass_transform
 from paramdb._param_data._param_data import ParamData
 
 
-@dataclass_transform()
+@dataclass_transform(kw_only_default=True)
 class _ParamDataclass(ParamData):
     """Base class for parameter dataclasses."""
 
-    def __init_subclass__(cls, /, **kwargs: Any) -> None:
+    def __init_subclass__(cls, /, kw_only: bool = True, **kwargs: Any) -> None:
         # Convert subclasses into dataclasses
         super().__init_subclass__()
-        dataclass(cls, **kwargs)
+        dataclass(kw_only=kw_only, **kwargs)(cls)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing

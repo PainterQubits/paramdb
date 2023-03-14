@@ -35,6 +35,8 @@ poetry source add --secondary paramdb https://painterqubits.github.io/paramdb/re
 Then the package can be installed like any other (e.g. `poetry add paramdb`).
 
 [poetry]: https://python-poetry.org
+[astropy]: https://docs.astropy.org/en/stable/index.html
+[`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
 
 <!-- end installation -->
 
@@ -50,8 +52,6 @@ ParamDB has two main components:
 
 See the [api reference] for more information.
 
-[astropy]: https://docs.astropy.org/en/stable/install.html
-[`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
 [**parameter data**]: https://painterqubits.github.io/paramdb/parameter-data.html
 [**database**]: https://painterqubits.github.io/paramdb/database.html
 [api reference]: https://painterqubits.github.io/paramdb/api-reference

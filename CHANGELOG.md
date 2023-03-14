@@ -11,12 +11,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Ability to specify start and end indices in `ParamDB.commit_history()`
 - Support for scalar [`astropy.units.Quantity`] objects
+- Parameter dataclass bases (`Param` and `Struct`) automatically convert subclasses into
+  dataclasses `kw_only` as True by default
 
 ### Changed
 
 - `ParamDict` can be initialized from keyword arguments in addition to dictionaries
-- Parameter dataclass bases (`Param` and `Struct`) automatically convert subclasses into
-  dataclasses, so the `@dataclass` decorator should no longer be used
 
 ## [0.2.0] (Mar 8 2023)
 
