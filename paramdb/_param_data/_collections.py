@@ -8,6 +8,9 @@ from collections.abc import (
     Mapping,
     MutableSequence,
     MutableMapping,
+    KeysView,
+    ValuesView,
+    ItemsView,
 )
 from datetime import datetime
 from typing_extensions import Self
@@ -109,7 +112,8 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     Mutable mapping that is also parameter data. It can be initialized from any mapping
     or using keyword arguments (like builtin ``dict``).
 
-    Keys that do not beginning with an underscore can be set via dot notation.
+    Keys that do not begin with an underscore can be set via dot notation. Keys, values,
+    and items are returned as dict_keys, dict_values, and dict_items objects.
     """
 
     _contents: dict[str, T]
@@ -168,6 +172,18 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
         (i.e. dunder variables), and to allow for true attributes to be used if needed.
         """
         return len(name) > 0 and name[0] == "_"
+
+    def keys(self) -> KeysView[str]:
+        # Use dict_keys so keys print nicely
+        return self._contents.keys()
+
+    def values(self) -> ValuesView[T]:
+        # Use dict_values so values print nicely
+        return self._contents.values()
+
+    def items(self) -> ItemsView[str, T]:
+        # Use dict_items so items print nicely
+        return self._contents.items()
 
     def to_dict(self) -> dict[str, T]:
         return self._contents

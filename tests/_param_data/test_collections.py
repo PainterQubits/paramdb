@@ -425,3 +425,33 @@ def test_param_dict_iter(
     """A parameter dictionary correctly supports iteration."""
     for key, contents_key in zip(param_dict, param_dict_contents):
         assert key == contents_key
+
+
+def test_param_dict_keys(
+    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
+) -> None:
+    """A parameter dictionary outputs keys as a dict_keys object."""
+    param_dict_keys = param_dict.keys()
+    contents_keys = param_dict_contents.keys()
+    assert isinstance(param_dict_keys, type(contents_keys))
+    assert param_dict_keys == param_dict_keys
+
+
+def test_param_dict_values(
+    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
+) -> None:
+    """A parameter dictionary outputs values as a dict_values object."""
+    param_dict_values = param_dict.values()
+    contents_values = param_dict_contents.values()
+    assert isinstance(param_dict_values, type(contents_values))
+    assert list(param_dict_values) == list(contents_values)
+
+
+def test_param_dict_items(
+    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
+) -> None:
+    """A parameter dictionary outputs items as a dict_items object."""
+    param_dict_items = param_dict.items()
+    contents_items = param_dict_contents.items()
+    assert isinstance(param_dict_items, type(contents_items))
+    assert param_dict_items == contents_items

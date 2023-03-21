@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- ParamDict uses dict_keys, dict_values, and dict_items instead of default KeysView,
+  ValuesView, and ItemsView since they print nicely
+
 ## [0.3.0] (Mar 14 2023)
 
 ### Added
