@@ -1,6 +1,6 @@
 """Parameter database backend using SQLAlchemy and SQLite."""
 
-from typing import TypeVar, Generic, Any, cast
+from typing import TypeVar, Generic, Literal, Any, overload
 from dataclasses import dataclass
 from datetime import datetime
 import json
@@ -13,6 +13,7 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
+from paramdb._keys import CLASS_NAME_KEY
 from paramdb._param_data._param_data import ParamData, get_param_class
 
 try:
@@ -23,9 +24,6 @@ except ImportError:
     ASTROPY_INSTALLED = False
 
 T = TypeVar("T")
-
-# Name of the key storing the class name of a JSON-encoded object
-CLASS_NAME_KEY = "__type"
 
 
 def _compress(text: str) -> bytes:
@@ -67,11 +65,14 @@ def _to_dict(obj: Any) -> Any:
     )
 
 
-def _from_dict(json_dict: dict[str, Any]) -> Any:
+def _from_dict(json_dict: dict[str, Any], load_classes: bool = True) -> Any:
     """
-    If the given dictionary created by `json.loads` has the key `CLASS_NAME_KEY`,
+    If the given dictionary created by ``json.loads`` has the key ``CLASS_NAME_KEY``,
     attempt to construct an object of the named type from it. Otherwise, return the
     dictionary unchanged.
+
+    If load_classes is False, then parameter data objects will be loaded as
+    dictionaries.
     """
     if CLASS_NAME_KEY not in json_dict:
         return json_dict
@@ -80,12 +81,14 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
         return datetime.fromisoformat(json_dict["isoformat"])
     if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
         return Quantity(**json_dict)
-    param_class = get_param_class(class_name)
-    if param_class is not None:
-        return param_class.from_dict(json_dict)
-    raise ValueError(
-        f"class '{class_name}' is not known to ParamDB, so the load failed"
-    )
+    if load_classes:
+        param_class = get_param_class(class_name)
+        if param_class is not None:
+            return param_class.from_dict(json_dict)
+        raise ValueError(
+            f"class '{class_name}' is not known to ParamDB, so the load failed"
+        )
+    return {CLASS_NAME_KEY: class_name} | json_dict
 
 
 class _Base(MappedAsDataclass, DeclarativeBase):
@@ -141,13 +144,30 @@ class ParamDB(Generic[T]):
                 )
             )
 
-    def load(self, commit_id: int | None = None) -> T:
+    @overload
+    def load(
+        self, commit_id: int | None = None, *, load_classes: Literal[True] = True
+    ) -> T:
+        ...
+
+    @overload
+    def load(
+        self, commit_id: int | None = None, *, load_classes: Literal[False]
+    ) -> dict[str, Any]:
+        ...
+
+    def load(self, commit_id: int | None = None, *, load_classes: bool = True) -> Any:
         """
         Load and return data from the database. If a commit ID is given, load from that
         commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
-        the specified commit does not exist.
+        the specified commit does not exist. Note that commit IDs begin at 1.
 
-        Note that commit IDs begin at 1.
+        By default, instances of parameter data classes are reconstructed, and the
+        relavant classes must be defined in the current program. To access data without
+        these classes defined, ``load_classes`` should be False, in which case parameter
+        data objects are loaded as dictionaries with the class name in the key
+        :py:const:`~paramdb._keys.CLASS_NAME_KEY` and, if they are parameters, the last
+        updated time in the key :py:const:`~paramdb._keys.LAST_UPDATED_KEY`.
         """
         select_stmt = select(_Snapshot.data)
         select_stmt = (
@@ -165,7 +185,10 @@ class ParamDB(Generic[T]):
                 else f"commit {commit_id} does not exist in database"
                 f" '{self._engine.url.database}'"
             )
-        return cast(T, json.loads(_decompress(data), object_hook=_from_dict))
+        return json.loads(
+            _decompress(data),
+            object_hook=lambda d: _from_dict(d, load_classes=load_classes),
+        )
 
     @property
     def num_commits(self) -> int:

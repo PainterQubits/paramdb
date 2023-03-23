@@ -13,8 +13,26 @@ from tests.helpers import (
     CustomParamDict,
     sleep_for_datetime,
 )
-from paramdb import ParamData, Struct, ParamList, ParamDict, ParamDB, CommitEntry
+from paramdb import (
+    ParamData,
+    Struct,
+    ParamList,
+    ParamDict,
+    ParamDB,
+    CommitEntry,
+    CLASS_NAME_KEY,
+)
 from paramdb._param_data._param_data import _param_classes
+
+
+class Unknown(Struct):
+    """
+    Class that is unknown to ParamDB. By default, it will get added to the private
+    param class dictionary when created, but on the next line we manually delete it.
+    """
+
+
+del _param_classes[Unknown.__name__]
 
 
 @pytest.fixture(name="db_path")
@@ -49,21 +67,12 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
 
 def test_load_unknown_class_fails(db_path: str) -> None:
     """
-    Fails to load an unknown class (i.e. one that is unknown to ParamDB). This simulates
-    trying to load from a database in a program where a particular class is not properly
-    defined.
+    Fails to load an instance of an unknown class (i.e. one that is unknown to ParamDB).
+    This simulates trying to load from a database in a program where a particular class
+    is not properly defined.
     """
-
-    class Unknown(Struct):
-        """
-        Class that is unknown to ParamDB. By default, it will get added to the private
-        param class dictionary when created, but on the next line we manually delete it.
-        """
-
-    del _param_classes[Unknown.__name__]
     param_db = ParamDB[Unknown](db_path)
-    data = Unknown()
-    param_db.commit("Initial commit", data)
+    param_db.commit("Initial commit", Unknown())
     with pytest.raises(ValueError) as exc_info:
         param_db.load()
     assert (
@@ -117,6 +126,45 @@ def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
         param_data_loaded_first_commit.last_updated
         == param_data_loaded_most_recent.last_updated
     )
+
+
+def test_load_classes_false(db_path: str, param_data: ParamData) -> None:
+    """Can load data as dictionaries if load_classes is false."""
+    param_db = ParamDB[ParamData](db_path)
+    param_db.commit("Initial commit", param_data)
+    data_loaded = param_db.load(load_classes=False)
+
+    # Check that loaded dictionary has the correct type and keys
+    assert isinstance(data_loaded, dict)
+    assert data_loaded.pop(CLASS_NAME_KEY) == type(param_data).__name__
+    param_data_dict = param_data.to_dict()
+    assert data_loaded.keys() == param_data_dict.keys()
+
+    # Check that loaded dictionary has the correct values
+    for key, value in data_loaded.items():
+        value_from_param_data = param_data_dict[key]
+        if isinstance(value_from_param_data, ParamData):
+            assert value.pop(CLASS_NAME_KEY) == type(value_from_param_data).__name__
+            assert value.keys() == value_from_param_data.to_dict().keys()
+        else:
+            if isinstance(value, list):
+                assert isinstance(value_from_param_data, list)
+                assert len(value) == len(value_from_param_data)
+            elif isinstance(value, dict):
+                assert isinstance(value_from_param_data, dict)
+                assert value.keys() == value_from_param_data.keys()
+            else:
+                assert value == value_from_param_data
+
+
+def test_load_classes_false_unknown_class(db_path: str) -> None:
+    """
+    Can load an instance of an unknown class (i.e. one that is unknown to ParamDB).
+    """
+    param_db = ParamDB[Unknown](db_path)
+    param_db.commit("Initial commit", Unknown())
+    data_loaded = param_db.load(load_classes=False)
+    assert data_loaded.pop(CLASS_NAME_KEY) == Unknown.__name__
 
 
 # pylint: disable-next=too-many-arguments

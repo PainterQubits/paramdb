@@ -14,6 +14,7 @@ from collections.abc import (
 )
 from datetime import datetime
 from typing_extensions import Self
+from paramdb._keys import PARAMLIST_ITEMS_KEY
 from paramdb._param_data._param_data import ParamData
 
 
@@ -100,11 +101,11 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
         self._add_child(value)
 
     def to_dict(self) -> dict[str, list[T]]:
-        return {"items": self._contents}
+        return {PARAMLIST_ITEMS_KEY: self._contents}
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, list[T]]) -> Self:
-        return cls(json_dict["items"])
+        return cls(json_dict[PARAMLIST_ITEMS_KEY])
 
 
 class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
