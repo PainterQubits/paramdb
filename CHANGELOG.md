@@ -7,6 +7,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- ParamDB load_classes parameter can be set to False to load parameter data classes as
+  dictionaries (created to allow ParamView to access data)
+- Keys for special properties in dictionary representations of parameter data
+
 ### Changed
 
 - ParamDict uses dict_keys, dict_values, and dict_items instead of default KeysView,

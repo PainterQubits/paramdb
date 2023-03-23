@@ -4,33 +4,17 @@
 
 ```
 
+All of the following can be imported from `paramdb`.
+
 ## Parameter Data
 
 ```{eval-rst}
 .. autoclass:: ParamData
-```
-
-```{eval-rst}
 .. autoclass:: Param
-```
-
-```{eval-rst}
 .. autoclass:: Struct
-```
-
-```{eval-rst}
 .. autoclass:: ParamList
-```
-
-```{eval-rst}
 .. autoclass:: ParamDict
-```
-
-```{eval-rst}
 .. autoclass:: ParentType
-```
-
-```{eval-rst}
 .. autoclass:: RootType
 ```
 
@@ -38,8 +22,15 @@
 
 ```{eval-rst}
 .. autoclass:: ParamDB
+.. autoclass:: CommitEntry
 ```
 
+## Keys
+
 ```{eval-rst}
-.. autoclass:: CommitEntry
+.. py:currentmodule:: paramdb._keys
+.. autodata:: paramdb._keys.CLASS_NAME_KEY
+.. autodata:: paramdb._keys.PARAMLIST_ITEMS_KEY
+.. autodata:: paramdb._keys.LAST_UPDATED_KEY
+.. py:currentmodule:: paramdb
 ```

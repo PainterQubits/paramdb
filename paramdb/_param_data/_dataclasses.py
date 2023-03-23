@@ -6,6 +6,7 @@ from abc import abstractmethod
 from datetime import datetime
 from dataclasses import dataclass, is_dataclass, fields
 from typing_extensions import Self, dataclass_transform
+from paramdb._keys import LAST_UPDATED_KEY
 from paramdb._param_data._param_data import ParamData
 
 
@@ -67,11 +68,11 @@ class Param(_ParamDataclass):
         return self.__last_updated
 
     def to_dict(self) -> dict[str, Any]:
-        return {"__last_updated": self.__last_updated} | super().to_dict()
+        return {LAST_UPDATED_KEY: self.__last_updated} | super().to_dict()
 
     @classmethod
     def from_dict(cls, json_dict: dict[str, Any]) -> Self:
-        last_updated = json_dict.pop("__last_updated")
+        last_updated = json_dict.pop(LAST_UPDATED_KEY)
         obj = cls(**json_dict)
         obj.__last_updated = last_updated  # pylint: disable=unused-private-member
         return obj
