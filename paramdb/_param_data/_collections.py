@@ -124,6 +124,14 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
         for item in self._contents.values():
             self._add_child(item)
 
+    def __dir__(self) -> Iterable[str]:
+        # Return keys that are not attribute names (i.e. do not pass self._is_attribute)
+        # in __dir__() so they are suggested by interactive prompts like IPython.
+        return [
+            *super().__dir__(),
+            *filter(lambda key: not self._is_attribute(key), self._contents.keys()),
+        ]
+
     def __getitem__(self, key: str) -> T:
         return self._contents[key]
 

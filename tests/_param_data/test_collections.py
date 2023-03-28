@@ -355,6 +355,19 @@ def test_param_dict_attribute_error(param_dict: ParamDict[Any]) -> None:
         del param_dict._nonexistent  # pylint: disable=protected-access
 
 
+def test_param_dict_dir(param_dict: ParamDict[Any]) -> None:
+    """
+    Keys of a parameter dictionary that are not attribute names (names that pass
+    ParamDict._is_attribute) are returned by dir().
+    """
+    param_dict["_attribute_name"] = 123
+    param_dict_dir_items = set(dir(param_dict))
+    assert "_attribute_name" not in param_dict_dir_items
+    for key in param_dict.keys():
+        if not param_dict._is_attribute(key):  # pylint: disable=protected-access
+            assert key in param_dict_dir_items
+
+
 def test_param_dict_get(
     param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
 ) -> None:
