@@ -68,9 +68,13 @@ customized_dataclass_param = CustomizedDataclassParam([1, 2, 3])
 customized_dataclass_param.values
 ```
 
+```{warning}
+For mutable default values, `default_factory` should generally be used. See Python
+dataclass documentation for [mutable default values] for more information.
+```
+
 Methods can also be added, including dynamic read-only properties using the
-[`@property`](https://docs.python.org/3/library/functions.html#property) decorator. For
-example:
+[`@property`] decorator. For example:
 
 ```{jupyter-execute}
 class ParamWithProperty(Param):
@@ -240,6 +244,7 @@ This does nothing to the functionality, but static type checkers will now know t
 [`@dataclass`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.dataclass
 [`field`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.field
 [`__init__`]: https://docs.python.org/3/reference/datamodel.html#object.__init__
+[mutable default values]: https://docs.python.org/3/library/dataclasses.html#mutable-default-values
 [`@property`]: https://docs.python.org/3/library/functions.html#property
 [`__post_init__`]: https://docs.python.org/3/library/dataclasses.html#post-init-processing
 [`abc.abc`]: https://docs.python.org/3/library/abc.html#abc.ABC
