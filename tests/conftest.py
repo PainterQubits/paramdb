@@ -1,8 +1,8 @@
 """Defines global fixtures. Called automatically by Pytest before running tests."""
 
 from typing import Any
+import time
 from copy import deepcopy
-from datetime import datetime
 import pytest
 from paramdb import ParamData, ParamList, ParamDict
 from tests.helpers import (
@@ -93,13 +93,13 @@ def fixture_param_data(
 @pytest.fixture(name="updated_param_data_and_datetimes")
 def fixture_updated_param_data_and_datetimes(
     param_data: ParamData,
-) -> tuple[ParamData, datetime, datetime]:
+) -> tuple[ParamData, float, float]:
     """
     Parameter data that has been updated between the returned start and end datetimes.
     Broken down into individual fixtures for parameter data, start, and end below.
     """
     updated_param_data = deepcopy(param_data)
-    start = datetime.now()
+    start = time.time()
     sleep_for_datetime()
     if isinstance(updated_param_data, CustomParam):
         updated_param_data.number += 1
@@ -111,13 +111,13 @@ def fixture_updated_param_data_and_datetimes(
     if isinstance(updated_param_data, ParamDict):
         updated_param_data.param.number += 1
     sleep_for_datetime()
-    end = datetime.now()
+    end = time.time()
     return updated_param_data, start, end
 
 
 @pytest.fixture(name="updated_param_data")
 def fixture_updated_param_data(
-    updated_param_data_and_datetimes: tuple[ParamData, datetime, datetime]
+    updated_param_data_and_datetimes: tuple[ParamData, float, float]
 ) -> ParamData:
     """Parameter data that has been updated."""
     return updated_param_data_and_datetimes[0]
@@ -125,15 +125,15 @@ def fixture_updated_param_data(
 
 @pytest.fixture(name="start")
 def fixture_start(
-    updated_param_data_and_datetimes: tuple[ParamData, datetime, datetime]
-) -> datetime:
-    """Datetime before param_data fixture was updated."""
+    updated_param_data_and_datetimes: tuple[ParamData, float, float]
+) -> float:
+    """UNIX timestamp before param_data fixture was updated."""
     return updated_param_data_and_datetimes[1]
 
 
 @pytest.fixture(name="end")
 def fixture_end(
-    updated_param_data_and_datetimes: tuple[ParamData, datetime, datetime]
-) -> datetime:
-    """Datetime after param_data fixture was updated."""
+    updated_param_data_and_datetimes: tuple[ParamData, float, float]
+) -> float:
+    """UNIX timestamp after param_data fixture was updated."""
     return updated_param_data_and_datetimes[2]

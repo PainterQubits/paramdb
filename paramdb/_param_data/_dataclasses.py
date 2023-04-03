@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing import Any
 from abc import abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass, is_dataclass, fields
 from typing_extensions import Self, dataclass_transform
 from paramdb._keys import LAST_UPDATED_KEY
@@ -52,7 +52,7 @@ class Param(_ParamDataclass):
     """
 
     def __post_init__(self) -> None:
-        self.__last_updated = datetime.now()
+        self.__last_updated = datetime.now(timezone.utc).astimezone()
 
     def __setattr__(self, name: str, value: Any) -> None:
         # Set the given attribute and update the last updated time if the object is
@@ -60,7 +60,7 @@ class Param(_ParamDataclass):
         # exclude private variables, like __initialized, and dunder variables).
         super().__setattr__(name, value)
         if "__" not in name:
-            self.__last_updated = datetime.now()
+            self.__last_updated = datetime.now(timezone.utc).astimezone()
 
     @property
     def last_updated(self) -> datetime:

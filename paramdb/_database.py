@@ -2,7 +2,7 @@
 
 from typing import TypeVar, Generic, Literal, Any, overload
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from zstandard import ZstdCompressor, ZstdDecompressor
 from sqlalchemy import URL, create_engine, select, func
@@ -103,16 +103,25 @@ class _Snapshot(_Base):
     message: Mapped[str]
     data: Mapped[bytes]
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.now)
+    timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
+    """Naive datetime in UTC time (since this is how SQLite stores datetimes)."""
 
 
 @dataclass(frozen=True)
 class CommitEntry:
     """Entry for a commit given commit containing the ID, message, and timestamp."""
 
-    id: int  #: Commit ID
-    message: str  #: Message for this commit
-    timestamp: datetime  #: When this commit was created
+    id: int
+    """Commit ID"""
+    message: str
+    """Message for this commit."""
+    timestamp: datetime
+    """When this commit was created."""
+
+    def __post_init__(self) -> None:
+        # Add timezone info to timestamp datetime object
+        timestamp_aware = self.timestamp.replace(tzinfo=timezone.utc).astimezone()
+        super().__setattr__("timestamp", timestamp_aware)
 
 
 class ParamDB(Generic[T]):

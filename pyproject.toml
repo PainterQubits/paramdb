@@ -36,7 +36,6 @@ jupyter-sphinx = "^0.4.0"
 addopts = ["--import-mode=importlib"]
 
 [tool.pylint.basic]
-# Allow one and two character variable names (e.g. "id" or "p1").
 good-names-rgxs = ["^[a-z][a-z0-9]?$"]
 
 [tool.pylint.messages_control]

@@ -2,7 +2,6 @@
 
 from typing import Any
 from copy import deepcopy
-from datetime import datetime
 import pytest
 from tests.helpers import CustomParamList, CustomParamDict
 from paramdb import ParamData, ParamList, ParamDict
@@ -210,25 +209,25 @@ def test_param_collection_no_last_updated(
 def test_param_list_last_updated(
     param_list: ParamList[Any],
     updated_param_data: ParamData,
-    start: datetime,
-    end: datetime,
+    start: float,
+    end: float,
 ) -> None:
     """Parameter list can correctly get the last updated time from its contents."""
     param_list.append(updated_param_data)
     assert param_list.last_updated is not None
-    assert start < param_list.last_updated < end
+    assert start < param_list.last_updated.timestamp() < end
 
 
 def test_param_dict_last_updated(
     param_dict: ParamDict[Any],
     updated_param_data: ParamData,
-    start: datetime,
-    end: datetime,
+    start: float,
+    end: float,
 ) -> None:
     """Parameter list can correctly get the last updated time from its contents."""
     param_dict["param_data"] = updated_param_data
     assert param_dict.last_updated is not None
-    assert start < param_dict.last_updated < end
+    assert start < param_dict.last_updated.timestamp() < end
 
 
 def test_param_list_get_index(

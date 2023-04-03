@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `datetime` objects (currently used in `CommitEntry.timestamp` and
+  `ParamData.last_updated`) and are timezone-aware
+
 ## [0.4.0] (March 28 2023)
 
 ### Added

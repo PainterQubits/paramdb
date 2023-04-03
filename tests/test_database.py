@@ -3,7 +3,7 @@
 from typing import Any
 from copy import deepcopy
 import os
-from datetime import datetime
+import time
 from pathlib import Path
 import pytest
 from tests.helpers import (
@@ -279,23 +279,23 @@ def test_empty_commit_history_slice(db_path: str) -> None:
 def test_commit_history(db_path: str, param: CustomParam) -> None:
     """Loads the correct commit history for a series of commits."""
     param_db = ParamDB[CustomParam](db_path)
-    starts = []
-    ends = []
+    starts: list[float] = []
+    ends: list[float] = []
 
     # Make 10 commits
     for i in range(10):
-        starts.append(datetime.now())
+        starts.append(time.time())
         sleep_for_datetime()
         param_db.commit(f"Commit {i}", param)
         sleep_for_datetime()
-        ends.append(datetime.now())
+        ends.append(time.time())
 
     # Load commit history
     commit_history = param_db.commit_history()
     for i, (commit_entry, start, end) in enumerate(zip(commit_history, starts, ends)):
         assert isinstance(commit_entry, CommitEntry)
         assert commit_entry.message == f"Commit {i}"
-        assert start < commit_entry.timestamp < end
+        assert start < commit_entry.timestamp.timestamp() < end
 
 
 def test_commit_history_slice(db_path: str, param: CustomParam) -> None:
