@@ -1,7 +1,6 @@
 """Tests for the paramdb._param_data._param_data module."""
 
 from copy import deepcopy
-from datetime import datetime
 import pytest
 from tests.helpers import CustomStruct, sleep_for_datetime
 from paramdb import ParamData
@@ -20,15 +19,15 @@ def test_get_param_class(param_data: ParamData) -> None:
 
 
 def test_param_data_last_updated(
-    updated_param_data: ParamData, start: datetime, end: datetime
+    updated_param_data: ParamData, start: float, end: float
 ) -> None:
     """Updating simple parameter data updates the last updated time."""
     assert updated_param_data.last_updated is not None
-    assert start < updated_param_data.last_updated < end
+    assert start < updated_param_data.last_updated.timestamp() < end
 
 
 def test_list_or_dict_last_updated(
-    updated_param_data: ParamData, start: datetime, end: datetime
+    updated_param_data: ParamData, start: float, end: float
 ) -> None:
     """Can get last updated from a Python list or dictionary."""
     # Can get last updated time from within a list
@@ -36,7 +35,7 @@ def test_list_or_dict_last_updated(
         list=[CustomStruct(), [updated_param_data, CustomStruct()]]
     )
     assert struct_with_list.last_updated is not None
-    assert start < struct_with_list.last_updated < end
+    assert start < struct_with_list.last_updated.timestamp() < end
 
     # Can get last updated time from within a dictionary
     struct_with_dict = CustomStruct(
@@ -46,7 +45,7 @@ def test_list_or_dict_last_updated(
         }
     )
     assert struct_with_dict.last_updated is not None
-    assert start < struct_with_list.last_updated < end
+    assert start < struct_with_list.last_updated.timestamp() < end
 
 
 def test_child_does_not_change(param_data: ParamData) -> None:
