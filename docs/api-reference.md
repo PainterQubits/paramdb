@@ -27,10 +27,17 @@ All of the following can be imported from `paramdb`.
 
 ## Keys
 
+<!--
+Changing the current module to paramdb._keys is necessary in order to show the correct
+docstrings.
+-->
+
+```{py:currentmodule} paramdb._keys
+
+```
+
 ```{eval-rst}
-.. py:currentmodule:: paramdb._keys
-.. autodata:: paramdb._keys.CLASS_NAME_KEY
-.. autodata:: paramdb._keys.PARAMLIST_ITEMS_KEY
-.. autodata:: paramdb._keys.LAST_UPDATED_KEY
-.. py:currentmodule:: paramdb
+.. autodata:: CLASS_NAME_KEY
+.. autodata:: PARAMLIST_ITEMS_KEY
+.. autodata:: LAST_UPDATED_KEY
 ```

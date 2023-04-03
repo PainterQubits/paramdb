@@ -104,15 +104,19 @@ class _Snapshot(_Base):
     data: Mapped[bytes]
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
+    """Naive datetime in UTC time (since this is how SQLite stores datetimes)."""
 
 
 @dataclass(frozen=True)
 class CommitEntry:
     """Entry for a commit given commit containing the ID, message, and timestamp."""
 
-    id: int  #: Commit ID
-    message: str  #: Message for this commit
-    timestamp: datetime  #: When this commit was created
+    id: int
+    """Commit ID"""
+    message: str
+    """Message for this commit."""
+    timestamp: datetime
+    """When this commit was created."""
 
     def __post_init__(self) -> None:
         # Add timezone info to timestamp datetime object
