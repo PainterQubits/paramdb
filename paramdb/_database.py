@@ -169,7 +169,7 @@ class ParamDB(Generic[T]):
         commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
         the specified commit does not exist. Note that commit IDs begin at 1.
 
-        By default, parameter data, `datetime`, and Astropy `Quantity` classes are
+        By default, parameter data, ``datetime``, and Astropy ``Quantity`` classes are
         reconstructed. The relevant parameter data classes must be defined in the
         current program. However, if ``load_classes`` is False, classes are loaded
         directly from the database as dictionaries with the class name in the key
