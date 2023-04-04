@@ -151,8 +151,13 @@ def test_load_classes_false(db_path: str, param_data: ParamData) -> None:
                 assert isinstance(value_from_param_data, list)
                 assert len(value) == len(value_from_param_data)
             elif isinstance(value, dict):
-                assert isinstance(value_from_param_data, dict)
-                assert value.keys() == value_from_param_data.keys()
+                if CLASS_NAME_KEY in value:
+                    value_class = type(value_from_param_data)
+                    full_class_name = f"{value_class.__module__}.{value_class.__name__}"
+                    assert value[CLASS_NAME_KEY] == full_class_name
+                else:
+                    assert isinstance(value_from_param_data, dict)
+                    assert value.keys() == value_from_param_data.keys()
             else:
                 assert value == value_from_param_data
 
