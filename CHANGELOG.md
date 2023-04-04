@@ -10,13 +10,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `datetime` objects (currently used in `CommitEntry.timestamp` and
-  `ParamData.last_updated`) and are timezone-aware
+  `ParamData.last_updated`) and are timezone-aware.
+- If ParamDB `load_classes` parameter is False, `datetime` and Astropy `Quantity`
+  objects are not loaded either.
 
 ## [0.4.0] (March 28 2023)
 
 ### Added
 
-- ParamDB load_classes parameter can be set to False to load parameter data classes as
+- ParamDB `load_classes` parameter can be set to False to load parameter data classes as
   dictionaries (created to allow ParamView to access data)
 - Keys for special properties in dictionary representations of parameter data can be
   imported

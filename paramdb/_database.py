@@ -65,7 +65,7 @@ def _to_dict(obj: Any) -> Any:
     )
 
 
-def _from_dict(json_dict: dict[str, Any], load_classes: bool = True) -> Any:
+def _from_dict(json_dict: dict[str, Any]) -> Any:
     """
     If the given dictionary created by ``json.loads`` has the key ``CLASS_NAME_KEY``,
     attempt to construct an object of the named type from it. Otherwise, return the
@@ -81,14 +81,12 @@ def _from_dict(json_dict: dict[str, Any], load_classes: bool = True) -> Any:
         return datetime.fromisoformat(json_dict["isoformat"])
     if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
         return Quantity(**json_dict)
-    if load_classes:
-        param_class = get_param_class(class_name)
-        if param_class is not None:
-            return param_class.from_dict(json_dict)
-        raise ValueError(
-            f"class '{class_name}' is not known to ParamDB, so the load failed"
-        )
-    return {CLASS_NAME_KEY: class_name} | json_dict
+    param_class = get_param_class(class_name)
+    if param_class is not None:
+        return param_class.from_dict(json_dict)
+    raise ValueError(
+        f"class '{class_name}' is not known to ParamDB, so the load failed"
+    )
 
 
 class _Base(MappedAsDataclass, DeclarativeBase):
@@ -171,10 +169,10 @@ class ParamDB(Generic[T]):
         commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
         the specified commit does not exist. Note that commit IDs begin at 1.
 
-        By default, instances of parameter data classes are reconstructed, and the
-        relavant classes must be defined in the current program. To access data without
-        these classes defined, ``load_classes`` should be False, in which case parameter
-        data objects are loaded as dictionaries with the class name in the key
+        By default, parameter data, ``datetime``, and Astropy ``Quantity`` classes are
+        reconstructed. The relevant parameter data classes must be defined in the
+        current program. However, if ``load_classes`` is False, classes are loaded
+        directly from the database as dictionaries with the class name in the key
         :py:const:`~paramdb._keys.CLASS_NAME_KEY` and, if they are parameters, the last
         updated time in the key :py:const:`~paramdb._keys.LAST_UPDATED_KEY`.
         """
@@ -196,7 +194,7 @@ class ParamDB(Generic[T]):
             )
         return json.loads(
             _decompress(data),
-            object_hook=lambda d: _from_dict(d, load_classes=load_classes),
+            object_hook=_from_dict if load_classes else None,
         )
 
     @property
