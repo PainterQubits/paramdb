@@ -10,7 +10,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `datetime` objects (currently used in `CommitEntry.timestamp` and
-  `ParamData.last_updated`) and are timezone-aware.
+  `ParamData.last_updated`) are timezone-aware.
 - If ParamDB `load_classes` parameter is False, `datetime` and Astropy `Quantity`
   objects are not loaded either.
 
