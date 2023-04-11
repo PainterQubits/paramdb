@@ -146,8 +146,8 @@ class ParamDB(Generic[T]):
         with self._Session.begin() as session:
             session.add(
                 _Snapshot(
-                    message=message,  # type: ignore
-                    data=_compress(json.dumps(data, default=_to_dict)),  # type: ignore
+                    message=message,
+                    data=_compress(json.dumps(data, default=_to_dict)),
                 )
             )
 
