@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.5.0] (Apr 11 2023)
+
 ### Changed
 
 - `datetime` objects (currently used in `CommitEntry.timestamp` and
@@ -14,7 +16,7 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - If ParamDB `load_classes` parameter is False, `datetime` and Astropy `Quantity`
   objects are not loaded either.
 
-## [0.4.0] (March 28 2023)
+## [0.4.0] (Mar 28 2023)
 
 ### Added
 
@@ -67,7 +69,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.4.0...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.5.0...main
+[0.5.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.5.0
 [0.4.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.4.0
 [0.3.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.3.0
 [0.2.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.2.0
