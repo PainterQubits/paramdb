@@ -10,7 +10,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  POETRY_VERSION: "1.4.0"
+  POETRY_VERSION: "1.4.2"
 
 jobs:
   ci:
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install Poetry
-        run: pipx install poetry==$POETRY_VERSION
+        run: pipx install poetry==${{ env.POETRY_VERSION }}
 
       - name: Set up Python with Poetry cache
         uses: actions/setup-python@v4

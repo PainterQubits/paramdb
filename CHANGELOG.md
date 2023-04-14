@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## Added
+
+- `ParamDB.dispose()` function for cases where it is required to fully clean up the
+  database before the program ends, such as in testing suites.
+
 ## [0.5.0] (Apr 11 2023)
 
 ### Changed

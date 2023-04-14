@@ -109,8 +109,7 @@ param_db.commit_history(start=-3)
 ```{jupyter-execute}
 :hide-code:
 
-# Gets ride of PermissionError on Windows
-param_db._engine.dispose()
+param_db.dispose()  # Fixes PermissionError on Windows
 ```
 
 [`dataclasses.field`]: https://docs.python.org/3/library/dataclasses.html#dataclasses.field

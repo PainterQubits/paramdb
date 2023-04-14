@@ -229,3 +229,15 @@ class ParamDB(Generic[T]):
             )
             history_entries = session.execute(select_stmt).mappings()
         return [CommitEntry(**row_mapping) for row_mapping in history_entries]
+
+    def dispose(self) -> None:
+        """
+        Dispose of the underlying SQLAlchemy connection pool. Usually this method does
+        not need to be called since disposal happens automatically when the database is
+        garbage collected, and typically only one global database object should be used.
+        However, there are certain cases where it is useful to fully dispose of a
+        database before the end of the program, such as when running a test suite. See
+        https://docs.sqlalchemy.org/en/20/core/connections.html#engine-disposal for more
+        information.
+        """
+        self._engine.dispose()
