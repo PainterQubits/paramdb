@@ -228,7 +228,7 @@ class ParamDB(Generic[T]):
                 .limit(max(end - start, 0))
             )
             history_entries = session.execute(select_stmt).mappings()
-        return [CommitEntry(**row_mapping) for row_mapping in history_entries]
+        return [CommitEntry(**dict(row_mapping)) for row_mapping in history_entries]
 
     def dispose(self) -> None:
         """
