@@ -99,9 +99,16 @@ class _Snapshot(_Base):
     __tablename__ = "snapshot"
 
     message: Mapped[str]
+    """Commit message."""
     data: Mapped[bytes]
+    """Compressed data."""
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    timestamp: Mapped[datetime] = mapped_column(default_factory=datetime.utcnow)
+    """Commit ID."""
+    # datetime.utcnow is wrapped in a lambda function to allow it to be mocked in tests
+    # where we want to control the time.
+    timestamp: Mapped[datetime] = mapped_column(
+        default_factory=lambda: datetime.utcnow()  # pylint: disable=unnecessary-lambda
+    )
     """Naive datetime in UTC time (since this is how SQLite stores datetimes)."""
 
 
@@ -110,9 +117,9 @@ class CommitEntry:
     """Entry for a commit given commit containing the ID, message, and timestamp."""
 
     id: int
-    """Commit ID"""
+    """Commit ID."""
     message: str
-    """Message for this commit."""
+    """Commit message."""
     timestamp: datetime
     """When this commit was created."""
 

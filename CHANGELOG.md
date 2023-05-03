@@ -12,6 +12,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `ParamDB.dispose()` function for cases where it is required to fully clean up the
   database before the program ends, such as in testing suites.
 
+### Changed
+
+- Commits get the current time in a way that can be mocked in tests where we
+  want to control the time.
+
 ## [0.5.0] (Apr 11 2023)
 
 ### Changed
