@@ -7,7 +7,9 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-## Added
+## [0.6.0] (May 3 2023)
+
+### Added
 
 - `ParamDB.dispose()` function for cases where it is required to fully clean up the
   database before the program ends, such as in testing suites.
@@ -79,7 +81,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.5.0...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.6.0...main
+[0.6.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.6.0
 [0.5.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.5.0
 [0.4.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.4.0
 [0.3.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.3.0
