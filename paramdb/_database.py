@@ -148,15 +148,19 @@ class ParamDB(Generic[T]):
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
 
-    def commit(self, message: str, data: T) -> None:
-        """Commit the current data to the database with the given message."""
+    def commit(self, message: str, data: T) -> int:
+        """
+        Commit the given data to the database with the given message and return the ID
+        of the new commit.
+        """
         with self._Session.begin() as session:
-            session.add(
-                _Snapshot(
-                    message=message,
-                    data=_compress(json.dumps(data, default=_to_dict)),
-                )
+            snapshot = _Snapshot(
+                message=message,
+                data=_compress(json.dumps(data, default=_to_dict)),
             )
+            session.add(snapshot)
+            session.flush()  # Flush so the commit ID is filled in
+            return snapshot.id
 
     @overload
     def load(

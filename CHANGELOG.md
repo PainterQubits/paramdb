@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `ParamDB.commit()` returns the ID of the newly created commit.
+
 ## [0.6.0] (May 3 2023)
 
 ### Added

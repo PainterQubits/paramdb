@@ -110,7 +110,10 @@ def test_load_nonexistent_commit_fails(db_path: str) -> None:
 def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
     """Can commit and load parameter data."""
     param_db = ParamDB[ParamData](db_path)
-    param_db.commit("Initial commit", param_data)
+    commit_id = param_db.commit("Initial commit", param_data)
+
+    # Returns commit ID and starts IDs at 1
+    assert commit_id == 1
 
     # Can load the most recent commit
     sleep_for_datetime()
@@ -120,7 +123,7 @@ def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
 
     # Can load by commit ID
     sleep_for_datetime()
-    param_data_loaded_first_commit = param_db.load(1)
+    param_data_loaded_first_commit = param_db.load(commit_id)
     assert param_data_loaded_first_commit == param_data_loaded_most_recent
     assert (
         param_data_loaded_first_commit.last_updated
@@ -222,15 +225,17 @@ def test_commit_and_load_complex(
 def test_commit_load_multiple(db_path: str) -> None:
     """Can commit multiple times and load previous commits."""
     param_db = ParamDB[CustomParam](db_path)
+    commit_ids = []
 
     # Make 10 commits
     params = [CustomParam(number=i + 1) for i in range(10)]
     for i, param in enumerate(params):
-        param_db.commit(f"Commit {i + 1}", param)
+        commit_id = param_db.commit(f"Commit {i + 1}", param)
+        commit_ids.append(commit_id)
 
     # Load and verify the commits
-    for i, param in enumerate(params):
-        param_loaded = param_db.load(i + 1)
+    for commit_id, param in zip(commit_ids, params):
+        param_loaded = param_db.load(commit_id)
         assert param_loaded == param
         assert param_loaded.last_updated == param.last_updated
 
