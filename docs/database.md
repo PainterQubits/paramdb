@@ -70,12 +70,6 @@ Or a specific previous commit:
 param_db.load(5)
 ```
 
-```{warning}
-Simultaneous database operations have not been tested yet. Simultaneous read operations
-(e.g. calls to {py:meth}`ParamDB.load`) are likely ok, but simultaneous write operations
-(e.g. calls to {py:meth}`ParamDB.commit`) may raise an exception.
-```
-
 ## Commit History
 
 We can get a list of commits (as {py:class}`CommitEntry` objects) using the
