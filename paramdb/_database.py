@@ -78,7 +78,7 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
         return json_dict
     class_name = json_dict.pop(CLASS_NAME_KEY)
     if class_name == _full_class_name(datetime):
-        return datetime.fromisoformat(json_dict["isoformat"])
+        return datetime.fromisoformat(json_dict["isoformat"]).astimezone()
     if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
         return Quantity(**json_dict)
     param_class = get_param_class(class_name)

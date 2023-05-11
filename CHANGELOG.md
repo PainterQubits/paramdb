@@ -10,6 +10,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - `ParamDB.commit()` returns the ID of the newly created commit.
+- `ParamDB.load()` converts `datetime` objects to local time regardless of the timezone
+  stored internally in the database.
 
 ## [0.6.0] (May 3 2023)
 
