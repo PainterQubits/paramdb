@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.7.0] (May 19 2023)
+
 ### Changed
 
 - `ParamDB.commit()` returns the ID of the newly created commit.
@@ -87,7 +89,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.6.0...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.7.0...main
+[0.7.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.7.0
 [0.6.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.6.0
 [0.5.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.5.0
 [0.4.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.4.0
