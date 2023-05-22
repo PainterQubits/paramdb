@@ -10,7 +10,7 @@ repository = "https://github.com/PainterQubits/paramdb"
 [tool.poetry.dependencies]
 python = "^3.10"
 typing-extensions = "^4.5.0"
-sqlalchemy = "^2.0.14"
+sqlalchemy = "^2.0.15"
 zstandard = "^0.21.0"
 astropy = {version = "^5.2.2", optional = true}
 
@@ -27,7 +27,7 @@ black = "^23.3.0"
 [tool.poetry.group.docs.dependencies]
 sphinx = "6.2.1"
 myst-parser = "^1.0.0"
-furo = "^2023.3.27"
+furo = "^2023.5.20"
 sphinx-copybutton = "^0.5.2"
 jupyter-sphinx = "^0.4.0"
 sphinx-autobuild = "^2021.3.14"
