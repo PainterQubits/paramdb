@@ -1,12 +1,12 @@
 # ParamDB
 
+[![CI](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml/badge.svg)](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml)
+
 <!-- start intro -->
 
 Python library for storing and retrieving experiment parameters.
 
 <!-- end intro -->
-
-[![CI](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml/badge.svg)](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml)
 
 ## Installation
 
