@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      # - develop
+      - develop
   pull_request:
     branches:
       - main
-      # - develop
+      - develop
 
 env:
   PYTHON_VERSION: "3.10"

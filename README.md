@@ -43,6 +43,6 @@ ParamDB has two main components:
 
 See the [api reference] for more information.
 
-[**parameter data**]: https://painterqubits.github.io/paramdb/parameter-data.html
-[**database**]: https://painterqubits.github.io/paramdb/database.html
-[api reference]: https://painterqubits.github.io/paramdb/api-reference
+[**parameter data**]: https://paramdb.readthedocs.io/en/stable/parameter-data.html
+[**database**]: https://paramdb.readthedocs.io/en/stable/database.html
+[api reference]: https://paramdb.readthedocs.io/en/stable/api-reference.html
