@@ -4,7 +4,7 @@
 
 <!-- start intro -->
 
-Python library for storing and retrieving experiment parameters.
+Python package for storing and retrieving experiment parameters.
 
 <!-- end intro -->
 
