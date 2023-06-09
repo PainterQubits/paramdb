@@ -6,7 +6,6 @@ on:
       - develop
   release:
     types: [published]
-  workflow_dispatch:
 
 env:
   PYTHON_VERSION: "3.10"
@@ -28,7 +27,7 @@ jobs:
       - name: Upload package artifact
         uses: actions/upload-artifact@v3.1.2
         with:
-          name: paramdb-dist
+          name: paramdb-release
           path: dist
 
   publish:
@@ -36,14 +35,14 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/paramdb
+      url: https://pypi.org/project/paramdb
     permissions:
       id-token: write
     steps:
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: paramdb-dist
+          name: paramdb-release
           path: dist
 
-      - name: Display structure of downloaded files
-        run: ls -R
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.8.6
