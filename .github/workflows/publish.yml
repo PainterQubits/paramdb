@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3
 
       - name: Install Poetry
         run: pipx install poetry==${{ env.POETRY_VERSION }}
@@ -22,7 +22,7 @@ jobs:
         run: poetry build
 
       - name: Upload package artifact
-        uses: actions/upload-artifact@v3.1.2
+        uses: actions/upload-artifact@v3
         with:
           name: paramdb-release
           path: dist
@@ -36,10 +36,10 @@ jobs:
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v3.0.2
+      - uses: actions/download-artifact@v3
         with:
           name: paramdb-release
           path: dist
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.6
+        uses: pypa/gh-action-pypi-publish@release/v1

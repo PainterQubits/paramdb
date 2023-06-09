@@ -165,13 +165,13 @@ class ParamDB(Generic[T]):
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[True] = True
-    ) -> T:
+    ) -> T:  # pragma: no cover
         ...
 
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[False]
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any]:  # pragma: no cover
         ...
 
     def load(self, commit_id: int | None = None, *, load_classes: bool = True) -> Any:

@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3.5.3
+        uses: actions/checkout@v3
 
       - name: Install Poetry
         run: pipx install poetry==${{ env.POETRY_VERSION }}
 
       - name: Set up Python with Poetry cache
-        uses: actions/setup-python@v4.6.1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
@@ -54,4 +54,7 @@ jobs:
         run: poetry run mypy paramdb tests
 
       - name: Test (Pytest)
-        run: poetry run pytest
+        run: poetry run pytest --cov=paramdb --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
