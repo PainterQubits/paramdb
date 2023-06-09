@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - develop
+      # - develop
   pull_request:
     branches:
       - main
-      - develop
+      # - develop
 
 env:
   PYTHON_VERSION: "3.10"
@@ -19,13 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v3.5.3
 
       - name: Install Poetry
         run: pipx install poetry==${{ env.POETRY_VERSION }}
 
       - name: Set up Python with Poetry cache
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4.6.1
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: poetry
