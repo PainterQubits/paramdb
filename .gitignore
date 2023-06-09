@@ -13,8 +13,7 @@ jupyter_execute/
 __pycache__/
 .mypy_cache/
 .pytest_cache/
-.coverage
 
-# Data files
+# Database files
 *.db
 *.db-journal

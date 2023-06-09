@@ -5,6 +5,5 @@ authors:
     given-names: "Alex"
 title: "ParamDB"
 version: 0.7.0
-# doi: 10.5281/zenodo.xxxx
 date-released: 2023-05-19
 url: "https://github.com/PainterQubits/paramdb"
