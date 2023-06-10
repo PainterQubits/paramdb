@@ -3,6 +3,7 @@
 [![PyPI Latest Release](https://img.shields.io/pypi/v/paramdb)](https://pypi.org/project/paramdb/)
 [![License](https://img.shields.io/pypi/l/paramdb)](https://github.com/PainterQubits/paramdb/blob/main/LICENSE)
 [![CI](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml/badge.svg)](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml)
+[![Codecov](https://codecov.io/github/PainterQubits/paramdb/branch/main/graph/badge.svg?token=PQEJWLBTBK)](https://codecov.io/github/PainterQubits/paramdb)
 [![Documentation Status](https://readthedocs.org/projects/paramdb/badge/?version=stable)](https://paramdb.readthedocs.io/en/stable/?badge=stable)
 
 <!-- start intro -->
