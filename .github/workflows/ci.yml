@@ -12,7 +12,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  POETRY_VERSION: "1.5.0"
+  POETRY_VERSION: "1.5.1"
 
 jobs:
   ci:
@@ -31,7 +31,7 @@ jobs:
           cache: poetry
 
       - name: Install dependencies
-        run: poetry install --all-extras
+        run: poetry install --all-extras --without docs
 
       - name: Check Formatting (Black)
         run: poetry run black paramdb tests --check
@@ -54,4 +54,7 @@ jobs:
         run: poetry run mypy paramdb tests
 
       - name: Test (Pytest)
-        run: poetry run pytest
+        run: poetry run pytest --cov=paramdb --cov-report=xml
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3

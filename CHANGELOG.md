@@ -2,10 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.8.0] (June 9 2023)
+
+### Changed
+
+- Documentation website moved to Read the Docs.
+
+### Added
+
+- Badges for latest PyPI version, license, CI status, Codecov, and docs website build.
 
 ## [0.7.0] (May 19 2023)
 
@@ -89,7 +99,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.7.0...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.8.0...develop
+[0.8.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.8.0
 [0.7.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.7.0
 [0.6.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.6.0
 [0.5.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.5.0

@@ -29,7 +29,7 @@ class _ParamDataclass(ParamData):
 
     @property
     @abstractmethod
-    def last_updated(self) -> datetime | None:
+    def last_updated(self) -> datetime | None:  # pragma: no cover
         ...
 
     def to_dict(self) -> dict[str, Any]:
