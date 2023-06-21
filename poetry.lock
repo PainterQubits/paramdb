@@ -2599,4 +2599,4 @@ astropy = ["astropy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "461868ede64589325be9a3fadfb7191a25e5581d1d2a47a9fdf51c541b3c2278"
+content-hash = "2c9908b400093e5e9ef682869aa215c76b51ffe9b7f8405d766794a6fcee7664"
