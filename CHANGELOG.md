@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `ParamDB.path` to retrieve the database path.
+- `ParamDB.latest_commit` to retrieve the latest commit entry.
+
 ## [0.8.0] (June 9 2023)
 
 ### Changed

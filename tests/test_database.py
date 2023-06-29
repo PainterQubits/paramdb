@@ -48,6 +48,12 @@ def test_create_database(db_path: str) -> None:
     assert os.path.exists(db_path)
 
 
+def test_path(db_path: str) -> None:
+    """Database path can be retrieved."""
+    param_db = ParamDB[Any](db_path)
+    assert param_db.path == db_path
+
+
 def test_commit_not_json_serializable_fails(db_path: str) -> None:
     """Fails to commit a class that ParamDB does not know how to convert to JSON."""
 
@@ -269,6 +275,32 @@ def test_num_commits(db_path: str, param: CustomParam) -> None:
     for i in range(10):
         param_db.commit(f"Commit {i}", param)
     assert param_db.num_commits == 10
+
+
+def test_empty_latest_commit(db_path: str) -> None:
+    """An empty database has a latest_commit of None."""
+    param_db = ParamDB[CustomStruct](db_path)
+    assert param_db.latest_commit is None
+
+
+def test_latest_commit(db_path: str, param: CustomParam) -> None:
+    """The database has the correct value of latest_commit after each commit."""
+    param_db = ParamDB[CustomParam](db_path)
+    for i in range(10):
+        # Make the commit
+        message = f"Commit {i}"
+        start = time.time()
+        sleep_for_datetime()
+        commit_id = param_db.commit(message, param)
+        sleep_for_datetime()
+        end = time.time()
+
+        # Assert latest_commit matches the commit that was just made
+        latest_commit = param_db.latest_commit
+        assert latest_commit is not None
+        assert latest_commit.id == commit_id
+        assert latest_commit.message == message
+        assert start < latest_commit.timestamp.timestamp() < end
 
 
 def test_empty_commit_history(db_path: str) -> None:

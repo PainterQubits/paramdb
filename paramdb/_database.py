@@ -144,9 +144,15 @@ class ParamDB(Generic[T]):
     """
 
     def __init__(self, path: str):
+        self._path = path
         self._engine = create_engine(URL.create("sqlite+pysqlite", database=path))
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
+
+    @property
+    def path(self) -> str:
+        """Path of the database file."""
+        return self._path
 
     def commit(self, message: str, data: T) -> int:
         """
@@ -198,10 +204,9 @@ class ParamDB(Generic[T]):
         if data is None:
             raise IndexError(
                 f"cannot load most recent commit because database"
-                f" '{self._engine.url.database}' has no commits"
+                f" '{self._path}' has no commits"
                 if commit_id is None
-                else f"commit {commit_id} does not exist in database"
-                f" '{self._engine.url.database}'"
+                else f"commit {commit_id} does not exist in database" f" '{self._path}'"
             )
         return json.loads(
             _decompress(data),
@@ -216,6 +221,18 @@ class ParamDB(Generic[T]):
         with self._Session() as session:
             count = session.execute(select_stmt).scalar()
         return count if count is not None else 0
+
+    @property
+    def latest_commit(self) -> CommitEntry | None:
+        """Latest commit added to the database, or None if the database is empty."""
+        max_id_func = func.max(_Snapshot.id)  # pylint: disable=not-callable
+        select_max_id = select(max_id_func).scalar_subquery()
+        select_stmt = select(
+            _Snapshot.id, _Snapshot.message, _Snapshot.timestamp
+        ).where(_Snapshot.id == select_max_id)
+        with self._Session() as session:
+            latest_entry = session.execute(select_stmt).mappings().first()
+        return None if latest_entry is None else CommitEntry(**latest_entry)
 
     def commit_history(
         self,
