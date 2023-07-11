@@ -7,6 +7,17 @@ from paramdb import ParamData
 from paramdb._param_data._param_data import get_param_class
 
 
+def test_custom_subclass_extra_kwarg(param_data: ParamData) -> None:
+    """Extra keyword arugments in a custom parameter data subclass raise a TypeError."""
+    cls = type(param_data)
+    with pytest.raises(TypeError) as exc_info:
+        # pylint: disable-next=unused-variable
+        class CustomParamData(cls, extra_kwarg="test"):  # type: ignore
+            """Custom parameter data class with an extra keyword arugment."""
+
+    assert "takes no keyword arguments" in str(exc_info.value)
+
+
 def test_is_param_data(param_data: ParamData) -> None:
     """Parameter data object is an instance of the `ParamData` class."""
     assert isinstance(param_data, ParamData)

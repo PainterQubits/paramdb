@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Custom `ParamData` subclasses have an improved error message if extra keyword arguments
+  are passed.
+
 ## [0.9.0] (June 29 2023)
 
 ### Added

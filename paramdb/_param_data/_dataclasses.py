@@ -16,7 +16,7 @@ class _ParamDataclass(ParamData):
 
     def __init_subclass__(cls, /, kw_only: bool = True, **kwargs: Any) -> None:
         # Convert subclasses into dataclasses
-        super().__init_subclass__()
+        super().__init_subclass__(**kwargs)
         dataclass(kw_only=kw_only, **kwargs)(cls)
 
     def __getitem__(self, name: str) -> Any:
