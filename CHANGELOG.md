@@ -7,6 +7,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.1] (Aug 9 2023)
+
+### Changed
+
+- Custom `ParamData` subclasses have an improved error message if extra keyword arguments
+  are passed.
+
 ## [0.9.0] (June 29 2023)
 
 ### Added
@@ -106,7 +113,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.9.0...develop
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.9.1...develop
+[0.9.1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.9.1
 [0.9.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.9.0
 [0.8.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.8.0
 [0.7.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.7.0

@@ -23,10 +23,10 @@ class ParamData(ABC):
     # Most recently initialized structure that contains this parameter data
     _parent: ParamData | None = None
 
-    def __init_subclass__(cls) -> None:
+    def __init_subclass__(cls, /, **kwargs: Any) -> None:
         # Add subclass to dictionary of parameter data classes
+        super().__init_subclass__(**kwargs)
         _param_classes[cls.__name__] = cls
-        super().__init_subclass__()
 
     def _add_child(self, child: Any) -> None:
         """Add the given object as a child, if it is ``ParamData``."""

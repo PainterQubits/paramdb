@@ -1,10 +1,29 @@
 """Tests for the paramdb._param_data._param_data module."""
 
+from dataclasses import is_dataclass
 from copy import deepcopy
 import pytest
 from tests.helpers import CustomStruct, sleep_for_datetime
 from paramdb import ParamData
 from paramdb._param_data._param_data import get_param_class
+
+
+def test_custom_subclass_extra_kwarg(param_data: ParamData) -> None:
+    """Extra keyword arugments in a custom parameter data subclass raise a TypeError."""
+    cls = type(param_data)
+    with pytest.raises(TypeError) as exc_info:
+        # pylint: disable-next=unused-variable
+        class CustomParamData(cls, extra_kwarg="test"):  # type: ignore
+            """Custom parameter data class with an extra keyword arugment."""
+
+    error_message = str(exc_info.value)
+    if is_dataclass(cls):
+        assert (
+            error_message
+            == "dataclass() got an unexpected keyword argument 'extra_kwarg'"
+        )
+    else:
+        assert "takes no keyword arguments" in error_message
 
 
 def test_is_param_data(param_data: ParamData) -> None:
