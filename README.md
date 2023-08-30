@@ -27,7 +27,7 @@ To install along with [Astropy] for support for storing scalar [`astropy.units.Q
 objects in the database, ParamDB can be installed with the `astropy` extra:
 
 ```
-pip install -U paramdb[astropy]
+pip install -U "paramdb[astropy]"
 ```
 
 [astropy]: https://docs.astropy.org/en/stable/index.html
