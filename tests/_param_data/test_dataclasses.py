@@ -1,12 +1,13 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
+from typing import Union
 import time
 from copy import deepcopy
 import pytest
 from tests.helpers import CustomParam, CustomStruct, sleep_for_datetime
 from paramdb import ParamData
 
-ParamDataclass = CustomParam | CustomStruct
+ParamDataclass = Union[CustomParam, CustomStruct]
 
 
 @pytest.fixture(

@@ -1,5 +1,6 @@
 """Parameter database backend using SQLAlchemy and SQLite."""
 
+from __future__ import annotations
 from typing import TypeVar, Generic, Literal, Any, overload
 from dataclasses import dataclass
 from datetime import datetime, timezone

@@ -1,14 +1,14 @@
 """Tests for the paramdb._param_data._collections module."""
 
-from typing import Any
+from typing import Union, Any
 from copy import deepcopy
 import pytest
 from tests.helpers import CustomParamList, CustomParamDict
 from paramdb import ParamData, ParamList, ParamDict
 
-ParamCollection = ParamList | ParamDict
-Contents = list[Any] | dict[str, Any]
-CustomParamCollection = CustomParamList | CustomParamDict
+ParamCollection = Union[ParamList, ParamDict]
+Contents = Union[list[Any], dict[str, Any]]
+CustomParamCollection = Union[CustomParamList, CustomParamDict]
 
 
 @pytest.fixture(

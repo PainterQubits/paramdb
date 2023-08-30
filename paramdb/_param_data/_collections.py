@@ -1,5 +1,6 @@
 """Parameter data collection classes."""
 
+from __future__ import annotations
 from typing import TypeVar, Generic, SupportsIndex, Any, overload
 from collections.abc import (
     Iterator,
@@ -16,7 +17,6 @@ from datetime import datetime
 from typing_extensions import Self
 from paramdb._keys import PARAMLIST_ITEMS_KEY
 from paramdb._param_data._param_data import ParamData
-
 
 T = TypeVar("T")
 
