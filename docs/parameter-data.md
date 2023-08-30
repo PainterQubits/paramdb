@@ -54,18 +54,24 @@ param.value
 The dataclass aspects of the subclass can be customized by passing keyword arguments when
 defining the custom class (the same arguments that would be passed to the [`@dataclass`]
 decorator), and by using the dataclass [`field`] function. The class arguments have the
-same default values as in [`@dataclass`], except `kw_only` is True by default for
-ParamDB dataclasses to facilitate dataclass inheritance with default values. An example of
-dataclass customization is shown below.
+same default values as in [`@dataclass`]. An example of dataclass customization is shown
+below.
+
+```{note}
+The `kw_only` setting below only works in Python 3.10, but is useful for defining
+non-default arguments after those with default values (like in the example), especially
+when building up dataclasses through inheritance.
+```
 
 ```{jupyter-execute}
 from dataclasses import field
 
-class CustomizedDataclassParam(Param, kw_only=False, repr=False):
+class CustomizedDataclassParam(Param, kw_only=True):
     values: list[int] = field(default_factory=list)
+    count: int
 
-customized_dataclass_param = CustomizedDataclassParam([1, 2, 3])
-customized_dataclass_param.values
+customized_dataclass_param = CustomizedDataclassParam(count=123)
+customized_dataclass_param
 ```
 
 ```{warning}

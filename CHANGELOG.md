@@ -7,6 +7,15 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Support for Python 3.9
+
+### Removed
+
+- Parameter dataclass bases (`Param` and `Struct`) no longer set `kw_only` to True by
+  default (since this feature does not exist in Python 3.9).
+
 ## [0.9.1] (Aug 9 2023)
 
 ### Changed

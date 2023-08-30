@@ -10,7 +10,7 @@ from paramdb._keys import LAST_UPDATED_KEY
 from paramdb._param_data._param_data import ParamData
 
 
-@dataclass_transform(kw_only_default=True)
+@dataclass_transform()
 class _ParamDataclass(ParamData):
     """
     Base class for parameter dataclasses.
@@ -19,10 +19,10 @@ class _ParamDataclass(ParamData):
     constructor.
     """
 
-    def __init_subclass__(cls, /, kw_only: bool = True, **kwargs: Any) -> None:
+    def __init_subclass__(cls, /, **kwargs: Any) -> None:
         # Convert subclasses into dataclasses
         super().__init_subclass__()  # kwargs are passed to dataclass constructor
-        dataclass(kw_only=kw_only, **kwargs)(cls)
+        dataclass(**kwargs)(cls)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via indexing
