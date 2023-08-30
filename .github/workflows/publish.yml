@@ -5,8 +5,7 @@ on:
     types: [published]
 
 env:
-  PYTHON_VERSION: "3.10"
-  POETRY_VERSION: "1.5.1"
+  POETRY_VERSION: "1.6.1"
 
 jobs:
   build:

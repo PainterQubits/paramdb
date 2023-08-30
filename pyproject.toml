@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "paramdb"
-version = "0.9.1"
+version = "0.10.0"
 description = "Python package for storing and retrieving experiment parameters."
 authors = ["Alex Hadley <alexhad6@gmail.com>"]
 license = "BSD-3-Clause"
@@ -8,11 +8,11 @@ readme = "README.md"
 repository = "https://github.com/PainterQubits/paramdb"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 typing-extensions = "^4.7.1"
-sqlalchemy = "^2.0.19"
+sqlalchemy = "^2.0.20"
 zstandard = "^0.21.0"
-astropy = {version = "^5.3.1", optional = true}
+astropy = {version = "^5.3.2", optional = true}
 
 [tool.poetry.extras]
 astropy = ["astropy"]
@@ -22,13 +22,13 @@ pytest = "^7.4.0"
 pytest-cov = "^4.1.0"
 flake8 = "^6.1.0"
 pylint = "^2.17.5"
-mypy = "^1.4.1"
+mypy = "^1.5.1"
 black = "^23.7.0"
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^7.1.2"
+sphinx = "^7.2.4"
 myst-parser = "^2.0.0"
-furo = "^2023.7.26"
+furo = "^2023.8.19"
 sphinx-copybutton = "^0.5.2"
 jupyter-sphinx = "^0.4.0"
 ipykernel = "^6.25.1"
