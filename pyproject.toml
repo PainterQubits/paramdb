@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "paramdb"
 version = "0.10.0"
@@ -10,20 +14,20 @@ repository = "https://github.com/PainterQubits/paramdb"
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
 typing-extensions = "^4.8.0"
-sqlalchemy = "^2.0.21"
-zstandard = "^0.21.0"
-astropy = {version = "^5.3.3", optional = true}
+sqlalchemy = "^2.0.23"
+zstandard = "^0.22.0"
+astropy = {version = "^5.3.4", optional = true}
 
 [tool.poetry.extras]
 astropy = ["astropy"]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.4.2"
+pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
 flake8 = "^6.1.0"
-pylint = "^3.0.0"
-mypy = "^1.5.1"
-black = "^23.9.1"
+pylint = "^3.0.2"
+mypy = "^1.6.1"
+black = "^23.10.1"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.2.6"
@@ -31,11 +35,11 @@ myst-parser = "^2.0.0"
 furo = "^2023.9.10"
 sphinx-copybutton = "^0.5.2"
 jupyter-sphinx = "^0.4.0"
-ipykernel = "^6.25.2"
+ipykernel = "^6.26.0"
 sphinx-autobuild = "^2021.3.14"
 
-[tool.pytest.ini_options]
-addopts = ["--import-mode=importlib"]
+[tool.mypy]
+strict = true
 
 [tool.pylint.basic]
 good-names-rgxs = ["^[a-z][a-z0-9]?$"]
@@ -46,9 +50,5 @@ disable = ["too-few-public-methods"]
 [tool.pylint.typecheck]
 ignored-classes = ["sqlalchemy.orm.session.sessionmaker"]
 
-[tool.mypy]
-strict = true
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
