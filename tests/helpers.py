@@ -1,5 +1,9 @@
 """Helper functions for paramdb tests."""
 
+# In Python 3.9, Pylint complains that field() cannot be used in parameter dataclasses,
+# so we disable the rule here.
+# pylint: disable=invalid-field-call
+
 from __future__ import annotations
 from typing import Any
 from dataclasses import field
