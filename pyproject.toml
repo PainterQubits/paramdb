@@ -12,11 +12,11 @@ readme = "README.md"
 repository = "https://github.com/PainterQubits/paramdb"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.13"
+python = ">=3.9"
 typing-extensions = "^4.8.0"
 sqlalchemy = "^2.0.23"
 zstandard = "^0.22.0"
-astropy = {version = "^5.3.4", optional = true}
+astropy = { version = "^5.3.4", optional = true }
 
 [tool.poetry.extras]
 astropy = ["astropy"]
@@ -26,8 +26,8 @@ pytest = "^7.4.3"
 pytest-cov = "^4.1.0"
 flake8 = "^6.1.0"
 pylint = "^3.0.2"
-mypy = "^1.6.1"
-black = "^23.10.1"
+mypy = "^1.7.0"
+black = "^23.11.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.2.6"
