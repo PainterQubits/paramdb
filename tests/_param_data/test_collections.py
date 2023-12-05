@@ -6,7 +6,7 @@ import pytest
 from tests.helpers import CustomParamList, CustomParamDict
 from paramdb import ParamData, ParamList, ParamDict
 
-ParamCollection = Union[ParamList, ParamDict]
+ParamCollection = Union[ParamList[Any], ParamDict[Any]]
 Contents = Union[list[Any], dict[str, Any]]
 CustomParamCollection = Union[CustomParamList, CustomParamDict]
 

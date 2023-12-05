@@ -11,8 +11,9 @@ on:
       - develop
 
 env:
-  POETRY_VERSION: "1.7.0"
+  POETRY_VERSION: "1.7.1"
   MAIN_PYTHON_VERSION: "3.9"
+  PACKAGE_NAME: "paramdb"
 
 jobs:
   ci:
@@ -38,15 +39,15 @@ jobs:
 
       - name: Check formatting (Black)
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
-        run: poetry run black paramdb tests --check
+        run: poetry run black ${{ env.PACKAGE_NAME }} tests --check
 
       - name: Lint (Flake8)
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
-        run: poetry run flake8 paramdb tests
+        run: poetry run flake8 ${{ env.PACKAGE_NAME }} tests
 
       - name: Lint (Pylint)
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
-        run: poetry run pylint paramdb tests
+        run: poetry run pylint ${{ env.PACKAGE_NAME }} tests
 
       - name: Mypy cache
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
@@ -59,7 +60,7 @@ jobs:
 
       - name: Type check (Mypy)
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
-        run: poetry run mypy paramdb tests
+        run: poetry run mypy ${{ env.PACKAGE_NAME }} tests
 
       - name: Test (Pytest)
         if: matrix.python_version != env.MAIN_PYTHON_VERSION
@@ -67,7 +68,7 @@ jobs:
 
       - name: Test (Pytest) with coverage
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
-        run: poetry run pytest --cov=paramdb --cov-report=xml
+        run: poetry run pytest --cov=${{ env.PACKAGE_NAME }} --cov-report=xml
 
       - name: Upload coverage reports to Codecov
         if: matrix.python_version == env.MAIN_PYTHON_VERSION

@@ -7,6 +7,13 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.2] (Dec 5 2023)
+
+### Changed
+
+- Change supported Python versions from `>=3.9,<3.13` to `^3.9` for better compatibility
+  with other Poetry projects and future versions of Python.
+
 ## [0.10.1] (Nov 6 2023)
 
 ### Added
@@ -130,7 +137,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.10.1...develop
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.10.2...develop
+[0.10.2]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.2
 [0.10.1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.1
 [0.10.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.0
 [0.9.1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.9.1
