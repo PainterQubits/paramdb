@@ -1012,21 +1012,26 @@ test = ["ipykernel", "pre-commit", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
 name = "jupyter-sphinx"
-version = "0.4.0"
+version = "0.5.3"
 description = "Jupyter Sphinx Extensions"
 optional = false
-python-versions = ">= 3.6"
+python-versions = ">=3.8"
 files = [
-    {file = "jupyter_sphinx-0.4.0-py3-none-any.whl", hash = "sha256:32ad3c32900bb5cc4db300ed54c3798f2264bd2d9a8cb7c04c01b6004f063da1"},
-    {file = "jupyter_sphinx-0.4.0.tar.gz", hash = "sha256:0c11a38f1343138f2c5051c0d34c4c545f4480174c1bd41c0256fe826e0baa55"},
+    {file = "jupyter_sphinx-0.5.3-py3-none-any.whl", hash = "sha256:a67b3208d4da5b3508dbb8260d3b359ae476c36c6c642747b78a2520e5be0b05"},
+    {file = "jupyter_sphinx-0.5.3.tar.gz", hash = "sha256:2e23699a3a1cf5db31b10981da5aa32606ee730f6b73a844d1e76d800756af56"},
 ]
 
 [package.dependencies]
-IPython = "*"
+ipykernel = ">=4.5.1"
+ipython = "*"
 ipywidgets = ">=7.0.0"
 nbconvert = ">=5.5"
 nbformat = "*"
-Sphinx = ">=2"
+sphinx = ">=7"
+
+[package.extras]
+doc = ["matplotlib"]
+test = ["bash-kernel", "pytest"]
 
 [[package]]
 name = "jupyterlab-pygments"
@@ -2659,4 +2664,4 @@ astropy = ["astropy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "620608899770f74ab671620748a886ff98e6b7aef7432200bb2dccca2a67e150"
+content-hash = "608f1f50961cd9005e0e2c98f1f7a745c29ed72eac8230ee37cf92b716df486c"
