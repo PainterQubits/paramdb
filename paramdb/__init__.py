@@ -7,7 +7,7 @@ from paramdb._param_data._param_data import ParamData
 from paramdb._param_data._dataclasses import Param, Struct
 from paramdb._param_data._collections import ParamList, ParamDict
 from paramdb._param_data._type_mixins import ParentType, RootType
-from paramdb._database import ParamDB, CommitEntry
+from paramdb._database import ParamDB, CommitEntry, CommitEntryWithData
 
 __all__ = [
     "CLASS_NAME_KEY",
@@ -22,4 +22,5 @@ __all__ = [
     "RootType",
     "ParamDB",
     "CommitEntry",
+    "CommitEntryWithData",
 ]

@@ -1,7 +1,6 @@
 """Defines global fixtures. Called automatically by Pytest before running tests."""
 
 from typing import Any
-import time
 from copy import deepcopy
 import pytest
 from paramdb import ParamData, ParamList, ParamDict
@@ -10,7 +9,8 @@ from tests.helpers import (
     DEFAULT_STRING,
     CustomStruct,
     CustomParam,
-    sleep_for_datetime,
+    Times,
+    capture_start_end_times,
 )
 
 
@@ -90,50 +90,37 @@ def fixture_param_data(
     return param_data
 
 
-@pytest.fixture(name="updated_param_data_and_datetimes")
-def fixture_updated_param_data_and_datetimes(
+@pytest.fixture(name="updated_param_data_and_times")
+def fixture_updated_param_data_and_times(
     param_data: ParamData,
-) -> tuple[ParamData, float, float]:
+) -> tuple[ParamData, Times]:
     """
-    Parameter data that has been updated between the returned start and end datetimes.
-    Broken down into individual fixtures for parameter data, start, and end below.
+    Parameter data that has been updated between the returned Times. Broken down into
+    individual fixtures for parameter data and times below.
     """
     updated_param_data = deepcopy(param_data)
-    start = time.time()
-    sleep_for_datetime()
-    if isinstance(updated_param_data, CustomParam):
-        updated_param_data.number += 1
-    if isinstance(updated_param_data, CustomStruct):
-        assert updated_param_data.param is not None
-        updated_param_data.param.number += 1
-    if isinstance(updated_param_data, ParamList):
-        updated_param_data[2].number += 1
-    if isinstance(updated_param_data, ParamDict):
-        updated_param_data.param.number += 1
-    sleep_for_datetime()
-    end = time.time()
-    return updated_param_data, start, end
+    with capture_start_end_times() as times:
+        if isinstance(updated_param_data, CustomParam):
+            updated_param_data.number += 1
+        if isinstance(updated_param_data, CustomStruct):
+            assert updated_param_data.param is not None
+            updated_param_data.param.number += 1
+        if isinstance(updated_param_data, ParamList):
+            updated_param_data[2].number += 1
+        if isinstance(updated_param_data, ParamDict):
+            updated_param_data.param.number += 1
+    return updated_param_data, times
 
 
 @pytest.fixture(name="updated_param_data")
 def fixture_updated_param_data(
-    updated_param_data_and_datetimes: tuple[ParamData, float, float]
+    updated_param_data_and_times: tuple[ParamData, Times]
 ) -> ParamData:
     """Parameter data that has been updated."""
-    return updated_param_data_and_datetimes[0]
+    return updated_param_data_and_times[0]
 
 
-@pytest.fixture(name="start")
-def fixture_start(
-    updated_param_data_and_datetimes: tuple[ParamData, float, float]
-) -> float:
-    """UNIX timestamp before param_data fixture was updated."""
-    return updated_param_data_and_datetimes[1]
-
-
-@pytest.fixture(name="end")
-def fixture_end(
-    updated_param_data_and_datetimes: tuple[ParamData, float, float]
-) -> float:
-    """UNIX timestamp after param_data fixture was updated."""
-    return updated_param_data_and_datetimes[2]
+@pytest.fixture(name="updated_times")
+def fixture_start(updated_param_data_and_times: tuple[ParamData, Times]) -> Times:
+    """Times before and after param_data fixture was updated."""
+    return updated_param_data_and_times[1]

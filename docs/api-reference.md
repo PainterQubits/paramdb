@@ -23,6 +23,7 @@ All of the following can be imported from `paramdb`.
 ```{eval-rst}
 .. autoclass:: ParamDB
 .. autoclass:: CommitEntry
+.. autoclass:: CommitEntryWithData
 ```
 
 ## Keys

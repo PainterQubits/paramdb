@@ -3,7 +3,7 @@
 from dataclasses import is_dataclass
 from copy import deepcopy
 import pytest
-from tests.helpers import CustomStruct, sleep_for_datetime
+from tests.helpers import CustomStruct, Times, capture_start_end_times
 from paramdb import ParamData
 from paramdb._param_data._param_data import get_param_class
 
@@ -38,15 +38,19 @@ def test_get_param_class(param_data: ParamData) -> None:
 
 
 def test_param_data_last_updated(
-    updated_param_data: ParamData, start: float, end: float
+    updated_param_data: ParamData, updated_times: Times
 ) -> None:
     """Updating simple parameter data updates the last updated time."""
     assert updated_param_data.last_updated is not None
-    assert start < updated_param_data.last_updated.timestamp() < end
+    assert (
+        updated_times.start
+        < updated_param_data.last_updated.timestamp()
+        < updated_times.end
+    )
 
 
 def test_list_or_dict_last_updated(
-    updated_param_data: ParamData, start: float, end: float
+    updated_param_data: ParamData, updated_times: Times
 ) -> None:
     """Can get last updated from a Python list or dictionary."""
     # Can get last updated time from within a list
@@ -54,7 +58,11 @@ def test_list_or_dict_last_updated(
         list=[CustomStruct(), [updated_param_data, CustomStruct()]]
     )
     assert struct_with_list.last_updated is not None
-    assert start < struct_with_list.last_updated.timestamp() < end
+    assert (
+        updated_times.start
+        < struct_with_list.last_updated.timestamp()
+        < updated_times.end
+    )
 
     # Can get last updated time from within a dictionary
     struct_with_dict = CustomStruct(
@@ -64,7 +72,11 @@ def test_list_or_dict_last_updated(
         }
     )
     assert struct_with_dict.last_updated is not None
-    assert start < struct_with_list.last_updated.timestamp() < end
+    assert (
+        updated_times.start
+        < struct_with_list.last_updated.timestamp()
+        < updated_times.end
+    )
 
 
 def test_child_does_not_change(param_data: ParamData) -> None:
@@ -74,8 +86,8 @@ def test_child_does_not_change(param_data: ParamData) -> None:
     importantly last_updated, have not changed).
     """
     param_data_original = deepcopy(param_data)
-    sleep_for_datetime()
-    _ = CustomStruct(param_data=param_data)
+    with capture_start_end_times():
+        _ = CustomStruct(param_data=param_data)
     assert param_data == param_data_original
 
 
@@ -83,8 +95,8 @@ def test_to_and_from_dict(param_data: ParamData) -> None:
     """Parameter data can be converted to and from a dictionary."""
     param_data_dict = param_data.to_dict()
     assert isinstance(param_data_dict, dict)
-    sleep_for_datetime()
-    param_data_from_dict = param_data.from_dict(param_data_dict)
+    with capture_start_end_times():
+        param_data_from_dict = param_data.from_dict(param_data_dict)
     assert param_data_from_dict == param_data
     assert param_data_from_dict.last_updated == param_data.last_updated
 

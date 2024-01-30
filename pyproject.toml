@@ -52,3 +52,7 @@ ignored-classes = ["sqlalchemy.orm.session.sessionmaker"]
 
 [tool.pytest.ini_options]
 addopts = ["--import-mode=importlib"]
+
+[tool.coverage.report]
+# Exclude lines that are only an ellipsis (e.g. overload signatures)
+exclude_also = ["^\\s*\\.\\.\\.$"]

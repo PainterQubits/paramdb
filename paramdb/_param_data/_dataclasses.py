@@ -34,7 +34,7 @@ class _ParamDataclass(ParamData):
 
     @property
     @abstractmethod
-    def last_updated(self) -> datetime | None:  # pragma: no cover
+    def last_updated(self) -> datetime | None:
         ...
 
     def to_dict(self) -> dict[str, Any]:
@@ -49,6 +49,8 @@ class _ParamDataclass(ParamData):
 
 class Param(_ParamDataclass):
     """
+    Subclass of :py:class:`ParamData`.
+
     Base class for parameters. Subclasses are automatically converted to dataclasses.
     For example::
 
@@ -85,6 +87,8 @@ class Param(_ParamDataclass):
 
 class Struct(_ParamDataclass):
     """
+    Subclass of :py:class:`ParamData`.
+
     Base class for parameter structures. Subclasses are automatically converted to
     dataclasses. For example::
 

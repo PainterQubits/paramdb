@@ -3,7 +3,8 @@
 CLASS_NAME_KEY = "__type"
 """
 Dictionary key corresponding to the parameter class name when :py:meth:`.ParamDB.load`
-is called with ``load_classes`` as False.
+or :py:meth:`.ParamDB.commit_history_with_data` is called with ``load_classes`` as
+False.
 """
 
 PARAMLIST_ITEMS_KEY = "__items"
