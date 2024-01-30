@@ -5,7 +5,7 @@ on:
     types: [published]
 
 env:
-  POETRY_VERSION: "1.7.0"
+  POETRY_VERSION: "1.7.1"
 
 jobs:
   build:
