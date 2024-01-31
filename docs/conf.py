@@ -2,9 +2,9 @@
 
 # Project information
 project = "ParamDB"
-copyright = "2023, California Institute of Technology"
+copyright = "2023–2024, California Institute of Technology"
 author = "Alex Hadley"
-release = "0.10.2"
+release = "0.11.0"
 
 # General configuration
 extensions = [
