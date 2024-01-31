@@ -9,17 +9,17 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.11.0] (Jan 31 2024)
 
-## Added
+### Added
 
 - `ParamDB.load_commit_entry()` loads a commit entry by ID or the most recent commit.
 - `ParamDB.commit_history_with_data()` to retrieve the commit history with data.
 - `CommitEntryWithData` to store a commit entry containing data.
 
-## Changed
+### Changed
 
 - `ParamDB.commit()` returns a `CommitEntry` instead of the commit ID.
 
-## Removed
+### Removed
 
 - `ParamDB.latest_commit` is replaced by `ParamDB.load_commit_entry()`
 
