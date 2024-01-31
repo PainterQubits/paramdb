@@ -34,8 +34,7 @@ class _ParamDataclass(ParamData):
 
     @property
     @abstractmethod
-    def last_updated(self) -> datetime | None:
-        ...
+    def last_updated(self) -> datetime | None: ...
 
     def to_dict(self) -> dict[str, Any]:
         if is_dataclass(self):

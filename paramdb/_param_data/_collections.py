@@ -63,23 +63,19 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
                 self._add_child(item)
 
     @overload
-    def __getitem__(self, index: SupportsIndex) -> T:
-        ...
+    def __getitem__(self, index: SupportsIndex) -> T: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[T]:
-        ...
+    def __getitem__(self, index: slice) -> list[T]: ...
 
     def __getitem__(self, index: Any) -> Any:
         return self._contents[index]
 
     @overload
-    def __setitem__(self, index: SupportsIndex, value: T) -> None:
-        ...
+    def __setitem__(self, index: SupportsIndex, value: T) -> None: ...
 
     @overload
-    def __setitem__(self, index: slice, value: Iterable[T]) -> None:
-        ...
+    def __setitem__(self, index: slice, value: Iterable[T]) -> None: ...
 
     def __setitem__(self, index: SupportsIndex | slice, value: Any) -> None:
         old_value: Any = self._contents[index]

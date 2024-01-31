@@ -259,14 +259,12 @@ class ParamDB(Generic[T]):
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[True] = True
-    ) -> T:
-        ...
+    ) -> T: ...
 
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[False]
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
     def load(self, commit_id: int | None = None, *, load_classes: bool = True) -> Any:
         """
@@ -325,8 +323,7 @@ class ParamDB(Generic[T]):
         end: int | None = None,
         *,
         load_classes: Literal[True] = True,
-    ) -> list[CommitEntryWithData[T]]:
-        ...
+    ) -> list[CommitEntryWithData[T]]: ...
 
     @overload
     def commit_history_with_data(
@@ -335,8 +332,7 @@ class ParamDB(Generic[T]):
         end: int | None = None,
         *,
         load_classes: Literal[False],
-    ) -> list[CommitEntryWithData[Any]]:
-        ...
+    ) -> list[CommitEntryWithData[Any]]: ...
 
     def commit_history_with_data(
         self,
