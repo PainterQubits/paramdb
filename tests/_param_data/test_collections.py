@@ -3,7 +3,7 @@
 from typing import Union, Any
 from copy import deepcopy
 import pytest
-from tests.helpers import CustomParamList, CustomParamDict
+from tests.helpers import CustomParamList, CustomParamDict, Times
 from paramdb import ParamData, ParamList, ParamDict
 
 ParamCollection = Union[ParamList[Any], ParamDict[Any]]
@@ -207,27 +207,21 @@ def test_param_collection_no_last_updated(
 
 
 def test_param_list_last_updated(
-    param_list: ParamList[Any],
-    updated_param_data: ParamData,
-    start: float,
-    end: float,
+    param_list: ParamList[Any], updated_param_data: ParamData, updated_times: Times
 ) -> None:
     """Parameter list can correctly get the last updated time from its contents."""
     param_list.append(updated_param_data)
     assert param_list.last_updated is not None
-    assert start < param_list.last_updated.timestamp() < end
+    assert updated_times.start < param_list.last_updated.timestamp() < updated_times.end
 
 
 def test_param_dict_last_updated(
-    param_dict: ParamDict[Any],
-    updated_param_data: ParamData,
-    start: float,
-    end: float,
+    param_dict: ParamDict[Any], updated_param_data: ParamData, updated_times: Times
 ) -> None:
     """Parameter list can correctly get the last updated time from its contents."""
     param_dict["param_data"] = updated_param_data
     assert param_dict.last_updated is not None
-    assert start < param_dict.last_updated.timestamp() < end
+    assert updated_times.start < param_dict.last_updated.timestamp() < updated_times.end
 
 
 def test_param_list_get_index(

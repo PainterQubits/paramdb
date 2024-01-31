@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 from zstandard import ZstdCompressor, ZstdDecompressor
-from sqlalchemy import URL, create_engine, select, func
+from sqlalchemy import Select, URL, create_engine, select, func
 from sqlalchemy.orm import (
     sessionmaker,
     MappedAsDataclass,
@@ -25,6 +25,7 @@ except ImportError:
     ASTROPY_INSTALLED = False
 
 T = TypeVar("T")
+SelectT = TypeVar("SelectT", bound=Select[Any])
 
 
 def _compress(text: str) -> bytes:
@@ -90,6 +91,22 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
     )
 
 
+def _encode(obj: Any) -> bytes:
+    """Encode the given object into bytes that will be stored in the database."""
+    return _compress(json.dumps(obj, default=_to_dict))
+
+
+def _decode(data: bytes, load_classes: bool) -> Any:
+    """
+    Decode an object from the given data from the database. Classes will be loaded in
+    if ``load_classes`` is True; otherwise, classes will be loaded as dictionaries.
+    """
+    return json.loads(
+        _decompress(data),
+        object_hook=_from_dict if load_classes else None,
+    )
+
+
 class _Base(MappedAsDataclass, DeclarativeBase):
     """Base class for defining SQLAlchemy declarative mapping classes."""
 
@@ -105,8 +122,8 @@ class _Snapshot(_Base):
     """Compressed data."""
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     """Commit ID."""
-    # datetime.utcnow is wrapped in a lambda function to allow it to be mocked in tests
-    # where we want to control the time.
+    # datetime.utcnow() is wrapped in a lambda function to allow it to be mocked in
+    # tests where we want to control the time.
     timestamp: Mapped[datetime] = mapped_column(
         default_factory=lambda: datetime.utcnow()  # pylint: disable=unnecessary-lambda
     )
@@ -115,7 +132,7 @@ class _Snapshot(_Base):
 
 @dataclass(frozen=True)
 class CommitEntry:
-    """Entry for a commit given commit containing the ID, message, and timestamp."""
+    """Entry for a commit containing the ID, message, and timestamp."""
 
     id: int
     """Commit ID."""
@@ -128,6 +145,18 @@ class CommitEntry:
         # Add timezone info to timestamp datetime object
         timestamp_aware = self.timestamp.replace(tzinfo=timezone.utc).astimezone()
         super().__setattr__("timestamp", timestamp_aware)
+
+
+@dataclass(frozen=True)
+class CommitEntryWithData(CommitEntry, Generic[T]):
+    """
+    Subclass of :py:class:`CommitEntry`.
+
+    Entry for a commit containing the ID, message, and timestamp, as well as the data.
+    """
+
+    data: T
+    """Data contained in this commit."""
 
 
 class ParamDB(Generic[T]):
@@ -150,41 +179,97 @@ class ParamDB(Generic[T]):
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
 
+    def _index_error(self, commit_id: int | None) -> IndexError:
+        """
+        Returns an ``IndexError`` to raise if the given commit ID was not found in the
+        database.
+        """
+        return IndexError(
+            f"cannot load most recent commit because database '{self._path}' has no"
+            " commits"
+            if commit_id is None
+            else f"commit {commit_id} does not exist in database" f" '{self._path}'"
+        )
+
+    def _select_commit(self, select_stmt: SelectT, commit_id: int | None) -> SelectT:
+        """
+        Modify the given ``_Snapshot`` select statement to return the commit specified
+        by the given commit ID, or the latest commit if the commit ID is None.
+        """
+        return (
+            select_stmt.order_by(_Snapshot.id.desc()).limit(1)  # Most recent commit
+            if commit_id is None
+            else select_stmt.where(_Snapshot.id == commit_id)  # Specified commit
+        )
+
+    def _select_slice(
+        self, select_stmt: SelectT, start: int | None, end: int | None
+    ) -> SelectT:
+        """
+        Modify the given Snapshot select statement to sort by commit ID and return the
+        slice specified by the given start and end indices.
+        """
+        num_commits = self.num_commits
+        start = 0 if start is None else start
+        end = num_commits if end is None else end
+        start = max(start + num_commits, 0) if start < 0 else start
+        end = max(end + num_commits, 0) if end < 0 else end
+        return (
+            select_stmt.order_by(_Snapshot.id).offset(start).limit(max(end - start, 0))
+        )
+
     @property
     def path(self) -> str:
         """Path of the database file."""
         return self._path
 
-    def commit(self, message: str, data: T) -> int:
+    def commit(
+        self, message: str, data: T, timestamp: datetime | None = None
+    ) -> CommitEntry:
         """
-        Commit the given data to the database with the given message and return the ID
-        of the new commit.
+        Commit the given data to the database with the given message and return a commit
+        entry for the new commit.
+
+        By default, the timestamp will be set to the current time. If a timestamp is
+        given, it is used instead. Naive datetimes will be assumed to be in UTC time.
         """
         with self._Session.begin() as session:
-            snapshot = _Snapshot(
-                message=message,
-                data=_compress(json.dumps(data, default=_to_dict)),
-            )
+            kwargs: dict[str, Any] = {"message": message, "data": _encode(data)}
+            if timestamp is not None:
+                utc_offset = timestamp.utcoffset()
+                kwargs["timestamp"] = (
+                    timestamp  # Assume naive datetime is already in UTC
+                    if utc_offset is None
+                    else timestamp.replace(tzinfo=None) - utc_offset  # Convert to UTC
+                )
+            snapshot = _Snapshot(**kwargs)
             session.add(snapshot)
-            session.flush()  # Flush so the commit ID is filled in
-            return snapshot.id
+            session.flush()  # Flush so the commit ID and timestamp are filled in
+            return CommitEntry(snapshot.id, snapshot.message, snapshot.timestamp)
+
+    @property
+    def num_commits(self) -> int:
+        """Number of commits in the database."""
+        # pylint: disable-next=not-callable
+        select_stmt = select(func.count()).select_from(_Snapshot)
+        with self._Session() as session:
+            count = session.scalar(select_stmt)
+        return count if count is not None else 0
 
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[True] = True
-    ) -> T:  # pragma: no cover
-        ...
+    ) -> T: ...
 
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[False]
-    ) -> dict[str, Any]:  # pragma: no cover
-        ...
+    ) -> Any: ...
 
     def load(self, commit_id: int | None = None, *, load_classes: bool = True) -> Any:
         """
         Load and return data from the database. If a commit ID is given, load from that
-        commit; otherwise, load from the most recent commit. Raise a ``IndexError`` if
+        commit; otherwise, load from the most recent commit. Raise an ``IndexError`` if
         the specified commit does not exist. Note that commit IDs begin at 1.
 
         By default, parameter data, ``datetime``, and Astropy ``Quantity`` classes are
@@ -194,70 +279,87 @@ class ParamDB(Generic[T]):
         :py:const:`~paramdb._keys.CLASS_NAME_KEY` and, if they are parameters, the last
         updated time in the key :py:const:`~paramdb._keys.LAST_UPDATED_KEY`.
         """
-        select_stmt = select(_Snapshot.data)
-        select_stmt = (
-            select_stmt.order_by(_Snapshot.id.desc()).limit(1)  # Most recent commit
-            if commit_id is None
-            else select_stmt.where(_Snapshot.id == commit_id)  # Specified commit
-        )
+        select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:
             data = session.scalar(select_stmt)
         if data is None:
-            raise IndexError(
-                f"cannot load most recent commit because database"
-                f" '{self._path}' has no commits"
-                if commit_id is None
-                else f"commit {commit_id} does not exist in database" f" '{self._path}'"
-            )
-        return json.loads(
-            _decompress(data),
-            object_hook=_from_dict if load_classes else None,
+            raise self._index_error(commit_id)
+        return _decode(data, load_classes)
+
+    def load_commit_entry(self, commit_id: int | None = None) -> CommitEntry:
+        """
+        Load and return a commit entry from the database. If a commit ID is given, load
+        that commit entry; otherwise, load the most recent commit entry. Raise an
+        ``IndexError`` if the specified commit does not exist. Note that commit IDs
+        begin at 1.
+        """
+        select_stmt = self._select_commit(
+            select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp), commit_id
         )
-
-    @property
-    def num_commits(self) -> int:
-        """Number of commits in the database."""
-        count_func = func.count()  # pylint: disable=not-callable
-        select_stmt = select(count_func).select_from(_Snapshot)
         with self._Session() as session:
-            count = session.execute(select_stmt).scalar()
-        return count if count is not None else 0
-
-    @property
-    def latest_commit(self) -> CommitEntry | None:
-        """Latest commit added to the database, or None if the database is empty."""
-        max_id_func = func.max(_Snapshot.id)  # pylint: disable=not-callable
-        select_max_id = select(max_id_func).scalar_subquery()
-        select_stmt = select(
-            _Snapshot.id, _Snapshot.message, _Snapshot.timestamp
-        ).where(_Snapshot.id == select_max_id)
-        with self._Session() as session:
-            latest_entry = session.execute(select_stmt).mappings().first()
-        return None if latest_entry is None else CommitEntry(**latest_entry)
+            commit_entry = session.execute(select_stmt).mappings().first()
+        if commit_entry is None:
+            raise self._index_error(commit_id)
+        return None if commit_entry is None else CommitEntry(**commit_entry)
 
     def commit_history(
+        self, start: int | None = None, end: int | None = None
+    ) -> list[CommitEntry]:
+        """
+        Retrieve the commit history as a list of :py:class:`CommitEntry` objects between
+        the provided start and end indices, which work like slicing a Python list.
+        """
+        select_stmt = self._select_slice(
+            select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp), start, end
+        )
+        with self._Session() as session:
+            entries = session.execute(select_stmt).mappings()
+        return [CommitEntry(**dict(row_mapping)) for row_mapping in entries]
+
+    @overload
+    def commit_history_with_data(
         self,
         start: int | None = None,
         end: int | None = None,
-    ) -> list[CommitEntry]:
+        *,
+        load_classes: Literal[True] = True,
+    ) -> list[CommitEntryWithData[T]]: ...
+
+    @overload
+    def commit_history_with_data(
+        self,
+        start: int | None = None,
+        end: int | None = None,
+        *,
+        load_classes: Literal[False],
+    ) -> list[CommitEntryWithData[Any]]: ...
+
+    def commit_history_with_data(
+        self,
+        start: int | None = None,
+        end: int | None = None,
+        *,
+        load_classes: bool = True,
+    ) -> list[CommitEntryWithData[Any]]:
         """
-        Retrieve the commit history as a list of :py:class:`CommitEntry` between the
-        provided start and end indices, which work like slicing a Python list.
+        Retrieve the commit history with data as a list of
+        :py:class:`CommitEntryWithData` objects between the provided start and end
+        indices, which work like slicing a Python list.
+
+        See :py:meth:`ParamDB.load` for the behavior of ``load_classes``.
         """
-        num_commits = self.num_commits
-        start = 0 if start is None else start
-        end = num_commits if end is None else end
-        start = max(start + num_commits, 0) if start < 0 else start
-        end = max(end + num_commits, 0) if end < 0 else end
         with self._Session() as session:
-            select_stmt = (
-                select(_Snapshot.id, _Snapshot.message, _Snapshot.timestamp)
-                .order_by(_Snapshot.id)
-                .offset(start)
-                .limit(max(end - start, 0))
-            )
-            history_entries = session.execute(select_stmt).mappings()
-        return [CommitEntry(**dict(row_mapping)) for row_mapping in history_entries]
+            select_stmt = self._select_slice(select(_Snapshot), start, end)
+            snapshots = session.scalars(select_stmt)
+            return [
+                CommitEntryWithData(
+                    snapshot.id,
+                    snapshot.message,
+                    snapshot.timestamp,
+                    _decode(snapshot.data, load_classes),
+                )
+                for snapshot in snapshots
+            ]
 
     def dispose(self) -> None:
         """

@@ -1,10 +1,9 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
 from typing import Union
-import time
 from copy import deepcopy
 import pytest
-from tests.helpers import CustomParam, CustomStruct, sleep_for_datetime
+from tests.helpers import CustomParam, CustomStruct, Times, capture_start_end_times
 from paramdb import ParamData
 
 ParamDataclass = Union[CustomParam, CustomStruct]
@@ -42,12 +41,9 @@ def test_param_dataclass_set(param_dataclass: ParamDataclass, number: float) -> 
 
 def test_param_default_last_updated() -> None:
     """Parameter object initializes the last updated time to the current time."""
-    start = time.time()
-    sleep_for_datetime()
-    param = CustomParam()
-    sleep_for_datetime()
-    end = time.time()
-    assert start < param.last_updated.timestamp() < end
+    with capture_start_end_times() as times:
+        param = CustomParam()
+    assert times.start < param.last_updated.timestamp() < times.end
 
 
 def test_struct_no_last_updated() -> None:
@@ -57,12 +53,12 @@ def test_struct_no_last_updated() -> None:
 
 
 def test_struct_last_updated(
-    struct: CustomStruct, updated_param_data: ParamData, start: float, end: float
+    struct: CustomStruct, updated_param_data: ParamData, updated_times: Times
 ) -> None:
     """Structure can correctly get the last updated time from its contents."""
     struct.param_data = updated_param_data
     assert struct.last_updated is not None
-    assert start < struct.last_updated.timestamp() < end
+    assert updated_times.start < struct.last_updated.timestamp() < updated_times.end
 
 
 def test_struct_init_parent(struct: CustomStruct) -> None:

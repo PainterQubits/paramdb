@@ -48,6 +48,8 @@ class _ParamCollection(ParamData):
 
 class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
     """
+    Subclass of :py:class:`ParamData` and ``MutableSequence``.
+
     Mutable sequence that is also parameter data. It can be initialized from any
     iterable (like builtin ``list``).
     """
@@ -61,23 +63,19 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
                 self._add_child(item)
 
     @overload
-    def __getitem__(self, index: SupportsIndex) -> T:  # pragma: no cover
-        ...
+    def __getitem__(self, index: SupportsIndex) -> T: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[T]:  # pragma: no cover
-        ...
+    def __getitem__(self, index: slice) -> list[T]: ...
 
     def __getitem__(self, index: Any) -> Any:
         return self._contents[index]
 
     @overload
-    def __setitem__(self, index: SupportsIndex, value: T) -> None:  # pragma: no cover
-        ...
+    def __setitem__(self, index: SupportsIndex, value: T) -> None: ...
 
     @overload
-    def __setitem__(self, index: slice, value: Iterable[T]) -> None:  # pragma: no cover
-        ...
+    def __setitem__(self, index: slice, value: Iterable[T]) -> None: ...
 
     def __setitem__(self, index: SupportsIndex | slice, value: Any) -> None:
         old_value: Any = self._contents[index]
@@ -110,6 +108,8 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
 
 class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     """
+    Subclass of :py:class:`ParamData` and ``MutableMapping``.
+
     Mutable mapping that is also parameter data. It can be initialized from any mapping
     or using keyword arguments (like builtin ``dict``).
 

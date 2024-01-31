@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "paramdb"
-version = "0.10.2"
+version = "0.11.0"
 description = "Python package for storing and retrieving experiment parameters."
 authors = ["Alex Hadley <contact@alexhadley.net>"]
 license = "BSD-3-Clause"
@@ -13,8 +13,8 @@ repository = "https://github.com/PainterQubits/paramdb"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-typing-extensions = "^4.8.0"
-sqlalchemy = "^2.0.23"
+typing-extensions = "^4.9.0"
+sqlalchemy = "^2.0.25"
 zstandard = "^0.22.0"
 astropy = { version = "^6.0.0", optional = true }
 
@@ -22,20 +22,20 @@ astropy = { version = "^6.0.0", optional = true }
 astropy = ["astropy"]
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.7.1"
-flake8 = "^6.1.0"
-pylint = "^3.0.2"
-black = "^23.11.0"
-pytest = "^7.4.3"
+mypy = "^1.8.0"
+flake8 = "^7.0.0"
+pylint = "^3.0.3"
+black = "^24.1.1"
+pytest = "^8.0.0"
 pytest-cov = "^4.1.0"
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.2.6"
 myst-parser = "^2.0.0"
-furo = "^2023.9.10"
+furo = "^2024.1.29"
 sphinx-copybutton = "^0.5.2"
-jupyter-sphinx = "^0.4.0"
-ipykernel = "^6.27.1"
+jupyter-sphinx = "^0.5.3"
+ipykernel = "^6.29.0"
 sphinx-autobuild = "^2021.3.14"
 
 [tool.mypy]
