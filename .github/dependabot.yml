@@ -4,10 +4,7 @@ updates:
     directory: "/"
     target-branch: "develop"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
-      timezone: "America/Los_Angeles"
+      interval: "monthly"
     groups:
       github-actions:
         patterns: ["*"]
@@ -16,10 +13,7 @@ updates:
     directory: "/"
     target-branch: "develop"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00"
-      timezone: "America/Los_Angeles"
+      interval: "monthly"
     groups:
       python:
         update-types: ["minor", "patch"]
