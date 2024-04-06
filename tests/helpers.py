@@ -11,14 +11,18 @@ from dataclasses import dataclass, field
 from contextlib import contextmanager
 import time
 from astropy.units import Quantity  # type: ignore # pylint: disable=import-error
-from paramdb import ParamData, Param, Struct, ParamList, ParamDict
+from paramdb import ParamData, ParamDataclass, ParamList, ParamDict
 
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
 
 
-class CustomParam(Param):
-    """Custom parameter."""
+class EmptyParam(ParamDataclass):
+    """Empty parameter dataclass"""
+
+
+class SimpleParam(ParamDataclass):
+    """Simple parameter dataclass."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
@@ -26,16 +30,24 @@ class CustomParam(Param):
     string: str = DEFAULT_STRING
 
 
-class CustomStruct(Struct):
-    """Custom parameter structure."""
+class SubclassParam(SimpleParam):
+    """Parameter dataclass that is a subclass of another parameter dataclass."""
+
+    second_number: float = DEFAULT_NUMBER
+
+
+class ComplexParam(ParamDataclass):
+    """Complex parameter dataclass."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     string: str = DEFAULT_STRING
     list: list[Any] = field(default_factory=list)
     dict: dict[str, Any] = field(default_factory=dict)
-    param: CustomParam | None = None
-    struct: CustomStruct | None = None
+    empty_param: EmptyParam | None = None
+    simple_param: SimpleParam | None = None
+    subclass_param: SubclassParam | None = None
+    complex_param: ComplexParam | None = None
     param_list: ParamList[Any] = field(default_factory=ParamList)
     param_dict: ParamDict[Any] = field(default_factory=ParamDict)
     param_data: ParamData | None = None

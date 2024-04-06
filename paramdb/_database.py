@@ -14,7 +14,6 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._keys import CLASS_NAME_KEY
 from paramdb._param_data._param_data import ParamData, get_param_class
 
 try:
@@ -26,6 +25,12 @@ except ImportError:
 
 T = TypeVar("T")
 SelectT = TypeVar("SelectT", bound=Select[Any])
+
+CLASS_NAME_KEY = "__type"
+"""
+Dictionary key corresponding to an object's class name in the JSON representation of a
+ParamDB commit.
+"""
 
 
 def _compress(text: str) -> bytes:
@@ -48,10 +53,10 @@ def _full_class_name(cls: type) -> str:
 
 def _to_dict(obj: Any) -> Any:
     """
-    Convert the given object into a dictionary to be passed to `json.dumps`.
+    Convert the given object into a dictionary to be passed to ``json.dumps()``.
 
     Note that objects within the dictionary do not need to be JSON serializable,
-    since they will be recursively processed by `json.dumps`.
+    since they will be recursively processed by ``json.dumps()``.
     """
     class_full_name = _full_class_name(type(obj))
     class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
@@ -69,7 +74,7 @@ def _to_dict(obj: Any) -> Any:
 
 def _from_dict(json_dict: dict[str, Any]) -> Any:
     """
-    If the given dictionary created by ``json.loads`` has the key ``CLASS_NAME_KEY``,
+    If the given dictionary created by ``json.loads()`` has the key ``CLASS_NAME_KEY``,
     attempt to construct an object of the named type from it. Otherwise, return the
     dictionary unchanged.
 
@@ -122,12 +127,10 @@ class _Snapshot(_Base):
     """Compressed data."""
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     """Commit ID."""
-    # datetime.utcnow() is wrapped in a lambda function to allow it to be mocked in
-    # tests where we want to control the time.
     timestamp: Mapped[datetime] = mapped_column(
-        default_factory=lambda: datetime.utcnow()  # pylint: disable=unnecessary-lambda
+        default_factory=lambda: datetime.now(timezone.utc)
     )
-    """Naive datetime in UTC time (since this is how SQLite stores datetimes)."""
+    """Datetime in UTC time (since this is how SQLite stores datetimes)."""
 
 
 @dataclass(frozen=True)
@@ -165,10 +168,10 @@ class ParamDB(Generic[T]):
     not exist. To work with type checking, this class can be parameterized with a root
     data type ``T``. For example::
 
-        from paramdb import Struct, ParamDB
+        from paramdb import ParamDataclass, ParamDB
 
-        class Root(Struct):
-            pass
+        class Root(ParamDataclass):
+            ...
 
         param_db = ParamDB[Root]("path/to/param.db")
     """
@@ -276,8 +279,7 @@ class ParamDB(Generic[T]):
         reconstructed. The relevant parameter data classes must be defined in the
         current program. However, if ``load_classes`` is False, classes are loaded
         directly from the database as dictionaries with the class name in the key
-        :py:const:`~paramdb._keys.CLASS_NAME_KEY` and, if they are parameters, the last
-        updated time in the key :py:const:`~paramdb._keys.LAST_UPDATED_KEY`.
+        :py:const:`CLASS_NAME_KEY`.
         """
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:

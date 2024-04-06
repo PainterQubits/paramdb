@@ -7,7 +7,6 @@ from paramdb._param_data._param_data import ParamData
 PT = TypeVar("PT", bound=ParamData)
 
 
-# pylint: disable-next=abstract-method
 class ParentType(ParamData, Generic[PT]):
     """
     Mixin for :py:class:`ParamData` that sets the type hint for
@@ -25,7 +24,6 @@ class ParentType(ParamData, Generic[PT]):
         return cast(PT, super().parent)
 
 
-# pylint: disable-next=abstract-method
 class RootType(ParamData, Generic[PT]):
     """
     Mixin for :py:class:`ParamData` that sets the type hint for
