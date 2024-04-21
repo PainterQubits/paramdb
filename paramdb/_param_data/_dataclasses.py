@@ -12,8 +12,8 @@ class ParamDataclass(ParamData):
     """
     Subclass of :py:class:`ParamData`.
 
-    Base class for parameter Data Classes. Subclasses are automatically converted to
-    Data Classes. For example::
+    Base class for parameter data classes. Subclasses are automatically converted to
+    data classes. For example::
 
         class CustomParam(ParamDataclass):
             value1: float
@@ -21,7 +21,7 @@ class ParamDataclass(ParamData):
 
 
     Any keyword arguments given when creating a subclass are passed internally to the
-    standard `@dataclass()` decorator.
+    standard ``@dataclass()`` decorator.
     """
 
     __field_names: set[str]

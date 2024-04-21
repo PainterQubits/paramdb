@@ -23,12 +23,12 @@ the root data type in order for its methods (e.g. {py:meth}`ParamDB.commit`) wor
 with type checking. For example:
 
 ```{jupyter-execute}
-from paramdb import Struct, Param, ParamDB
+from paramdb import ParamDataclass, ParamDB
 
-class Root(Struct):
+class Root(ParamDataclass):
     param: CustomParam
 
-class CustomParam(Param):
+class CustomParam(ParamDataclass):
     value: float
 
 param_db = ParamDB[Root]("path/to/param.db")

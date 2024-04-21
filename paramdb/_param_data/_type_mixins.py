@@ -12,7 +12,7 @@ class ParentType(ParamData, Generic[PT]):
     Mixin for :py:class:`ParamData` that sets the type hint for
     :py:attr:`ParamData.parent` to type parameter ``PT``. For example::
 
-        class CustomParam(ParentType[ParentStruct], Param):
+        class CustomParam(ParentType[ParentParam], Param):
             ...
 
     Note that if the parent actually has a different type, the type hint will be
@@ -29,7 +29,7 @@ class RootType(ParamData, Generic[PT]):
     Mixin for :py:class:`ParamData` that sets the type hint for
     :py:attr:`ParamData.root` to type parameter ``PT``. For example::
 
-        class CustomParam(RootType[RootStruct], Param):
+        class CustomParam(RootType[RootParam], Param):
             ...
 
     Note that if the root actually has a different type, the type hint will be

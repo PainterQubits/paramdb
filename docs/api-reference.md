@@ -10,8 +10,7 @@ All of the following can be imported from `paramdb`.
 
 ```{eval-rst}
 .. autoclass:: ParamData
-.. autoclass:: Param
-.. autoclass:: Struct
+.. autoclass:: ParamDataclass
 .. autoclass:: ParamList
 .. autoclass:: ParamDict
 .. autoclass:: ParentType
@@ -26,19 +25,13 @@ All of the following can be imported from `paramdb`.
 .. autoclass:: CommitEntryWithData
 ```
 
-## Keys
-
 <!--
-Changing the current module to paramdb._keys is necessary in order to show the correct
-docstrings.
+Changing the current module to paramdb._database is necessary in order to show the correct
+docstring.
 -->
 
-```{py:currentmodule} paramdb._keys
-
-```
-
 ```{eval-rst}
+.. py:currentmodule:: paramdb._database
 .. autodata:: CLASS_NAME_KEY
-.. autodata:: PARAMLIST_ITEMS_KEY
-.. autodata:: LAST_UPDATED_KEY
+.. py:currentmodule:: paramdb
 ```

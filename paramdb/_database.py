@@ -279,7 +279,7 @@ class ParamDB(Generic[T]):
         reconstructed. The relevant parameter data classes must be defined in the
         current program. However, if ``load_classes`` is False, classes are loaded
         directly from the database as dictionaries with the class name in the key
-        :py:const:`CLASS_NAME_KEY`.
+        :py:const:`~paramdb._database.CLASS_NAME_KEY`.
         """
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:

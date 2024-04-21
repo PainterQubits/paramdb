@@ -28,7 +28,7 @@ def fixture_param_dataclass_object(
     return param_dataclass_object
 
 
-def test_param_data_direct_instantiation_fails() -> None:
+def test_param_dataclass_direct_instantiation_fails() -> None:
     """Fails to instantiate an object of type ``ParamDataclass``."""
     with pytest.raises(TypeError) as exc_info:
         ParamDataclass()
