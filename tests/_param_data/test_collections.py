@@ -3,7 +3,11 @@
 from typing import Union, Any
 from copy import deepcopy
 import pytest
-from tests.helpers import CustomParamList, CustomParamDict, Times
+from tests.helpers import (
+    CustomParamList,
+    CustomParamDict,
+    capture_start_end_times,
+)
 from paramdb import ParamData, ParamList, ParamDict
 
 ParamCollection = Union[ParamList[Any], ParamDict[Any]]
@@ -199,31 +203,6 @@ def test_param_collection_repr_subclass(
     )
 
 
-def test_param_collection_no_last_updated(
-    param_collection_type: type[ParamCollection],
-) -> None:
-    """Empty parameter collection has no last updated time."""
-    assert param_collection_type().last_updated is None
-
-
-def test_param_list_last_updated(
-    param_list: ParamList[Any], updated_param_data: ParamData, updated_times: Times
-) -> None:
-    """Parameter list can correctly get the last updated time from its contents."""
-    param_list.append(updated_param_data)
-    assert param_list.last_updated is not None
-    assert updated_times.start < param_list.last_updated.timestamp() < updated_times.end
-
-
-def test_param_dict_last_updated(
-    param_dict: ParamDict[Any], updated_param_data: ParamData, updated_times: Times
-) -> None:
-    """Parameter list can correctly get the last updated time from its contents."""
-    param_dict["param_data"] = updated_param_data
-    assert param_dict.last_updated is not None
-    assert updated_times.start < param_dict.last_updated.timestamp() < updated_times.end
-
-
 def test_param_list_get_index(
     param_list: ParamList[Any], param_list_contents: list[Any]
 ) -> None:
@@ -259,10 +238,21 @@ def test_param_list_set_index(param_list: ParamList[Any]) -> None:
     assert param_list[0] == new_number
 
 
+def test_param_list_set_index_last_updated(param_list: ParamList[Any]) -> None:
+    """
+    Parameter list updates its last updated timestamp when an item is set by index.
+    """
+    with capture_start_end_times() as times:
+        param_list[0] = 4.56
+    assert times.start < param_list.last_updated.timestamp() < times.end
+
+
 def test_param_list_set_index_parent(
     param_list: ParamList[Any], param_data: ParamData
 ) -> None:
-    """Parameter data added to a parameter list via indexing has the correct parent."""
+    """
+    A parameter data added to a parameter list via indexing has the correct parent.
+    """
     with pytest.raises(ValueError):
         _ = param_data.parent
     for _ in range(2):  # Run twice to check reassigning the same parameter data
@@ -281,10 +271,19 @@ def test_param_list_set_slice(param_list: ParamList[Any]) -> None:
     assert param_list[0:2] == new_numbers
 
 
+def test_param_list_set_slice_last_updated(param_list: ParamList[Any]) -> None:
+    """
+    A parameter list updates its last updated timestamp when an item is set by slice.
+    """
+    with capture_start_end_times() as times:
+        param_list[0:2] = [4.56, 7.89]
+    assert times.start < param_list.last_updated.timestamp() < times.end
+
+
 def test_param_list_set_slice_parent(
     param_list: ParamList[Any], param_data: ParamData
 ) -> None:
-    """Parameter data added to a parameter list via slicing has the correct parent."""
+    """A parameter data added to a parameter list via slicing has the correct parent."""
     for _ in range(2):  # Run twice to check reassigning the same parameter data
         param_list[0:2] = [None, param_data]
         assert param_data.parent is param_list
@@ -298,6 +297,13 @@ def test_param_list_insert(param_list: ParamList[Any]) -> None:
     new_number = 4.56
     param_list.insert(1, new_number)
     assert param_list[1] == new_number
+
+
+def test_param_list_insert_last_updated(param_list: ParamList[Any]) -> None:
+    """A parameter list updates its last updated timestamp when an item is inserted."""
+    with capture_start_end_times() as times:
+        param_list.insert(1, 4.56)
+    assert times.start < param_list.last_updated.timestamp() < times.end
 
 
 def test_param_list_insert_parent(
@@ -315,6 +321,13 @@ def test_param_list_del(
     assert list(param_list) == param_list_contents
     del param_list[0]
     assert list(param_list) == param_list_contents[1:]
+
+
+def test_param_list_del_last_updated(param_list: ParamList[Any]) -> None:
+    """A parameter list updates its last updated timestamp when an item is deleted."""
+    with capture_start_end_times() as times:
+        del param_list[0]
+    assert times.start < param_list.last_updated.timestamp() < times.end
 
 
 def test_param_list_del_parent(
@@ -373,12 +386,12 @@ def test_param_dict_get(
 
 def test_param_dict_get_parent(param_dict: ParamDict[Any]) -> None:
     """An item gotten from a parameter dictionary has the correct parent."""
-    assert param_dict["param"].parent is param_dict
-    assert param_dict.param.parent is param_dict
+    assert param_dict["simple_param"].parent is param_dict
+    assert param_dict.simple_param.parent is param_dict
 
 
 def test_param_dict_set(param_dict: ParamDict[Any]) -> None:
-    """Can set an item in a parameter list."""
+    """Can set an item in a parameter dictionary using index bracket or dot notation."""
     new_number_1 = 4.56
     new_number_2 = 7.89
     assert param_dict["number"] != new_number_1
@@ -386,6 +399,13 @@ def test_param_dict_set(param_dict: ParamDict[Any]) -> None:
     assert param_dict["number"] == new_number_1
     param_dict.number = new_number_2
     assert param_dict["number"] == new_number_2
+
+
+def test_param_dict_set_last_updated(param_dict: ParamDict[Any]) -> None:
+    """A parameter dictionary updates its last updated timestamp when an item is set."""
+    with capture_start_end_times() as times:
+        param_dict["number"] = 4.56
+    assert times.start < param_dict.last_updated.timestamp() < times.end
 
 
 def test_param_dict_set_parent(
@@ -405,13 +425,22 @@ def test_param_dict_set_parent(
 def test_param_dict_del(
     param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
 ) -> None:
-    """Can delete items from a parameter dictionary."""
+    """
+    Can delete items from a parameter dictionary using index bracket or dot notation.
+    """
     assert dict(param_dict) == param_dict_contents
     del param_dict["number"]
     del param_dict.string
     del param_dict_contents["number"]
     del param_dict_contents["string"]
     assert dict(param_dict) == param_dict_contents
+
+
+def test_param_dict_del_last_updated(param_dict: ParamDict[Any]) -> None:
+    """Parameter dictionary updates last updated timestamp when an item is deleted."""
+    with capture_start_end_times() as times:
+        del param_dict["number"]
+    assert times.start < param_dict.last_updated.timestamp() < times.end
 
 
 def test_param_dict_del_parent(

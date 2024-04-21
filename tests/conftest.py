@@ -7,8 +7,10 @@ from paramdb import ParamData, ParamList, ParamDict
 from tests.helpers import (
     DEFAULT_NUMBER,
     DEFAULT_STRING,
-    CustomStruct,
-    CustomParam,
+    EmptyParam,
+    SimpleParam,
+    SubclassParam,
+    ComplexParam,
     Times,
     capture_start_end_times,
 )
@@ -26,20 +28,34 @@ def fixture_string() -> str:
     return DEFAULT_STRING
 
 
-@pytest.fixture(name="param")
-def fixture_param(number: float, string: str) -> CustomParam:
-    """Parameter."""
-    return CustomParam(number=number, string=string)
+@pytest.fixture(name="empty_param")
+def fixture_empty_param() -> EmptyParam:
+    """Empty parameter dataclass object."""
+    return EmptyParam()
 
 
-@pytest.fixture(name="struct")
-def fixture_struct(number: float, string: str) -> CustomStruct:
-    """Structure."""
-    return CustomStruct(
+@pytest.fixture(name="simple_param")
+def fixture_simple_param(number: float, string: str) -> SimpleParam:
+    """Simple parameter dataclass object."""
+    return SimpleParam(number=number, string=string)
+
+
+@pytest.fixture(name="subclass_param")
+def fixture_subclass_param(number: float, string: str) -> SubclassParam:
+    """Parameter dataclass object that is a subclass of another parameter dataclass."""
+    return SubclassParam(number=number, string=string, second_number=number)
+
+
+@pytest.fixture(name="complex_param")
+def fixture_complex_param(number: float, string: str) -> ComplexParam:
+    """Complex parameter dataclass object."""
+    return ComplexParam(
         number=number,
         string=string,
-        param=CustomParam(),
-        struct=CustomStruct(),
+        empty_param=EmptyParam(),
+        simple_param=SimpleParam(),
+        subclass_param=SubclassParam(),
+        complex_param=ComplexParam(),
         param_list=ParamList(),
         param_dict=ParamDict(),
     )
@@ -48,28 +64,57 @@ def fixture_struct(number: float, string: str) -> CustomStruct:
 @pytest.fixture(name="param_list_contents")
 def fixture_param_list_contents(number: float, string: str) -> list[Any]:
     """Contents to initialize a parameter list."""
-    return [number, string, CustomParam(), CustomStruct(), ParamList(), ParamDict()]
+    return [
+        number,
+        string,
+        EmptyParam(),
+        SimpleParam(),
+        SubclassParam(),
+        ComplexParam(),
+        ParamList(),
+        ParamDict(),
+    ]
 
 
 @pytest.fixture(name="param_dict_contents")
+# pylint: disable-next=too-many-arguments
 def fixture_param_dict_contents(
-    number: float, string: str, param: CustomParam, struct: CustomStruct
+    number: float,
+    string: str,
+    empty_param: EmptyParam,
+    simple_param: SimpleParam,
+    subclass_param: SubclassParam,
+    complex_param: ComplexParam,
 ) -> dict[str, Any]:
     """Contents to initialize a parameter dictionary."""
     return {
         "number": number,
         "string": string,
-        "param": deepcopy(param),
-        "struct": deepcopy(struct),
+        "empty_param": deepcopy(empty_param),
+        "simple_param": deepcopy(simple_param),
+        "subclass_param": deepcopy(subclass_param),
+        "complex_param": deepcopy(complex_param),
         "param_list": ParamList(),
         "param_dict": ParamDict(),
     }
+
+
+@pytest.fixture(name="empty_param_list")
+def fixture_empty_param_list() -> ParamList[Any]:
+    """Empty parameter list."""
+    return ParamList()
 
 
 @pytest.fixture(name="param_list")
 def fixture_param_list(param_list_contents: list[Any]) -> ParamList[Any]:
     """Parameter list."""
     return ParamList(deepcopy(param_list_contents))
+
+
+@pytest.fixture(name="empty_param_dict")
+def fixture_empty_param_dict() -> ParamDict[Any]:
+    """Empty parameter dictionary."""
+    return ParamDict()
 
 
 @pytest.fixture(name="param_dict")
@@ -80,11 +125,18 @@ def fixture_param_dict(param_dict_contents: dict[str, Any]) -> ParamDict[Any]:
 
 @pytest.fixture(
     name="param_data",
-    params=["param", "struct", "param_list", "param_dict"],
+    params=[
+        "empty_param",
+        "simple_param",
+        "subclass_param",
+        "complex_param",
+        "empty_param_list",
+        "param_list",
+        "empty_param_dict",
+        "param_dict",
+    ],
 )
-def fixture_param_data(
-    request: pytest.FixtureRequest,
-) -> ParamData:
+def fixture_param_data(request: pytest.FixtureRequest) -> ParamData:
     """Parameter data."""
     param_data: ParamData = deepcopy(request.getfixturevalue(request.param))
     return param_data
@@ -92,7 +144,7 @@ def fixture_param_data(
 
 @pytest.fixture(name="updated_param_data_and_times")
 def fixture_updated_param_data_and_times(
-    param_data: ParamData,
+    param_data: ParamData, number: float
 ) -> tuple[ParamData, Times]:
     """
     Parameter data that has been updated between the returned Times. Broken down into
@@ -100,15 +152,26 @@ def fixture_updated_param_data_and_times(
     """
     updated_param_data = deepcopy(param_data)
     with capture_start_end_times() as times:
-        if isinstance(updated_param_data, CustomParam):
+        if isinstance(updated_param_data, EmptyParam):
+            # pylint: disable-next=protected-access
+            updated_param_data._update_last_updated()
+        elif isinstance(updated_param_data, SimpleParam):
             updated_param_data.number += 1
-        if isinstance(updated_param_data, CustomStruct):
-            assert updated_param_data.param is not None
-            updated_param_data.param.number += 1
-        if isinstance(updated_param_data, ParamList):
-            updated_param_data[2].number += 1
-        if isinstance(updated_param_data, ParamDict):
-            updated_param_data.param.number += 1
+        elif isinstance(updated_param_data, SubclassParam):
+            updated_param_data.second_number += 1
+        elif isinstance(updated_param_data, ComplexParam):
+            assert updated_param_data.simple_param is not None
+            updated_param_data.simple_param.number += 1
+        elif isinstance(updated_param_data, ParamList):
+            if len(updated_param_data) == 0:
+                updated_param_data.append(number)
+            else:
+                updated_param_data[3].number += 1
+        elif isinstance(updated_param_data, ParamDict):
+            if len(updated_param_data) == 0:
+                updated_param_data["number"] = number
+            else:
+                updated_param_data.simple_param.number += 1
     return updated_param_data, times
 
 
@@ -121,6 +184,8 @@ def fixture_updated_param_data(
 
 
 @pytest.fixture(name="updated_times")
-def fixture_start(updated_param_data_and_times: tuple[ParamData, Times]) -> Times:
+def fixture_updated_times(
+    updated_param_data_and_times: tuple[ParamData, Times]
+) -> Times:
     """Times before and after param_data fixture was updated."""
     return updated_param_data_and_times[1]

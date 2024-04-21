@@ -11,8 +11,10 @@ from pathlib import Path
 from datetime import datetime, timezone
 import pytest
 from tests.helpers import (
-    CustomStruct,
-    CustomParam,
+    EmptyParam,
+    SimpleParam,
+    SubclassParam,
+    ComplexParam,
     CustomParamList,
     CustomParamDict,
     Times,
@@ -20,7 +22,7 @@ from tests.helpers import (
 )
 from paramdb import (
     ParamData,
-    Struct,
+    ParamDataclass,
     ParamList,
     ParamDict,
     ParamDB,
@@ -31,7 +33,7 @@ from paramdb import (
 from paramdb._param_data._param_data import _param_classes
 
 
-class Unknown(Struct):
+class Unknown(ParamDataclass):
     """
     Class that is unknown to ParamDB. By default, it will get added to the private
     param class dictionary when created, but on the next line we manually delete it.
@@ -162,15 +164,16 @@ def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
     assert commit_entry_from_history == commit_entry
 
 
-def test_commit_and_load_timestamp(db_path: str, param: CustomParam) -> None:
+def test_commit_and_load_timestamp(db_path: str, simple_param: SimpleParam) -> None:
     """Can make a commit using a specific timestamp and load it back."""
     param_db = ParamDB[ParamData](db_path)
-    utc_timestamp = datetime.utcnow()
-    aware_timestamp = utc_timestamp.replace(tzinfo=timezone.utc).astimezone()
+    utc_timestamp = datetime.now(timezone.utc)
+    naive_timestamp = utc_timestamp.replace(tzinfo=None)
+    aware_timestamp = utc_timestamp.astimezone()
 
-    for i, timestamp in enumerate((utc_timestamp, aware_timestamp)):
+    for i, timestamp in enumerate((utc_timestamp, naive_timestamp, aware_timestamp)):
         with capture_start_end_times() as times:
-            commit_entry = param_db.commit(f"Commit {i}", param, timestamp)
+            commit_entry = param_db.commit(f"Commit {i}", simple_param, timestamp)
 
         # Given timestamp was used, not the current time
         assert commit_entry.timestamp.timestamp() < times.start
@@ -238,29 +241,33 @@ def test_load_classes_false_unknown_class(db_path: str) -> None:
     assert data_from_history.pop(CLASS_NAME_KEY) == Unknown.__name__
 
 
-# pylint: disable-next=too-many-arguments
+# pylint: disable-next=too-many-arguments,too-many-locals
 def test_commit_and_load_complex(
     db_path: str,
     number: float,
     string: str,
     param_list_contents: list[Any],
     param_dict_contents: dict[str, Any],
-    param: CustomParam,
-    struct: CustomStruct,
+    empty_param: EmptyParam,
+    simple_param: SimpleParam,
+    subclass_param: SubclassParam,
+    complex_param: ComplexParam,
     param_list: ParamList[Any],
     param_dict: ParamDict[Any],
 ) -> None:
     """Can commit and load a complex parameter structure."""
 
-    class Root(Struct):
+    class Root(ParamDataclass):
         """Complex root structure to test the database."""
 
         number: float
         string: str
         list: list[Any]
         dict: dict[str, Any]
-        param: CustomParam
-        struct: CustomStruct
+        empty_param: EmptyParam
+        simple_param: SimpleParam
+        subclass_param: SubclassParam
+        complex_param: ComplexParam
         param_list: ParamList[Any]
         param_dict: ParamDict[Any]
         custom_param_list: CustomParamList
@@ -271,8 +278,10 @@ def test_commit_and_load_complex(
         string=string,
         list=param_list_contents,
         dict=param_dict_contents,
-        param=param,
-        struct=struct,
+        empty_param=empty_param,
+        simple_param=simple_param,
+        subclass_param=subclass_param,
+        complex_param=complex_param,
         param_list=param_list,
         param_dict=param_dict,
         custom_param_list=CustomParamList(deepcopy(param_list_contents)),
@@ -290,11 +299,11 @@ def test_commit_and_load_complex(
 
 def test_commit_load_latest(db_path: str) -> None:
     """The database can load the latest data and commit entry after each commit."""
-    param_db = ParamDB[CustomParam](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     for i in range(10):
         # Make the commit
         message = f"Commit {i}"
-        param = CustomParam(number=i)
+        param = SimpleParam(number=i)
         with capture_start_end_times():
             commit_entry = param_db.commit(message, param)
 
@@ -305,11 +314,11 @@ def test_commit_load_latest(db_path: str) -> None:
 
 def test_commit_load_multiple(db_path: str) -> None:
     """Can commit multiple times and load previous commits."""
-    param_db = ParamDB[CustomParam](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     commit_entries: list[CommitEntry] = []
 
     # Make 10 commits
-    params = [CustomParam(number=i + 1) for i in range(10)]
+    params = [SimpleParam(number=i + 1) for i in range(10)]
     for i, param in enumerate(params):
         with capture_start_end_times():
             commit_entry = param_db.commit(f"Commit {i + 1}", param)
@@ -338,47 +347,47 @@ def test_commit_load_multiple(db_path: str) -> None:
         assert param_from_history.last_updated == param.last_updated
 
 
-def test_separate_connections(db_path: str, param: CustomParam) -> None:
+def test_separate_connections(db_path: str, simple_param: SimpleParam) -> None:
     """
     Can commit and load using separate connections. This simulates committing to the
     database in one program and loading in another program at a later time.
     """
     # Commit using one connection
-    param_db1 = ParamDB[CustomParam](db_path)
-    param_db1.commit("Initial commit", param)
+    param_db1 = ParamDB[SimpleParam](db_path)
+    param_db1.commit("Initial commit", simple_param)
     del param_db1
 
     # Load back using another connection
-    param_db2 = ParamDB[CustomParam](db_path)
+    param_db2 = ParamDB[SimpleParam](db_path)
     param_loaded = param_db2.load()
-    assert param == param_loaded
-    assert param.last_updated == param_loaded.last_updated
+    assert simple_param == param_loaded
+    assert simple_param.last_updated == param_loaded.last_updated
 
 
 def test_empty_num_commits(db_path: str) -> None:
     """An empty database has no commits according to num_commits."""
-    param_db = ParamDB[CustomStruct](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     assert param_db.num_commits == 0
 
 
-def test_num_commits(db_path: str, param: CustomParam) -> None:
+def test_num_commits(db_path: str, simple_param: SimpleParam) -> None:
     """A database with multiple commits has the correct value for num_commits."""
-    param_db = ParamDB[CustomParam](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     for i in range(10):
-        param_db.commit(f"Commit {i}", param)
+        param_db.commit(f"Commit {i}", simple_param)
     assert param_db.num_commits == 10
 
 
 def test_empty_commit_history(db_path: str) -> None:
     """Loads an empty commit history from an empty database."""
-    param_db = ParamDB[CustomStruct](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
         assert history_func() == []  # type: ignore
 
 
 def test_empty_commit_history_slice(db_path: str) -> None:
     """Correctly slices an empty commit history."""
-    param_db = ParamDB[CustomStruct](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
         assert history_func(0) == []  # type: ignore
         assert history_func(0, 10) == []  # type: ignore
@@ -386,19 +395,19 @@ def test_empty_commit_history_slice(db_path: str) -> None:
         assert history_func(-10, -5) == []  # type: ignore
 
 
-def test_commit_history(db_path: str, param: CustomParam) -> None:
+def test_commit_history(db_path: str, simple_param: SimpleParam) -> None:
     """
     Loads the commit history with the correct messages and timestamps for a series of
     commits.
     """
-    param_db = ParamDB[CustomParam](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
     commit_times: list[Times] = []
 
     # Make 10 commits
     for i in range(10):
         with capture_start_end_times() as times:
             commit_times.append(times)
-            param_db.commit(f"Commit {i}", param)
+            param_db.commit(f"Commit {i}", simple_param)
 
     # Load commit history
     commit_history = param_db.commit_history()
@@ -414,13 +423,13 @@ def test_commit_history(db_path: str, param: CustomParam) -> None:
         assert times.start < commit_entry_with_data.timestamp.timestamp() < times.end
 
 
-def test_commit_history_slice(db_path: str, param: CustomParam) -> None:
+def test_commit_history_slice(db_path: str, simple_param: SimpleParam) -> None:
     """Can retrieve a slice of a commit history, using Python slicing rules."""
-    param_db = ParamDB[CustomParam](db_path)
+    param_db = ParamDB[SimpleParam](db_path)
 
     # Make 10 commits
     for i in range(10):
-        param_db.commit(f"Commit {i}", param)
+        param_db.commit(f"Commit {i}", simple_param)
 
     # Load slices of commit history
     commit_history = param_db.commit_history()

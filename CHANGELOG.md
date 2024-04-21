@@ -7,6 +7,12 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- All `ParamData` objects now internally track the latest time that they or any of their
+  children were last updated, which is returned by `ParamData.last_updated`.
+- `Param` and `Struct` are combined into a single class `ParamDataclass`.
+
 ## [0.11.0] (Jan 31 2024)
 
 ### Added
