@@ -80,7 +80,8 @@ def test_param_dataclass_set_last_updated_non_field(
     parameter is set.
     """
     with capture_start_end_times() as times:
-        param_dataclass_object.non_field = 1.23
+        # Use ParamData's setattr function to bypass Pydantic validation
+        ParamData.__setattr__(param_dataclass_object, "non_field", 1.23)
     assert param_dataclass_object.last_updated.timestamp() < times.start
 
 

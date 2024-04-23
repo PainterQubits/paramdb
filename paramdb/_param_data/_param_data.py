@@ -24,8 +24,8 @@ def get_param_class(class_name: str) -> type[ParamData] | None:
 class ParamData(ABC):
     """Abstract base class for all parameter data."""
 
-    __parent: ParamData | None = None
-    __last_updated: datetime
+    _parent: ParamData | None = None
+    _last_updated: datetime
 
     def __init_subclass__(cls, /, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -34,19 +34,17 @@ class ParamData(ABC):
         _param_classes[cls.__name__] = cls
 
     def __init__(self) -> None:
-        self.__last_updated = datetime.now(timezone.utc).astimezone()
+        super().__setattr__("_last_updated", datetime.now(timezone.utc).astimezone())
 
     def _add_child(self, child: Any) -> None:
         """Add the given object as a child, if it is ``ParamData``."""
         if isinstance(child, ParamData):
-            # pylint: disable-next=protected-access,unused-private-member
-            child.__parent = self
+            super(ParamData, child).__setattr__("_parent", self)
 
     def _remove_child(self, child: Any) -> None:
         """Remove the given object as a child, if it is ``ParamData``."""
         if isinstance(child, ParamData):
-            # pylint: disable-next=protected-access,unused-private-member
-            child.__parent = None
+            super(ParamData, child).__setattr__("_parent", None)
 
     def _update_last_updated(self) -> None:
         """Update last updated for this object and its chain of parents."""
@@ -57,10 +55,10 @@ class ParamData(ABC):
         # Continue up the chain of parents, stopping if we reach a last updated
         # timestamp that is more recent than the new one
         while current and not (
-            current.__last_updated and current.__last_updated >= new_last_updated
+            current._last_updated and current._last_updated >= new_last_updated
         ):
-            current.__last_updated = new_last_updated
-            current = current.__parent
+            super(ParamData, current).__setattr__("_last_updated", new_last_updated)
+            current = current._parent
 
     @abstractmethod
     def _to_json(self) -> Any:
@@ -91,7 +89,7 @@ class ParamData(ABC):
         Return a dictionary representation of this parameter data object, which can be
         used to reconstruct the object by passing it to :py:meth:`from_dict`.
         """
-        return {_LAST_UPDATED_KEY: self.last_updated, _DATA_KEY: self._to_json()}
+        return {_LAST_UPDATED_KEY: self._last_updated, _DATA_KEY: self._to_json()}
 
     @classmethod
     def from_dict(cls, data_dict: dict[str, Any]) -> Self:
@@ -100,14 +98,13 @@ class ParamData(ABC):
         ``json.loads()`` and originally constructed by :py:meth:`from_dict`.
         """
         param_data = cls._from_json(data_dict[_DATA_KEY])
-        # pylint: disable-next=protected-access,unused-private-member
-        param_data.__last_updated = data_dict[_LAST_UPDATED_KEY]
+        super().__setattr__(param_data, "_last_updated", data_dict[_LAST_UPDATED_KEY])
         return param_data
 
     @property
     def last_updated(self) -> datetime:
         """When any parameter within this parameter data was last updated."""
-        return self.__last_updated
+        return self._last_updated
 
     @property
     def parent(self) -> ParamData:
@@ -119,12 +116,12 @@ class ParamData(ABC):
         Raises a ``ValueError`` if there is currently no parent, which can occur if the
         parent is still being initialized.
         """
-        if self.__parent is None:
+        if self._parent is None:
             raise ValueError(
                 f"'{type(self).__name__}' object has no parent, or its parent has not"
                 " been initialized yet"
             )
-        return self.__parent
+        return self._parent
 
     @property
     def root(self) -> ParamData:
@@ -134,6 +131,6 @@ class ParamData(ABC):
         """
         # pylint: disable=protected-access
         root = self
-        while root.__parent is not None:
-            root = root.__parent
+        while root._parent is not None:
+            root = root._parent
         return root
