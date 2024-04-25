@@ -10,6 +10,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 import time
+import pydantic
 from astropy.units import Quantity  # type: ignore # pylint: disable=import-error
 from paramdb import ParamData, ParamDataclass, ParamList, ParamDict
 
@@ -18,11 +19,11 @@ DEFAULT_STRING = "test"
 
 
 class EmptyParam(ParamDataclass):
-    """Empty parameter dataclass"""
+    """Empty parameter data class"""
 
 
 class SimpleParam(ParamDataclass):
-    """Simple parameter dataclass."""
+    """Simple parameter data class."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
@@ -30,14 +31,34 @@ class SimpleParam(ParamDataclass):
     string: str = DEFAULT_STRING
 
 
+class NoTypeValidationParam(SimpleParam, type_validation=False):
+    """Parameter dataclass without type validation."""
+
+
+class WithTypeValidationParam(SimpleParam, type_validation=True):
+    """Parameter dataclass with type validation re-enabled."""
+
+
+class NoAssignmentValidationParam(
+    SimpleParam, pydantic_config=pydantic.ConfigDict(validate_assignment=False)
+):
+    """Parameter dataclass without assignment validation."""
+
+
+class WithAssignmentValidationParam(
+    SimpleParam, pydantic_config=pydantic.ConfigDict(validate_assignment=True)
+):
+    """Parameter dataclass with assignment validation re-enabled."""
+
+
 class SubclassParam(SimpleParam):
-    """Parameter dataclass that is a subclass of another parameter dataclass."""
+    """Parameter data class that is a subclass of another parameter data class."""
 
     second_number: float = DEFAULT_NUMBER
 
 
 class ComplexParam(ParamDataclass):
-    """Complex parameter dataclass."""
+    """Complex parameter data class."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
@@ -46,6 +67,10 @@ class ComplexParam(ParamDataclass):
     dict: dict[str, Any] = field(default_factory=dict)
     empty_param: EmptyParam | None = None
     simple_param: SimpleParam | None = None
+    no_type_validation_param: NoTypeValidationParam | None = None
+    with_type_validation_param: WithTypeValidationParam | None = None
+    no_assignment_validation_param: NoAssignmentValidationParam | None = None
+    with_assignment_validation_param: WithAssignmentValidationParam | None = None
     subclass_param: SubclassParam | None = None
     complex_param: ComplexParam | None = None
     param_list: ParamList[Any] = field(default_factory=ParamList)

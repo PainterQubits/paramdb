@@ -39,6 +39,7 @@ class ParamDataclass(ParamData):
     - validate_assignment: ``True`` (validate on assignment as well as initialization)
     - arbitrary_types_allowed: ``True`` (allow arbitrary type hints)
     - strict: ``True`` (disable value coercion, e.g. '2' -> 2)
+    - validate_default: ``True`` (validate default values)
 
     Pydantic configuration options can be updated using the class keyword argument
     ``pydantic_config``, which will merge new options with the existing configuration.
@@ -51,6 +52,7 @@ class ParamDataclass(ParamData):
         "validate_assignment": True,
         "arbitrary_types_allowed": True,
         "strict": True,
+        "validate_default": True,
     }
 
     # Set in __init_subclass__() and used to set attributes within __setattr__()
@@ -69,7 +71,7 @@ class ParamDataclass(ParamData):
             cls.__type_validation = type_validation
         if pydantic_config is not None:
             # Merge new Pydantic config with the old one
-            cls.__pydantic_config |= pydantic_config
+            cls.__pydantic_config = cls.__pydantic_config | pydantic_config
         cls.__base_setattr = object.__setattr__  # type: ignore
         if _PYDANTIC_INSTALLED and cls.__type_validation:
             # Transform the class into a Pydantic data class, with custom handling for
@@ -77,7 +79,10 @@ class ParamDataclass(ParamData):
             pydantic.dataclasses.dataclass(
                 config=cls.__pydantic_config | {"validate_assignment": False}, **kwargs
             )(cls)
-            if cls.__pydantic_config["validate_assignment"]:
+            if (
+                "validate_assignment" in cls.__pydantic_config
+                and cls.__pydantic_config["validate_assignment"]
+            ):
                 pydantic_validator = (
                     pydantic.dataclasses.is_pydantic_dataclass(cls)
                     and cls.__pydantic_validator__  # pylint: disable=no-member
@@ -100,7 +105,9 @@ class ParamDataclass(ParamData):
         # Prevent instantiating ParamDataclass and call the superclass __init__() here
         # since __init__() will be overwritten by dataclass()
         if cls is ParamDataclass:
-            raise TypeError("only subclasses of ParamDataclass can be instantiated")
+            raise TypeError(
+                f"only subclasses of {ParamDataclass.__name__} can be instantiated"
+            )
         self = super().__new__(cls)
         super().__init__(self)
         return self
