@@ -68,8 +68,8 @@ when building up dataclasses through inheritance.
 from dataclasses import field
 
 class KeywordOnlyParam(ParamDataclass, kw_only=True):
-    values: list[int] = field(default_factory=list)
     count: int
+    values: list[int] = field(default_factory=list)
 
 keyword_only_param = KeywordOnlyParam(count=123)
 keyword_only_param
@@ -161,6 +161,34 @@ nested_param.child_param.root is nested_param
 
 See [Type Mixins](#type-mixins) for information on how to get the parent and root
 properties to work better with static type checkers.
+
+### Type Validation
+
+If [Pydantic] is installed, parameter data classes will automatically be converted to
+[Pydantic data classes], enabling runtime type validation. Some [Pydantic configuration]
+have modified defaults; see {py:class}`ParamDataclass` for more information.
+
+Pydantic type validation will enforce type hints at runtime by raising an exception. For
+example:
+
+```{jupyter-execute}
+import pydantic
+
+try:
+    CustomParam(value="123")
+except pydantic.ValidationError as exception:
+    print(exception)
+```
+
+Type validation can be disabled for a particular parameter data class (and its subclasses)
+using the class keyword argument `type_validation`:
+
+```{jupyter-execute}
+class NoTypeValidationParam(CustomParam, type_validation=False):
+    pass
+
+NoTypeValidationParam(value="123")
+```
 
 ## Collections
 
@@ -265,5 +293,7 @@ This does nothing to the functionality, but static type checkers will now know t
 [mutable default values]: https://docs.python.org/3/library/dataclasses.html#mutable-default-values
 [`@property`]: https://docs.python.org/3/library/functions.html#property
 [`__post_init__`]: https://docs.python.org/3/library/dataclasses.html#post-init-processing
-[`abc.abc`]: https://docs.python.org/3/library/abc.html#abc.ABC
+[Pydantic]: https://docs.pydantic.dev/latest/
+[Pydantic data classes]: https://docs.pydantic.dev/latest/concepts/dataclasses/
+[Pydantic configuration]: https://docs.pydantic.dev/latest/api/config/
 [`collections.abc`]: https://docs.python.org/3/library/collections.abc.html

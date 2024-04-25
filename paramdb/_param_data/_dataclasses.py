@@ -43,6 +43,7 @@ class ParamDataclass(ParamData):
 
     Pydantic configuration options can be updated using the class keyword argument
     ``pydantic_config``, which will merge new options with the existing configuration.
+    See https://docs.pydantic.dev/latest/api/config for full configuration options.
     """
 
     __field_names: set[str]  # Data class field names
