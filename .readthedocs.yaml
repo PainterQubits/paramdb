@@ -9,7 +9,7 @@ build:
       - pip install poetry==1.8.2
     post_install:
       # See https://docs.readthedocs.io/en/stable/build-customization.html#install-dependencies-with-poetry
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --without dev
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install -E pydantic --without dev
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry run python -m ipykernel install --user
 
 sphinx:
