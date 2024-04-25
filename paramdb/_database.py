@@ -19,9 +19,9 @@ from paramdb._param_data._param_data import ParamData, get_param_class
 try:
     from astropy.units import Quantity  # type: ignore
 
-    ASTROPY_INSTALLED = True
+    _ASTROPY_INSTALLED = True
 except ImportError:
-    ASTROPY_INSTALLED = False
+    _ASTROPY_INSTALLED = False
 
 T = TypeVar("T")
 SelectT = TypeVar("SelectT", bound=Select[Any])
@@ -62,7 +62,7 @@ def _to_dict(obj: Any) -> Any:
     class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
     if isinstance(obj, datetime):
         return class_full_name_dict | {"isoformat": obj.isoformat()}
-    if ASTROPY_INSTALLED and isinstance(obj, Quantity):
+    if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
         return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
     if isinstance(obj, ParamData):
         return {CLASS_NAME_KEY: type(obj).__name__} | obj.to_dict()
@@ -86,7 +86,7 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
     class_name = json_dict.pop(CLASS_NAME_KEY)
     if class_name == _full_class_name(datetime):
         return datetime.fromisoformat(json_dict["isoformat"]).astimezone()
-    if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
+    if _ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
         return Quantity(**json_dict)
     param_class = get_param_class(class_name)
     if param_class is not None:

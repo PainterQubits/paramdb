@@ -7,6 +7,11 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- If Pydantic is installed, parameter data classes automatically have Pydantic type
+  validation enabled.
+
 ### Changed
 
 - All `ParamData` objects now internally track the latest time that they or any of their
