@@ -12,7 +12,17 @@ from contextlib import contextmanager
 import time
 import pydantic
 from astropy.units import Quantity  # type: ignore # pylint: disable=import-error
-from paramdb import ParamData, ParamDataclass, ParamList, ParamDict
+from paramdb import (
+    ParamData,
+    ParamInt,
+    ParamBool,
+    ParamFloat,
+    ParamStr,
+    ParamNone,
+    ParamDataclass,
+    ParamList,
+    ParamDict,
+)
 
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
@@ -29,6 +39,11 @@ class SimpleParam(ParamDataclass):
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     number_with_units: Quantity = Quantity(12, "m")
     string: str = DEFAULT_STRING
+    param_int: ParamInt = ParamInt(123)
+    param_float: ParamFloat = ParamFloat(DEFAULT_NUMBER)
+    param_bool: ParamBool = ParamBool(False)
+    param_str: ParamStr = ParamStr(DEFAULT_STRING)
+    param_none: ParamNone = ParamNone()
 
 
 class NoTypeValidationParam(SimpleParam, type_validation=False):

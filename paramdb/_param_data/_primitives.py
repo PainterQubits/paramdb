@@ -122,6 +122,9 @@ class ParamNone(_ParamPrimitive[None]):
     def __bool__(self) -> bool:
         return False
 
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, ParamNone)
+
     def __repr__(self) -> str:
         # Show empty parentheses
         return f"{type(self).__name__}()"

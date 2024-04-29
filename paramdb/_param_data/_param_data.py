@@ -69,8 +69,8 @@ class ParamData(ABC):
         The last updated timestamp is handled separately and does not need to be saved
         here.
 
-        Note that objects within the dictionary do not need to be JSON serializable,
-        since they will be recursively processed by ``json.dumps()``.
+        Note that objects within a list or dictionary returned by this function do not
+        need to be JSON serializable, since they will be processed recursively.
         """
 
     @classmethod

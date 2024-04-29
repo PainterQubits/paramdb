@@ -18,14 +18,14 @@ from typing_extensions import Self
 from paramdb._param_data._param_data import ParamData
 
 T = TypeVar("T")
-CollectionT = TypeVar("CollectionT", bound=Collection[Any])
+_CollectionT = TypeVar("_CollectionT", bound=Collection[Any])
 
 
 # pylint: disable-next=abstract-method
-class _ParamCollection(ParamData, Generic[CollectionT]):
+class _ParamCollection(ParamData, Generic[_CollectionT]):
     """Base class for parameter collections."""
 
-    _contents: CollectionT
+    _contents: _CollectionT
 
     def __len__(self) -> int:
         return len(self._contents)
@@ -41,12 +41,12 @@ class _ParamCollection(ParamData, Generic[CollectionT]):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._contents})"
 
-    def _to_json(self) -> CollectionT:
+    def _to_json(self) -> _CollectionT:
         return self._contents
 
     @classmethod
     @abstractmethod
-    def _from_json(cls, json_data: CollectionT) -> Self: ...
+    def _from_json(cls, json_data: _CollectionT) -> Self: ...
 
 
 class ParamList(_ParamCollection[list[T]], MutableSequence[T], Generic[T]):
