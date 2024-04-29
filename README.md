@@ -1,6 +1,6 @@
 # ParamDB
 
-<!-- start badges -->
+<!-- start intro -->
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/paramdb)](https://pypi.org/project/paramdb/)
 [![PyPI Python Versions](https://img.shields.io/pypi/pyversions/paramdb)](https://pypi.org/project/paramdb/)
@@ -8,10 +8,6 @@
 [![CI](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml/badge.svg)](https://github.com/PainterQubits/paramdb/actions/workflows/ci.yml)
 [![Codecov](https://codecov.io/github/PainterQubits/paramdb/branch/main/graph/badge.svg?token=PQEJWLBTBK)](https://codecov.io/github/PainterQubits/paramdb)
 [![Documentation Status](https://readthedocs.org/projects/paramdb/badge/?version=stable)](https://paramdb.readthedocs.io/en/stable/?badge=stable)
-
-<!-- end badges -->
-
-<!-- start intro -->
 
 Python package for storing and retrieving experiment parameters.
 

@@ -18,6 +18,11 @@ extensions = [
 # HTML output options
 html_theme = "furo"
 html_static_path = ["_static"]
+html_theme_options = {
+    "source_repository": "https://github.com/PainterQubits/paramdb",
+    "source_branch": "develop",
+    "source_directory": "docs",
+}
 
 # MyST options
 myst_heading_anchors = 3

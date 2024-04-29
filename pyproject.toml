@@ -40,6 +40,7 @@ furo = "^2024.1.29"
 sphinx-copybutton = "^0.5.2"
 jupyter-sphinx = "^0.5.3"
 ipykernel = "^6.29.4"
+sphinx-autobuild = "^2024.4.16"
 
 [tool.mypy]
 strict = true
