@@ -28,7 +28,7 @@ class _ParamPrimitive(ParamData, Generic[_T]):
         return f"{type(self).__name__}({self.value!r})"
 
 
-def __init__(self: _ParamPrimitive[Any], *_args: Any) -> None:
+def __init__(self: _ParamPrimitive[Any], *_args: Any, **_kwargs: Any) -> None:
     # Allow extra arguments to be passed to __init__() to allow for extra arguments in
     # __new__() from base classes int, float, and str.
     super(_ParamPrimitive, self).__init__()
@@ -65,7 +65,7 @@ class ParamBool(ParamInt):
     returned.
     """
 
-    def __new__(cls, o: object = False) -> Self:
+    def __new__(cls, o: object = False, /) -> Self:
         # Convert any object to a boolean to emulate bool()
         return super().__new__(cls, bool(o))
 

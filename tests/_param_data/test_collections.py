@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data._collections module."""
 
-from typing import Union, Any
+from typing import Union, Any, cast
 from copy import deepcopy
 import pytest
 from tests.helpers import (
@@ -21,8 +21,7 @@ CustomParamCollection = Union[CustomParamList, CustomParamDict]
 )
 def fixture_param_collection(request: pytest.FixtureRequest) -> ParamCollection:
     """Parameter collection."""
-    param_collection: ParamCollection = deepcopy(request.getfixturevalue(request.param))
-    return param_collection
+    return cast(ParamCollection, deepcopy(request.getfixturevalue(request.param)))
 
 
 @pytest.fixture(name="param_collection_type")
@@ -59,8 +58,7 @@ def fixture_custom_param_collection_type(
     """Custom parameter collection subclass."""
     if isinstance(param_collection, ParamList):
         return CustomParamList
-    if isinstance(param_collection, ParamDict):
-        return CustomParamDict
+    return CustomParamDict
 
 
 @pytest.fixture(name="custom_param_collection")

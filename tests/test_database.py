@@ -15,6 +15,11 @@ from tests.helpers import (
     SimpleParam,
     SubclassParam,
     ComplexParam,
+    CustomParamInt,
+    CustomParamFloat,
+    CustomParamBool,
+    CustomParamStr,
+    CustomParamNone,
     CustomParamList,
     CustomParamDict,
     Times,
@@ -22,6 +27,11 @@ from tests.helpers import (
 )
 from paramdb import (
     ParamData,
+    ParamInt,
+    ParamFloat,
+    ParamBool,
+    ParamStr,
+    ParamNone,
     ParamDataclass,
     ParamList,
     ParamDict,
@@ -248,6 +258,11 @@ def test_commit_and_load_complex(
     string: str,
     param_list_contents: list[Any],
     param_dict_contents: dict[str, Any],
+    param_int: ParamInt,
+    param_float: ParamFloat,
+    param_bool: ParamBool,
+    param_str: ParamStr,
+    param_none: ParamNone,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
     subclass_param: SubclassParam,
@@ -264,12 +279,22 @@ def test_commit_and_load_complex(
         string: str
         list: list[Any]
         dict: dict[str, Any]
+        param_int: ParamInt
+        param_float: ParamFloat
+        param_bool: ParamBool
+        param_str: ParamStr
+        param_none: ParamNone
         empty_param: EmptyParam
         simple_param: SimpleParam
         subclass_param: SubclassParam
         complex_param: ComplexParam
         param_list: ParamList[Any]
         param_dict: ParamDict[Any]
+        custom_param_int: CustomParamInt
+        custom_param_float: CustomParamFloat
+        custom_param_bool: CustomParamBool
+        custom_param_str: CustomParamStr
+        custom_param_none: CustomParamNone
         custom_param_list: CustomParamList
         custom_param_dict: CustomParamDict
 
@@ -278,12 +303,22 @@ def test_commit_and_load_complex(
         string=string,
         list=param_list_contents,
         dict=param_dict_contents,
+        param_int=param_int,
+        param_float=param_float,
+        param_bool=param_bool,
+        param_str=param_str,
+        param_none=param_none,
         empty_param=empty_param,
         simple_param=simple_param,
         subclass_param=subclass_param,
         complex_param=complex_param,
         param_list=param_list,
         param_dict=param_dict,
+        custom_param_int=CustomParamInt(param_int.value),
+        custom_param_float=CustomParamFloat(param_float.value),
+        custom_param_bool=CustomParamBool(param_bool.value),
+        custom_param_str=CustomParamStr(param_str.value),
+        custom_param_none=CustomParamNone(),
         custom_param_list=CustomParamList(deepcopy(param_list_contents)),
         custom_param_dict=CustomParamDict(deepcopy(param_dict_contents)),
     )
