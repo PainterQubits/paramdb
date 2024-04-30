@@ -1,12 +1,35 @@
 """Parameter data primitive classes."""
 
 from __future__ import annotations
-from typing import TypeVar, Generic, Any
+from typing import (
+    Union,
+    Protocol,
+    TypeVar,
+    Generic,
+    SupportsInt,
+    SupportsFloat,
+    SupportsIndex,
+    Any,
+    overload,
+)
 from abc import abstractmethod
-from typing_extensions import Self
+from typing_extensions import Self, Buffer
 from paramdb._param_data._param_data import ParamData
 
 _T = TypeVar("_T")
+
+
+class _SupportsTrunc(Protocol):
+    """
+    Based on https://github.com/python/typeshed/blob/main/stdlib/_typeshed/__init__.pyi.
+    """
+
+    def __trunc__(self) -> int: ...
+
+
+# Based on https://github.com/python/typeshed/blob/main/stdlib/_typeshed/__init__.pyi
+ConvertibleToInt = Union[str, Buffer, SupportsInt, SupportsIndex, _SupportsTrunc]
+ConvertibleToFloat = Union[str, Buffer, SupportsFloat, SupportsIndex]
 
 
 class _ParamPrimitive(ParamData, Generic[_T]):
@@ -22,21 +45,10 @@ class _ParamPrimitive(ParamData, Generic[_T]):
 
     @classmethod
     def _from_json(cls, json_data: _T) -> Self:
-        return cls(json_data)  # type: ignore
+        return cls(json_data)  # type: ignore # pylint: disable=too-many-function-args
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.value!r})"
-
-
-def __init__(self: _ParamPrimitive[Any], *_args: Any, **_kwargs: Any) -> None:
-    # Allow extra arguments to be passed to __init__() to allow for extra arguments in
-    # __new__() from base classes int, float, and str.
-    super(_ParamPrimitive, self).__init__()
-
-
-# We assign __init__() outside of the class so that static type checkers and suggestions
-# defer to the signature of __new__() from base classes int, float, and str.
-_ParamPrimitive.__init__ = __init__  # type: ignore
 
 
 class ParamInt(int, _ParamPrimitive[int]):
@@ -46,6 +58,17 @@ class ParamInt(int, _ParamPrimitive[int]):
     Parameter data integer. All ``int`` functions and operations are available; however,
     note that ordinary ``int`` objects will be returned.
     """
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    @overload
+    def __init__(self, x: ConvertibleToInt = 0, /): ...
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    @overload
+    def __init__(self, x: str | bytes | bytearray, /, base: SupportsIndex = 10): ...
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        super().__init__()
 
     @property
     def value(self) -> int:
@@ -65,9 +88,15 @@ class ParamBool(ParamInt):
     returned.
     """
 
-    def __new__(cls, o: object = False, /) -> Self:
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    def __new__(cls, x: object = False, /) -> Self:
         # Convert any object to a boolean to emulate bool()
-        return super().__new__(cls, bool(o))
+        return super().__new__(cls, bool(x))
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    # pylint: disable-next=unused-argument
+    def __init__(self, o: object = False, /) -> None:
+        super().__init__()
 
     @property
     def value(self) -> bool:
@@ -81,6 +110,11 @@ class ParamFloat(float, _ParamPrimitive[float]):
     Parameter data float. All ``float`` funtions and operations are available; however,
     note that ordinary ``float`` objects will be returned.
     """
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    # pylint: disable-next=unused-argument
+    def __init__(self, x: ConvertibleToFloat = 0.0, /) -> None:
+        super().__init__()
 
     @property
     def value(self) -> float:
@@ -98,6 +132,26 @@ class ParamStr(str, _ParamPrimitive[str]):
     Parameter data string. All ``str`` funtions and operations are available; however,
     note that ordinary ``str`` objects will be returned.
     """
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    @overload
+    def __init__(
+        self,
+        object: object = "",  # pylint: disable=redefined-builtin
+        /,
+    ) -> None: ...
+
+    # Based on https://github.com/python/typeshed/blob/main/stdlib/builtins.pyi
+    @overload
+    def __init__(
+        self,
+        object: Buffer = b"",  # pylint: disable=redefined-builtin
+        encoding: str = "utf-8",
+        errors: str = "strict",
+    ) -> None: ...
+
+    def __init__(self, *_args: Any, **_kwargs: Any) -> None:
+        super().__init__()
 
     @property
     def value(self) -> str:
@@ -118,6 +172,10 @@ class ParamNone(_ParamPrimitive[None]):
     @property
     def value(self) -> None:
         return None
+
+    @classmethod
+    def _from_json(cls, json_data: None) -> Self:
+        return cls()
 
     def __bool__(self) -> bool:
         return False
