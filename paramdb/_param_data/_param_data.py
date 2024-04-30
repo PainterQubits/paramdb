@@ -54,7 +54,7 @@ class ParamData(ABC):
 
         # Continue up the chain of parents, stopping if we reach a last updated
         # timestamp that is more recent than the new one
-        while current and not (
+        while current is not None and not (
             current._last_updated and current._last_updated >= new_last_updated
         ):
             super(ParamData, current).__setattr__("_last_updated", new_last_updated)

@@ -339,6 +339,18 @@ def test_param_list_del_parent(
         _ = param_data.parent
 
 
+def test_param_list_empty_last_updated() -> None:
+    """
+    A parameter list updates its last updated time when it becomes empty. (A previous
+    bug only updated ``last_updated`` if the ``ParamData`` object had a truth value of
+    true.)
+    """
+    param_list = ParamList([123])
+    with capture_start_end_times() as times:
+        del param_list[0]
+    assert times.start < param_list.last_updated.timestamp() < times.end
+
+
 def test_param_dict_key_error(param_dict: ParamDict[Any]) -> None:
     """Getting or deleting a nonexistent key raises a KeyError."""
     with pytest.raises(KeyError):
@@ -450,6 +462,18 @@ def test_param_dict_del_parent(
     del param_dict["param_data"]
     with pytest.raises(ValueError):
         _ = param_data.parent
+
+
+def test_param_dict_empty_last_updated() -> None:
+    """
+    A parameter dictionary updates its last updated time when it becomes empty. (A
+    previous bug only updated ``last_updated`` if the ``ParamData`` object had a truth
+    value of true.)
+    """
+    param_dict = ParamDict(test=123)
+    with capture_start_end_times() as times:
+        del param_dict.test
+    assert times.start < param_dict.last_updated.timestamp() < times.end
 
 
 def test_param_dict_iter(
