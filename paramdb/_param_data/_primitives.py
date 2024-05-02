@@ -3,8 +3,6 @@
 from __future__ import annotations
 from typing import (
     Union,
-    Literal,
-    Callable,
     Protocol,
     TypeVar,
     Generic,
@@ -15,20 +13,8 @@ from typing import (
     overload,
 )
 from abc import abstractmethod
-from functools import wraps
-from datetime import datetime, tzinfo
 from typing_extensions import Self, Buffer
 from paramdb._param_data._param_data import ParamData
-
-try:
-    from astropy.units import Quantity  # type: ignore
-    import numpy as np
-    from numpy.typing import DTypeLike
-
-    _ASTROPY_INSTALLED = True
-except ImportError:
-    _ASTROPY_INSTALLED = False
-
 
 _T = TypeVar("_T")
 
@@ -197,108 +183,3 @@ class ParamNone(_ParamPrimitive[None]):
     def __repr__(self) -> str:
         # Show empty parentheses
         return f"{type(self).__name__}()"
-
-
-class ParamDatetime(datetime, _ParamPrimitive[datetime]):
-    """
-    Subclass of :py:class:`ParamData` and ``datetime.datetime``.
-
-    Parameter data datetime. All ``datetime`` methods and operations are available.
-    """
-
-    # Based on https://github.com/python/typeshed/blob/main/stdlib/datetime.pyi
-    # pylint: disable-next=too-many-arguments
-    def __init__(
-        self,
-        year: SupportsIndex,
-        month: SupportsIndex,
-        day: SupportsIndex,
-        hour: SupportsIndex = 0,
-        minute: SupportsIndex = 0,
-        second: SupportsIndex = 0,
-        microsecond: SupportsIndex = 0,
-        tzinfo: tzinfo | None = None,  # pylint: disable=redefined-outer-name
-        *,
-        fold: int = 0,
-    ) -> None:
-        # pylint: disable=unused-argument
-        super().__init__()
-
-    @property
-    def value(self) -> datetime:
-        return datetime(
-            self.year,
-            self.month,
-            self.day,
-            self.hour,
-            self.minute,
-            self.second,
-            self.microsecond,
-            self.tzinfo,
-            fold=self.fold,
-        )
-
-
-if _ASTROPY_INSTALLED:
-
-    def _wrap_update_last_updated(method: Callable[..., Any]) -> Callable[..., Any]:
-        """
-        Wrap the given method inherited from ``Quantity``, updating the last updated
-        time when it is called.
-        """
-
-        @wraps(method)
-        def wrapped_method(self: Any, *args: Any, **kwargs: Any) -> Any:
-            result = method(self, *args, **kwargs)
-            if result is not NotImplemented:
-                # Only update last updated time if the method succeeded and, in the case
-                # of an operator, did not return NotImplemented
-                # pylint: disable-next=protected-access
-                _ParamPrimitive._update_last_updated(self)
-            return result
-
-        return wrapped_method
-
-    class ParamQuantity(Quantity, _ParamPrimitive[Quantity]):  # type: ignore
-        """
-        Subclass of :py:class:`ParamData` and ``astropy.units.Quantity``. Only available
-        if Astropy is installed.
-
-        Parameter data Astropy Quantity. All ``Quantity`` methods and operations are
-        available.
-        """
-
-        # Based on the signature of Quantity.__new__()
-        # pylint: disable-next=too-many-arguments
-        def __init__(
-            self,
-            value: Any,
-            unit: Any | None = None,
-            dtype: DTypeLike = np.inexact,
-            copy: bool = True,
-            order: Literal["C", "F", "A", "K"] | None = None,
-            subok: bool = False,
-            ndmin: int = 0,
-        ) -> None:
-            # pylint: disable=unused-argument
-            super(_ParamPrimitive, self).__init__()
-
-        def _new_view(self, *args: Any, **kwargs: Any) -> Any:
-            view = super()._new_view(*args, **kwargs)
-            super(_ParamPrimitive, view).__init__()
-            return view
-
-        # Wrap in-place operators to update last updated
-        __iadd__ = _wrap_update_last_updated(Quantity.__iadd__)
-        __isub__ = _wrap_update_last_updated(Quantity.__isub__)
-        __imul__ = _wrap_update_last_updated(Quantity.__imul__)
-        __itruediv__ = _wrap_update_last_updated(Quantity.__itruediv__)
-        __ifloordiv__ = _wrap_update_last_updated(Quantity.__ifloordiv__)
-        __ipow__ = _wrap_update_last_updated(Quantity.__ipow__)
-        __imod__ = _wrap_update_last_updated(Quantity.__imod__)
-        __ilshift__ = _wrap_update_last_updated(Quantity.__ilshift__)
-        __irshift__ = _wrap_update_last_updated(Quantity.__irshift__)
-        __iand__ = _wrap_update_last_updated(Quantity.__iand__)
-        __ixor__ = _wrap_update_last_updated(Quantity.__ixor__)
-        __ior__ = _wrap_update_last_updated(Quantity.__ior__)
-        __imatmul__ = _wrap_update_last_updated(Quantity.__imatmul__)

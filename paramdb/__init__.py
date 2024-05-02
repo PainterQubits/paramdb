@@ -7,7 +7,6 @@ from paramdb._param_data._primitives import (
     ParamFloat,
     ParamStr,
     ParamNone,
-    ParamDatetime,
 )
 from paramdb._param_data._dataclasses import ParamDataclass
 from paramdb._param_data._collections import ParamList, ParamDict
@@ -21,7 +20,6 @@ __all__ = [
     "ParamFloat",
     "ParamStr",
     "ParamNone",
-    "ParamDatetime",
     "ParamDataclass",
     "ParamList",
     "ParamDict",
@@ -32,10 +30,3 @@ __all__ = [
     "CommitEntry",
     "CommitEntryWithData",
 ]
-
-try:
-    from paramdb._param_data._primitives import ParamQuantity
-
-    __all__ += ["ParamQuantity"]
-except ImportError:
-    pass
