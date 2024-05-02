@@ -6,6 +6,7 @@ import math
 import pytest
 from paramdb import ParamInt, ParamFloat, ParamBool, ParamStr, ParamNone
 from tests.helpers import (
+    SimpleParam,
     CustomParamInt,
     CustomParamFloat,
     CustomParamBool,
@@ -174,19 +175,38 @@ def test_param_primitive_eq(
 ) -> None:
     """
     Parameter primitive objects are equal to themselves, their vaues, and custom
-    parameter primitive objects, and are not equal to other objects.
+    parameter primitive objects.
     """
     # pylint: disable=comparison-with-itself
     assert param_primitive == param_primitive
+    assert param_primitive == deepcopy(param_primitive)
     assert param_primitive == custom_param_primitive
-    assert custom_param_primitive == custom_param_primitive
-    assert custom_param_primitive == param_primitive
-    if isinstance(param_primitive, ParamNone):
-        assert param_primitive != param_primitive.value
-        assert custom_param_primitive != custom_param_primitive.value
-    else:
-        assert param_primitive == param_primitive.value
-        assert custom_param_primitive == custom_param_primitive.value
+    assert param_primitive == param_primitive.value
+
+
+def test_param_primitive_ne(
+    simple_param: SimpleParam,
+    param_primitive: ParamPrimitive,
+    custom_param_primitive: CustomParamPrimitive,
+) -> None:
+    """
+    Parameter primitive objects are not equal to other objects or parameter primitives
+    with different values.
+    """
+    assert param_primitive != simple_param
+    assert custom_param_primitive != simple_param
+    if not isinstance(param_primitive, ParamNone):
+        assert param_primitive != type(param_primitive)()
+        assert custom_param_primitive != type(custom_param_primitive)()
+
+
+def test_param_primitive_hash(
+    param_primitive: ParamPrimitive, custom_param_primitive: CustomParamPrimitive
+) -> None:
+    """Parameter primitive objects has the same hash as objects they are equal to."""
+    assert hash(param_primitive) == hash(deepcopy(param_primitive))
+    assert hash(param_primitive) == hash(custom_param_primitive)
+    assert hash(param_primitive) == hash(param_primitive.value)
 
 
 def test_param_int_methods_return_int(param_int: ParamInt) -> None:

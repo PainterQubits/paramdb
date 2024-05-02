@@ -178,7 +178,10 @@ class ParamNone(_ParamPrimitive[None]):
         return False
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, ParamNone)
+        return other is None or isinstance(other, ParamNone)
+
+    def __hash__(self) -> int:
+        return hash(self.value)
 
     def __repr__(self) -> str:
         # Show empty parentheses
