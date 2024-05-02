@@ -11,6 +11,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - If Pydantic is installed, parameter data classes automatically have Pydantic type
   validation enabled.
+- Parameter primitives classes: `ParamInt`, `ParamFloat`, `ParamBool`, `ParamStr`, and
+  `ParamNone`.
 
 ### Changed
 
