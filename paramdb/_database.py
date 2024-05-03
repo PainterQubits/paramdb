@@ -24,7 +24,7 @@ except ImportError:
     _ASTROPY_INSTALLED = False
 
 T = TypeVar("T")
-SelectT = TypeVar("SelectT", bound=Select[Any])
+_SelectT = TypeVar("_SelectT", bound=Select[Any])
 
 CLASS_NAME_KEY = "__type"
 """
@@ -51,27 +51,6 @@ def _full_class_name(cls: type) -> str:
     return f"{cls.__module__}.{cls.__name__}"
 
 
-def _to_dict(obj: Any) -> Any:
-    """
-    Convert the given object into a dictionary to be passed to ``json.dumps()``.
-
-    Note that objects within the dictionary do not need to be JSON serializable,
-    since they will be recursively processed by ``json.dumps()``.
-    """
-    class_full_name = _full_class_name(type(obj))
-    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
-    if isinstance(obj, datetime):
-        return class_full_name_dict | {"isoformat": obj.isoformat()}
-    if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
-        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
-    if isinstance(obj, ParamData):
-        return {CLASS_NAME_KEY: type(obj).__name__} | obj.to_dict()
-    raise TypeError(
-        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
-        " commit failed"
-    )
-
-
 def _from_dict(json_dict: dict[str, Any]) -> Any:
     """
     If the given dictionary created by ``json.loads()`` has the key ``CLASS_NAME_KEY``,
@@ -96,9 +75,36 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
     )
 
 
+def _preprocess_json(obj: Any) -> Any:
+    """
+    Preprocess the given object and its children into a JSON-serializable format.
+    Compared with ``json.dumps()``, this function can define custom logic for dealing
+    with subclasses of ``int``, ``float``, and ``str``.
+    """
+    if isinstance(obj, ParamData):
+        return {CLASS_NAME_KEY: type(obj).__name__} | _preprocess_json(obj.to_dict())
+    if isinstance(obj, (int, float, bool, str)) or obj is None:
+        return obj
+    if isinstance(obj, (list, tuple)):
+        return [_preprocess_json(value) for value in obj]
+    if isinstance(obj, dict):
+        return {key: _preprocess_json(value) for key, value in obj.items()}
+    class_full_name = _full_class_name(type(obj))
+    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
+    if isinstance(obj, datetime):
+        return class_full_name_dict | {"isoformat": obj.isoformat()}
+    if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
+        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
+    raise TypeError(
+        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
+        " commit failed"
+    )
+
+
 def _encode(obj: Any) -> bytes:
     """Encode the given object into bytes that will be stored in the database."""
-    return _compress(json.dumps(obj, default=_to_dict))
+    # pylint: disable=no-member
+    return _compress(json.dumps(_preprocess_json(obj)))
 
 
 def _decode(data: bytes, load_classes: bool) -> Any:
@@ -194,7 +200,7 @@ class ParamDB(Generic[T]):
             else f"commit {commit_id} does not exist in database" f" '{self._path}'"
         )
 
-    def _select_commit(self, select_stmt: SelectT, commit_id: int | None) -> SelectT:
+    def _select_commit(self, select_stmt: _SelectT, commit_id: int | None) -> _SelectT:
         """
         Modify the given ``_Snapshot`` select statement to return the commit specified
         by the given commit ID, or the latest commit if the commit ID is None.
@@ -206,8 +212,8 @@ class ParamDB(Generic[T]):
         )
 
     def _select_slice(
-        self, select_stmt: SelectT, start: int | None, end: int | None
-    ) -> SelectT:
+        self, select_stmt: _SelectT, start: int | None, end: int | None
+    ) -> _SelectT:
         """
         Modify the given Snapshot select statement to sort by commit ID and return the
         slice specified by the given start and end indices.

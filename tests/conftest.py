@@ -3,7 +3,16 @@
 from typing import Any
 from copy import deepcopy
 import pytest
-from paramdb import ParamData, ParamList, ParamDict
+from paramdb import (
+    ParamData,
+    ParamInt,
+    ParamFloat,
+    ParamBool,
+    ParamStr,
+    ParamNone,
+    ParamList,
+    ParamDict,
+)
 from tests.helpers import (
     DEFAULT_NUMBER,
     DEFAULT_STRING,
@@ -30,6 +39,36 @@ def fixture_number() -> float:
 def fixture_string() -> str:
     """String used to initialize parameter data."""
     return DEFAULT_STRING
+
+
+@pytest.fixture(name="param_int")
+def fixture_param_int() -> ParamInt:
+    """Parameter integer object."""
+    return ParamInt(123)
+
+
+@pytest.fixture(name="param_float")
+def fixture_param_float(number: float) -> ParamFloat:
+    """Parameter float object."""
+    return ParamFloat(number)
+
+
+@pytest.fixture(name="param_bool")
+def fixture_param_bool() -> ParamBool:
+    """Parameter boolean object."""
+    return ParamBool(True)
+
+
+@pytest.fixture(name="param_str")
+def fixture_param_str(string: str) -> ParamStr:
+    """Parameter string object."""
+    return ParamStr(string)
+
+
+@pytest.fixture(name="param_none")
+def fixture_param_none() -> ParamNone:
+    """Parameter ``None`` object."""
+    return ParamNone()
 
 
 @pytest.fixture(name="empty_param")
@@ -109,6 +148,11 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
     return [
         number,
         string,
+        ParamInt(),
+        ParamFloat(number),
+        ParamBool(),
+        ParamStr(string),
+        ParamNone(),
         EmptyParam(),
         SimpleParam(),
         NoTypeValidationParam(),
@@ -127,6 +171,11 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
 def fixture_param_dict_contents(
     number: float,
     string: str,
+    param_int: ParamInt,
+    param_float: ParamFloat,
+    param_bool: ParamBool,
+    param_str: ParamStr,
+    param_none: ParamNone,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
     no_type_validation_param: NoTypeValidationParam,
@@ -140,6 +189,11 @@ def fixture_param_dict_contents(
     return {
         "number": number,
         "string": string,
+        "param_int": param_int,
+        "param_float": deepcopy(param_float),
+        "param_bool": deepcopy(param_bool),
+        "param_str": deepcopy(param_str),
+        "param_none": deepcopy(param_none),
         "empty_param": deepcopy(empty_param),
         "simple_param": deepcopy(simple_param),
         "no_type_validation_param": deepcopy(no_type_validation_param),
@@ -180,6 +234,11 @@ def fixture_param_dict(param_dict_contents: dict[str, Any]) -> ParamDict[Any]:
 @pytest.fixture(
     name="param_data",
     params=[
+        "param_int",
+        "param_float",
+        "param_bool",
+        "param_str",
+        "param_none",
         "empty_param",
         "simple_param",
         "no_type_validation_param",
@@ -208,9 +267,13 @@ def fixture_updated_param_data_and_times(
     """
     updated_param_data = deepcopy(param_data)
     with capture_start_end_times() as times:
-        if isinstance(updated_param_data, EmptyParam):
-            # pylint: disable-next=protected-access
-            updated_param_data._update_last_updated()
+        if isinstance(
+            updated_param_data,
+            (ParamInt, ParamFloat, ParamBool, ParamStr),
+        ):
+            updated_param_data = type(updated_param_data)(updated_param_data.value)
+        elif isinstance(updated_param_data, (ParamNone, EmptyParam)):
+            updated_param_data = type(updated_param_data)()
         elif isinstance(updated_param_data, SimpleParam):
             updated_param_data.number += 1
         elif isinstance(updated_param_data, SubclassParam):
@@ -222,7 +285,7 @@ def fixture_updated_param_data_and_times(
             if len(updated_param_data) == 0:
                 updated_param_data.append(number)
             else:
-                updated_param_data[3].number += 1
+                updated_param_data[8].number += 1
         elif isinstance(updated_param_data, ParamDict):
             if len(updated_param_data) == 0:
                 updated_param_data["number"] = number

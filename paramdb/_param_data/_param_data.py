@@ -54,7 +54,7 @@ class ParamData(ABC):
 
         # Continue up the chain of parents, stopping if we reach a last updated
         # timestamp that is more recent than the new one
-        while current and not (
+        while current is not None and not (
             current._last_updated and current._last_updated >= new_last_updated
         ):
             super(ParamData, current).__setattr__("_last_updated", new_last_updated)
@@ -69,8 +69,8 @@ class ParamData(ABC):
         The last updated timestamp is handled separately and does not need to be saved
         here.
 
-        Note that objects within the dictionary do not need to be JSON serializable,
-        since they will be recursively processed by ``json.dumps()``.
+        Note that objects within a list or dictionary returned by this function do not
+        need to be JSON serializable, since they will be processed recursively.
         """
 
     @classmethod

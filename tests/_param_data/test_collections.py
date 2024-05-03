@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data._collections module."""
 
-from typing import Union, Any
+from typing import Union, Any, cast
 from copy import deepcopy
 import pytest
 from tests.helpers import (
@@ -21,8 +21,7 @@ CustomParamCollection = Union[CustomParamList, CustomParamDict]
 )
 def fixture_param_collection(request: pytest.FixtureRequest) -> ParamCollection:
     """Parameter collection."""
-    param_collection: ParamCollection = deepcopy(request.getfixturevalue(request.param))
-    return param_collection
+    return cast(ParamCollection, deepcopy(request.getfixturevalue(request.param)))
 
 
 @pytest.fixture(name="param_collection_type")
@@ -59,8 +58,7 @@ def fixture_custom_param_collection_type(
     """Custom parameter collection subclass."""
     if isinstance(param_collection, ParamList):
         return CustomParamList
-    if isinstance(param_collection, ParamDict):
-        return CustomParamDict
+    return CustomParamDict
 
 
 @pytest.fixture(name="custom_param_collection")
@@ -341,6 +339,18 @@ def test_param_list_del_parent(
         _ = param_data.parent
 
 
+def test_param_list_empty_last_updated() -> None:
+    """
+    A parameter list updates its last updated time when it becomes empty. (A previous
+    bug only updated ``last_updated`` if the ``ParamData`` object had a truth value of
+    true.)
+    """
+    param_list = ParamList([123])
+    with capture_start_end_times() as times:
+        del param_list[0]
+    assert times.start < param_list.last_updated.timestamp() < times.end
+
+
 def test_param_dict_key_error(param_dict: ParamDict[Any]) -> None:
     """Getting or deleting a nonexistent key raises a KeyError."""
     with pytest.raises(KeyError):
@@ -452,6 +462,18 @@ def test_param_dict_del_parent(
     del param_dict["param_data"]
     with pytest.raises(ValueError):
         _ = param_data.parent
+
+
+def test_param_dict_empty_last_updated() -> None:
+    """
+    A parameter dictionary updates its last updated time when it becomes empty. (A
+    previous bug only updated ``last_updated`` if the ``ParamData`` object had a truth
+    value of true.)
+    """
+    param_dict = ParamDict(test=123)
+    with capture_start_end_times() as times:
+        del param_dict.test
+    assert times.start < param_dict.last_updated.timestamp() < times.end
 
 
 def test_param_dict_iter(

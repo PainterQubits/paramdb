@@ -1,4 +1,4 @@
-"""Base classes for parameter dataclasses."""
+"""Base class for parameter dataclasses."""
 
 from __future__ import annotations
 from typing import Any
@@ -73,7 +73,7 @@ class ParamDataclass(ParamData):
         if pydantic_config is not None:
             # Merge new Pydantic config with the old one
             cls.__pydantic_config = cls.__pydantic_config | pydantic_config
-        cls.__base_setattr = object.__setattr__  # type: ignore
+        cls.__base_setattr = super().__setattr__  # type: ignore
         if _PYDANTIC_INSTALLED and cls.__type_validation:
             # Transform the class into a Pydantic data class, with custom handling for
             # validate_assignment
