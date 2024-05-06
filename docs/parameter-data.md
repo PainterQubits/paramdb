@@ -10,6 +10,10 @@
 :hide-code:
 
 from __future__ import annotations
+import os
+from tempfile import TemporaryDirectory
+tmp_dir = TemporaryDirectory()
+os.chdir(tmp_dir.name)
 ```
 
 A ParamDB database stores parameter data. The abstract base class {py:class}`ParamData`
@@ -232,7 +236,25 @@ NoTypeValidationParam(value="123")
 
 ## Files
 
-{py:class}`ParamFile` is a parameter dataclass
+{py:class}`ParamFile` is an abstract base class that stores the path to a file. The data
+in the file can then be loaded by accessing {py:attr}`ParamFile.data` and updated using
+{py:meth}`ParamFile.update_data`. In order to use {py:class}`ParamFile`, it must be
+subclassed and the functions `ParamFile._save_data()` and `ParamFile._load_data()` must be
+defined.
+
+### Pandas DataFrames
+
+One class that implements these functions is {py:class}`ParamDataFrame` for saving and
+retrieving [Pandas DataFrames]. For example:
+
+```{jupyter-execute}
+import pandas as pd
+from paramdb import ParamDataFrame
+
+data_frame = pd.DataFrame([[1, 2, 3], [4, 5, 6]], columns=["col1", "col2", "col3"])
+param_data_frame = ParamDataFrame("data.csv", data_frame)
+param_data_frame.data
+```
 
 ## Collections
 
@@ -336,4 +358,5 @@ This does nothing to the functionality, but static type checkers will now know t
 [Pydantic]: https://docs.pydantic.dev/latest/
 [Pydantic data classes]: https://docs.pydantic.dev/latest/concepts/dataclasses/
 [Pydantic configuration]: https://docs.pydantic.dev/latest/api/config/
+[Pandas DataFrames]: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
 [`collections.abc`]: https://docs.python.org/3/library/collections.abc.html
