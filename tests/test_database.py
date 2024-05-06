@@ -33,6 +33,7 @@ from paramdb import (
     ParamStr,
     ParamNone,
     ParamDataclass,
+    ParamDataFrame,
     ParamList,
     ParamDict,
     ParamDB,
@@ -263,6 +264,7 @@ def test_commit_and_load_complex(
     param_bool: ParamBool,
     param_str: ParamStr,
     param_none: ParamNone,
+    param_data_frame: ParamDataFrame,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
     subclass_param: SubclassParam,
@@ -284,6 +286,7 @@ def test_commit_and_load_complex(
         param_bool: ParamBool
         param_str: ParamStr
         param_none: ParamNone
+        param_data_frame: ParamDataFrame
         empty_param: EmptyParam
         simple_param: SimpleParam
         subclass_param: SubclassParam
@@ -308,6 +311,7 @@ def test_commit_and_load_complex(
         param_bool=param_bool,
         param_str=param_str,
         param_none=param_none,
+        param_data_frame=param_data_frame,
         empty_param=empty_param,
         simple_param=simple_param,
         subclass_param=subclass_param,

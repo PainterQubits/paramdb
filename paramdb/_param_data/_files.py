@@ -7,7 +7,7 @@ from dataclasses import InitVar
 from paramdb._param_data._dataclasses import ParamDataclass
 
 try:
-    import pandas as pd  # type: ignore
+    import pandas as pd
 
     PANDAS_INSTALLED = True
 except ImportError:
@@ -38,7 +38,7 @@ class ParamFile(ParamDataclass, Generic[T]):
     initial_data: InitVar[T | None] = None
 
     # pylint: disable-next=arguments-differ
-    def __post_init__(self, initial_data: T | None = None) -> None:  # type: ignore
+    def __post_init__(self, initial_data: T | None) -> None:
         super().__post_init__()
         if initial_data is not None:
             self.update_data(initial_data)
@@ -51,15 +51,15 @@ class ParamFile(ParamDataclass, Generic[T]):
     def _load_data(self, path: str) -> T:
         """Load data from the file at the given path."""
 
-    def update_data(self, data: T) -> None:
-        """Update the data stored within the file represented by this object."""
-        self._save_data(self.path, data)
-        self._update_last_updated()
-
     @property
     def data(self) -> T:
         """Data stored in the file represented by this object."""
         return self._load_data(self.path)
+
+    def update_data(self, data: T) -> None:
+        """Update the data stored within the file represented by this object."""
+        self._save_data(self.path, data)
+        self._update_last_updated()
 
 
 if PANDAS_INSTALLED:
@@ -68,8 +68,8 @@ if PANDAS_INSTALLED:
         """
         Subclass of :py:class:`ParamFile`.
 
-        Pandas DataFrame stored in a CSV file (with no index). This class will only be
-        defined if Pandas is installed.
+        Parameter data Pandas DataFrame, stored in a CSV file (with no index). This
+        class will only be defined if Pandas is installed.
         """
 
         def _load_data(self, path: str) -> pd.DataFrame:
