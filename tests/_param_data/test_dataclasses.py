@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
-from typing import Union
+from typing import Union, cast
 from copy import deepcopy
 import pydantic
 import pytest
@@ -43,10 +43,7 @@ def fixture_param_dataclass_object(
     request: pytest.FixtureRequest,
 ) -> ParamDataclassObject:
     """Parameter data class object."""
-    param_dataclass_object: ParamDataclassObject = deepcopy(
-        request.getfixturevalue(request.param)
-    )
-    return param_dataclass_object
+    return cast(ParamDataclassObject, deepcopy(request.getfixturevalue(request.param)))
 
 
 def test_param_dataclass_direct_instantiation_fails() -> None:

@@ -16,6 +16,8 @@ All of the following can be imported from `paramdb`.
 .. autoclass:: ParamStr
 .. autoclass:: ParamNone
 .. autoclass:: ParamDataclass
+.. autoclass:: ParamFile
+.. autoclass:: ParamDataFrame
 .. autoclass:: ParamList
    :no-members:
 .. autoclass:: ParamDict

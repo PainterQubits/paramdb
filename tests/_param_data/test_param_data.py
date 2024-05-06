@@ -4,7 +4,7 @@ from dataclasses import is_dataclass
 from copy import deepcopy
 import pytest
 from tests.helpers import ComplexParam, Times, capture_start_end_times
-from paramdb import ParamData
+from paramdb import ParamData, ParamDataFrame
 from paramdb._param_data._param_data import get_param_class
 
 
@@ -45,7 +45,11 @@ def test_get_param_class(param_data: ParamData) -> None:
 def test_param_data_initial_last_updated(param_data_type: type[ParamData]) -> None:
     """New parameter data objects are initialized with a last updated timestamp."""
     with capture_start_end_times() as times:
-        new_param_data = param_data_type()
+        new_param_data: ParamData
+        if issubclass(param_data_type, ParamDataFrame):
+            new_param_data = param_data_type("")
+        else:
+            new_param_data = param_data_type()
     assert new_param_data.last_updated is not None
     assert times.start < new_param_data.last_updated.timestamp() < times.end
 

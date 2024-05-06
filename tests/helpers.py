@@ -20,12 +20,26 @@ from paramdb import (
     ParamStr,
     ParamNone,
     ParamDataclass,
+    ParamFile,
+    ParamDataFrame,
     ParamList,
     ParamDict,
 )
 
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
+
+
+class ParamTextFile(ParamFile[str]):
+    """Parameter text file, created using ``ParamFile``."""
+
+    def _save_data(self, path: str, data: str) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(data)
+
+    def _load_data(self, path: str) -> str:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
 
 
 class EmptyParam(ParamDataclass):
@@ -78,13 +92,14 @@ class ComplexParam(ParamDataclass):
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     string: str = DEFAULT_STRING
+    list: list[Any] = field(default_factory=list)
+    dict: dict[str, Any] = field(default_factory=dict)
     param_int: ParamInt = ParamInt(123)
     param_float: ParamFloat = ParamFloat(DEFAULT_NUMBER)
     param_bool: ParamBool = ParamBool(False)
     param_str: ParamStr = ParamStr(DEFAULT_STRING)
     param_none: ParamNone = ParamNone()
-    list: list[Any] = field(default_factory=list)
-    dict: dict[str, Any] = field(default_factory=dict)
+    param_data_frame: ParamDataFrame | None = None
     empty_param: EmptyParam | None = None
     simple_param: SimpleParam | None = None
     no_type_validation_param: NoTypeValidationParam | None = None

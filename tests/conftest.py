@@ -10,6 +10,7 @@ from paramdb import (
     ParamBool,
     ParamStr,
     ParamNone,
+    ParamDataFrame,
     ParamList,
     ParamDict,
 )
@@ -71,6 +72,12 @@ def fixture_param_none() -> ParamNone:
     return ParamNone()
 
 
+@pytest.fixture(name="param_data_frame")
+def fixture_param_data_frame(string: str) -> ParamDataFrame:
+    """Parameter DataFrame."""
+    return ParamDataFrame(f"{string}.csv")
+
+
 @pytest.fixture(name="empty_param")
 def fixture_empty_param() -> EmptyParam:
     """Empty parameter data class object."""
@@ -129,6 +136,7 @@ def fixture_complex_param(number: float, string: str) -> ComplexParam:
     return ComplexParam(
         number=number,
         string=string,
+        param_data_frame=ParamDataFrame(string),
         empty_param=EmptyParam(),
         simple_param=SimpleParam(),
         no_type_validation_param=NoTypeValidationParam(),
@@ -153,6 +161,7 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
         ParamBool(),
         ParamStr(string),
         ParamNone(),
+        ParamDataFrame(string),
         EmptyParam(),
         SimpleParam(),
         NoTypeValidationParam(),
@@ -167,7 +176,7 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
 
 
 @pytest.fixture(name="param_dict_contents")
-# pylint: disable-next=too-many-arguments
+# pylint: disable-next=too-many-arguments,too-many-locals
 def fixture_param_dict_contents(
     number: float,
     string: str,
@@ -176,6 +185,7 @@ def fixture_param_dict_contents(
     param_bool: ParamBool,
     param_str: ParamStr,
     param_none: ParamNone,
+    param_data_frame: ParamDataFrame,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
     no_type_validation_param: NoTypeValidationParam,
@@ -194,6 +204,7 @@ def fixture_param_dict_contents(
         "param_bool": deepcopy(param_bool),
         "param_str": deepcopy(param_str),
         "param_none": deepcopy(param_none),
+        "param_data_frame": deepcopy(param_data_frame),
         "empty_param": deepcopy(empty_param),
         "simple_param": deepcopy(simple_param),
         "no_type_validation_param": deepcopy(no_type_validation_param),
@@ -239,6 +250,7 @@ def fixture_param_dict(param_dict_contents: dict[str, Any]) -> ParamDict[Any]:
         "param_bool",
         "param_str",
         "param_none",
+        "param_data_frame",
         "empty_param",
         "simple_param",
         "no_type_validation_param",
@@ -274,6 +286,8 @@ def fixture_updated_param_data_and_times(
             updated_param_data = type(updated_param_data)(updated_param_data.value)
         elif isinstance(updated_param_data, (ParamNone, EmptyParam)):
             updated_param_data = type(updated_param_data)()
+        elif isinstance(updated_param_data, ParamDataFrame):
+            updated_param_data.path = ""
         elif isinstance(updated_param_data, SimpleParam):
             updated_param_data.number += 1
         elif isinstance(updated_param_data, SubclassParam):
@@ -285,7 +299,7 @@ def fixture_updated_param_data_and_times(
             if len(updated_param_data) == 0:
                 updated_param_data.append(number)
             else:
-                updated_param_data[8].number += 1
+                updated_param_data[9].number += 1
         elif isinstance(updated_param_data, ParamDict):
             if len(updated_param_data) == 0:
                 updated_param_data["number"] = number
