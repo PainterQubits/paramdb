@@ -176,7 +176,7 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
 
 
 @pytest.fixture(name="param_dict_contents")
-# pylint: disable-next=too-many-arguments
+# pylint: disable-next=too-many-arguments,too-many-locals
 def fixture_param_dict_contents(
     number: float,
     string: str,

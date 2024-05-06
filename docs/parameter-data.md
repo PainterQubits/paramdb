@@ -230,6 +230,10 @@ class NoTypeValidationParam(CustomParam, type_validation=False):
 NoTypeValidationParam(value="123")
 ```
 
+## Files
+
+{py:class}`ParamFile` is a parameter dataclass
+
 ## Collections
 
 Ordinary lists and dictionaries can be used within parameter data; however, any
