@@ -11,7 +11,7 @@ on:
       - develop
 
 env:
-  POETRY_VERSION: "1.8.2"
+  POETRY_VERSION: "1.8.3"
   MAIN_PYTHON_VERSION: "3.9"
   PACKAGE_NAME: "paramdb"
 
