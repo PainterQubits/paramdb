@@ -6,11 +6,11 @@ build:
     python: "3.10"
   jobs:
     post_create_environment:
-      - pip install poetry==1.6.1
-      - poetry config virtualenvs.create false
+      - pip install poetry==1.8.2
     post_install:
-      - poetry install --without dev
-      - poetry run python -m ipykernel install --user
+      # See https://docs.readthedocs.io/en/stable/build-customization.html#install-dependencies-with-poetry
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --all-extras --without dev
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry run python -m ipykernel install --user
 
 sphinx:
   configuration: docs/conf.py

@@ -10,32 +10,104 @@ from collections.abc import Iterator
 from dataclasses import dataclass, field
 from contextlib import contextmanager
 import time
+import pydantic
 from astropy.units import Quantity  # type: ignore # pylint: disable=import-error
-from paramdb import ParamData, Param, Struct, ParamList, ParamDict
+from paramdb import (
+    ParamData,
+    ParamInt,
+    ParamBool,
+    ParamFloat,
+    ParamStr,
+    ParamNone,
+    ParamDataclass,
+    ParamFile,
+    ParamDataFrame,
+    ParamList,
+    ParamDict,
+)
 
 DEFAULT_NUMBER = 1.23
 DEFAULT_STRING = "test"
 
 
-class CustomParam(Param):
-    """Custom parameter."""
+class ParamTextFile(ParamFile[str]):
+    """Parameter text file, created using ``ParamFile``."""
+
+    def _save_data(self, path: str, data: str) -> None:
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(data)
+
+    def _load_data(self, path: str) -> str:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+
+
+class EmptyParam(ParamDataclass):
+    """Empty parameter data class"""
+
+
+class SimpleParam(ParamDataclass):
+    """Simple parameter data class."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     number_with_units: Quantity = Quantity(12, "m")
     string: str = DEFAULT_STRING
+    param_int: ParamInt = ParamInt(123)
+    param_float: ParamFloat = ParamFloat(DEFAULT_NUMBER)
+    param_bool: ParamBool = ParamBool(False)
+    param_str: ParamStr = ParamStr(DEFAULT_STRING)
+    param_none: ParamNone = ParamNone()
 
 
-class CustomStruct(Struct):
-    """Custom parameter structure."""
+class NoTypeValidationParam(SimpleParam, type_validation=False):
+    """Parameter dataclass without type validation."""
+
+
+class WithTypeValidationParam(SimpleParam, type_validation=True):
+    """Parameter dataclass with type validation re-enabled."""
+
+
+class NoAssignmentValidationParam(
+    SimpleParam, pydantic_config=pydantic.ConfigDict(validate_assignment=False)
+):
+    """Parameter dataclass without assignment validation."""
+
+
+class WithAssignmentValidationParam(
+    SimpleParam, pydantic_config=pydantic.ConfigDict(validate_assignment=True)
+):
+    """Parameter dataclass with assignment validation re-enabled."""
+
+
+class SubclassParam(SimpleParam):
+    """Parameter data class that is a subclass of another parameter data class."""
+
+    second_number: float = DEFAULT_NUMBER
+
+
+class ComplexParam(ParamDataclass):
+    """Complex parameter data class."""
 
     number: float = DEFAULT_NUMBER
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     string: str = DEFAULT_STRING
     list: list[Any] = field(default_factory=list)
     dict: dict[str, Any] = field(default_factory=dict)
-    param: CustomParam | None = None
-    struct: CustomStruct | None = None
+    param_int: ParamInt = ParamInt(123)
+    param_float: ParamFloat = ParamFloat(DEFAULT_NUMBER)
+    param_bool: ParamBool = ParamBool(False)
+    param_str: ParamStr = ParamStr(DEFAULT_STRING)
+    param_none: ParamNone = ParamNone()
+    param_data_frame: ParamDataFrame | None = None
+    empty_param: EmptyParam | None = None
+    simple_param: SimpleParam | None = None
+    no_type_validation_param: NoTypeValidationParam | None = None
+    with_type_validation_param: WithTypeValidationParam | None = None
+    no_assignment_validation_param: NoAssignmentValidationParam | None = None
+    with_assignment_validation_param: WithAssignmentValidationParam | None = None
+    subclass_param: SubclassParam | None = None
+    complex_param: ComplexParam | None = None
     param_list: ParamList[Any] = field(default_factory=ParamList)
     param_dict: ParamDict[Any] = field(default_factory=ParamDict)
     param_data: ParamData | None = None
@@ -47,6 +119,26 @@ class CustomParamList(ParamList[Any]):
 
 class CustomParamDict(ParamDict[Any]):
     """Custom parameter dictionary subclass."""
+
+
+class CustomParamInt(ParamInt):
+    """Custom parameter integer subclass."""
+
+
+class CustomParamFloat(ParamFloat):
+    """Custom parameter float subclass."""
+
+
+class CustomParamBool(ParamBool):
+    """Custom parameter boolean subclass."""
+
+
+class CustomParamStr(ParamStr):
+    """Custom parameter string subclass."""
+
+
+class CustomParamNone(ParamNone):
+    """Custom parameter ``None`` subclass."""
 
 
 @dataclass

@@ -14,18 +14,23 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._keys import CLASS_NAME_KEY
 from paramdb._param_data._param_data import ParamData, get_param_class
 
 try:
     from astropy.units import Quantity  # type: ignore
 
-    ASTROPY_INSTALLED = True
+    _ASTROPY_INSTALLED = True
 except ImportError:
-    ASTROPY_INSTALLED = False
+    _ASTROPY_INSTALLED = False
 
 T = TypeVar("T")
-SelectT = TypeVar("SelectT", bound=Select[Any])
+_SelectT = TypeVar("_SelectT", bound=Select[Any])
+
+CLASS_NAME_KEY = "__type"
+"""
+Dictionary key corresponding to an object's class name in the JSON representation of a
+ParamDB commit.
+"""
 
 
 def _compress(text: str) -> bytes:
@@ -46,30 +51,9 @@ def _full_class_name(cls: type) -> str:
     return f"{cls.__module__}.{cls.__name__}"
 
 
-def _to_dict(obj: Any) -> Any:
-    """
-    Convert the given object into a dictionary to be passed to `json.dumps`.
-
-    Note that objects within the dictionary do not need to be JSON serializable,
-    since they will be recursively processed by `json.dumps`.
-    """
-    class_full_name = _full_class_name(type(obj))
-    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
-    if isinstance(obj, datetime):
-        return class_full_name_dict | {"isoformat": obj.isoformat()}
-    if ASTROPY_INSTALLED and isinstance(obj, Quantity):
-        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
-    if isinstance(obj, ParamData):
-        return {CLASS_NAME_KEY: type(obj).__name__} | obj.to_dict()
-    raise TypeError(
-        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
-        " commit failed"
-    )
-
-
 def _from_dict(json_dict: dict[str, Any]) -> Any:
     """
-    If the given dictionary created by ``json.loads`` has the key ``CLASS_NAME_KEY``,
+    If the given dictionary created by ``json.loads()`` has the key ``CLASS_NAME_KEY``,
     attempt to construct an object of the named type from it. Otherwise, return the
     dictionary unchanged.
 
@@ -81,7 +65,7 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
     class_name = json_dict.pop(CLASS_NAME_KEY)
     if class_name == _full_class_name(datetime):
         return datetime.fromisoformat(json_dict["isoformat"]).astimezone()
-    if ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
+    if _ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
         return Quantity(**json_dict)
     param_class = get_param_class(class_name)
     if param_class is not None:
@@ -91,9 +75,36 @@ def _from_dict(json_dict: dict[str, Any]) -> Any:
     )
 
 
+def _preprocess_json(obj: Any) -> Any:
+    """
+    Preprocess the given object and its children into a JSON-serializable format.
+    Compared with ``json.dumps()``, this function can define custom logic for dealing
+    with subclasses of ``int``, ``float``, and ``str``.
+    """
+    if isinstance(obj, ParamData):
+        return {CLASS_NAME_KEY: type(obj).__name__} | _preprocess_json(obj.to_dict())
+    if isinstance(obj, (int, float, bool, str)) or obj is None:
+        return obj
+    if isinstance(obj, (list, tuple)):
+        return [_preprocess_json(value) for value in obj]
+    if isinstance(obj, dict):
+        return {key: _preprocess_json(value) for key, value in obj.items()}
+    class_full_name = _full_class_name(type(obj))
+    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
+    if isinstance(obj, datetime):
+        return class_full_name_dict | {"isoformat": obj.isoformat()}
+    if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
+        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
+    raise TypeError(
+        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
+        " commit failed"
+    )
+
+
 def _encode(obj: Any) -> bytes:
     """Encode the given object into bytes that will be stored in the database."""
-    return _compress(json.dumps(obj, default=_to_dict))
+    # pylint: disable=no-member
+    return _compress(json.dumps(_preprocess_json(obj)))
 
 
 def _decode(data: bytes, load_classes: bool) -> Any:
@@ -122,12 +133,10 @@ class _Snapshot(_Base):
     """Compressed data."""
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     """Commit ID."""
-    # datetime.utcnow() is wrapped in a lambda function to allow it to be mocked in
-    # tests where we want to control the time.
     timestamp: Mapped[datetime] = mapped_column(
-        default_factory=lambda: datetime.utcnow()  # pylint: disable=unnecessary-lambda
+        default_factory=lambda: datetime.now(timezone.utc)
     )
-    """Naive datetime in UTC time (since this is how SQLite stores datetimes)."""
+    """Datetime in UTC time (since this is how SQLite stores datetimes)."""
 
 
 @dataclass(frozen=True)
@@ -165,10 +174,10 @@ class ParamDB(Generic[T]):
     not exist. To work with type checking, this class can be parameterized with a root
     data type ``T``. For example::
 
-        from paramdb import Struct, ParamDB
+        from paramdb import ParamDataclass, ParamDB
 
-        class Root(Struct):
-            pass
+        class Root(ParamDataclass):
+            ...
 
         param_db = ParamDB[Root]("path/to/param.db")
     """
@@ -191,7 +200,7 @@ class ParamDB(Generic[T]):
             else f"commit {commit_id} does not exist in database" f" '{self._path}'"
         )
 
-    def _select_commit(self, select_stmt: SelectT, commit_id: int | None) -> SelectT:
+    def _select_commit(self, select_stmt: _SelectT, commit_id: int | None) -> _SelectT:
         """
         Modify the given ``_Snapshot`` select statement to return the commit specified
         by the given commit ID, or the latest commit if the commit ID is None.
@@ -203,8 +212,8 @@ class ParamDB(Generic[T]):
         )
 
     def _select_slice(
-        self, select_stmt: SelectT, start: int | None, end: int | None
-    ) -> SelectT:
+        self, select_stmt: _SelectT, start: int | None, end: int | None
+    ) -> _SelectT:
         """
         Modify the given Snapshot select statement to sort by commit ID and return the
         slice specified by the given start and end indices.
@@ -276,8 +285,7 @@ class ParamDB(Generic[T]):
         reconstructed. The relevant parameter data classes must be defined in the
         current program. However, if ``load_classes`` is False, classes are loaded
         directly from the database as dictionaries with the class name in the key
-        :py:const:`~paramdb._keys.CLASS_NAME_KEY` and, if they are parameters, the last
-        updated time in the key :py:const:`~paramdb._keys.LAST_UPDATED_KEY`.
+        :py:const:`~paramdb._database.CLASS_NAME_KEY`.
         """
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:

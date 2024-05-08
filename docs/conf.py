@@ -25,7 +25,11 @@ myst_heading_anchors = 3
 # Autodoc options
 # See https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html#configuration
 autodoc_default_options = {"members": True, "member-order": "bysource"}
-autodoc_inherit_docstrings = False
+autodoc_type_aliases = {
+    "ConvertibleToInt": "ConvertibleToInt",
+    "ConvertibleToFloat": "ConvertibleToFloat",
+}
+# autodoc_inherit_docstrings = False
 add_module_names = False
 
 

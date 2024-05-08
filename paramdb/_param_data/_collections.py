@@ -13,19 +13,19 @@ from collections.abc import (
     ValuesView,
     ItemsView,
 )
-from datetime import datetime
+from abc import abstractmethod
 from typing_extensions import Self
-from paramdb._keys import PARAMLIST_ITEMS_KEY
 from paramdb._param_data._param_data import ParamData
 
 T = TypeVar("T")
+_CollectionT = TypeVar("_CollectionT", bound=Collection[Any])
 
 
 # pylint: disable-next=abstract-method
-class _ParamCollection(ParamData):
+class _ParamCollection(ParamData, Generic[_CollectionT]):
     """Base class for parameter collections."""
 
-    _contents: Collection[Any]
+    _contents: _CollectionT
 
     def __len__(self) -> int:
         return len(self._contents)
@@ -41,12 +41,15 @@ class _ParamCollection(ParamData):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._contents})"
 
-    @property
-    def last_updated(self) -> datetime | None:
-        return self._get_last_updated(self._contents)
+    def _to_json(self) -> _CollectionT:
+        return self._contents
+
+    @classmethod
+    @abstractmethod
+    def _from_json(cls, json_data: _CollectionT) -> Self: ...
 
 
-class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
+class ParamList(_ParamCollection[list[T]], MutableSequence[T], Generic[T]):
     """
     Subclass of :py:class:`ParamData` and ``MutableSequence``.
 
@@ -54,9 +57,8 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
     iterable (like builtin ``list``).
     """
 
-    _contents: list[T]
-
     def __init__(self, iterable: Iterable[T] | None = None) -> None:
+        super().__init__()
         self._contents = [] if iterable is None else list(iterable)
         if iterable is not None:
             for item in self._contents:
@@ -80,6 +82,7 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
     def __setitem__(self, index: SupportsIndex | slice, value: Any) -> None:
         old_value: Any = self._contents[index]
         self._contents[index] = value
+        self._update_last_updated()
         if isinstance(index, slice):
             for item in old_value:
                 self._remove_child(item)
@@ -92,21 +95,20 @@ class ParamList(_ParamCollection, MutableSequence[T], Generic[T]):
     def __delitem__(self, index: SupportsIndex | slice) -> None:
         old_value = self._contents[index]
         del self._contents[index]
+        self._update_last_updated()
         self._remove_child(old_value)
 
     def insert(self, index: SupportsIndex, value: T) -> None:
         self._contents.insert(index, value)
+        self._update_last_updated()
         self._add_child(value)
 
-    def to_dict(self) -> dict[str, list[T]]:
-        return {PARAMLIST_ITEMS_KEY: self._contents}
-
     @classmethod
-    def from_dict(cls, json_dict: dict[str, list[T]]) -> Self:
-        return cls(json_dict[PARAMLIST_ITEMS_KEY])
+    def _from_json(cls, json_data: list[T]) -> Self:
+        return cls(json_data)
 
 
-class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
+class ParamDict(_ParamCollection[dict[str, T]], MutableMapping[str, T], Generic[T]):
     """
     Subclass of :py:class:`ParamData` and ``MutableMapping``.
 
@@ -117,9 +119,8 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     and items are returned as dict_keys, dict_values, and dict_items objects.
     """
 
-    _contents: dict[str, T]
-
     def __init__(self, mapping: Mapping[str, T] | None = None, /, **kwargs: T):
+        super().__init__()
         self._contents = ({} if mapping is None else dict(mapping)) | kwargs
         for item in self._contents.values():
             self._add_child(item)
@@ -138,12 +139,14 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
     def __setitem__(self, key: str, value: T) -> None:
         old_value = self._contents[key] if key in self._contents else None
         self._contents[key] = value
+        self._update_last_updated()
         self._remove_child(old_value)
         self._add_child(value)
 
     def __delitem__(self, key: str) -> None:
         old_value = self._contents[key] if key in self._contents else None
         del self._contents[key]
+        self._update_last_updated()
         self._remove_child(old_value)
 
     def __iter__(self) -> Iterator[str]:
@@ -194,9 +197,6 @@ class ParamDict(_ParamCollection, MutableMapping[str, T], Generic[T]):
         # Use dict_items so items print nicely
         return self._contents.items()
 
-    def to_dict(self) -> dict[str, T]:
-        return self._contents
-
     @classmethod
-    def from_dict(cls, json_dict: dict[str, T]) -> Self:
-        return cls(json_dict)
+    def _from_json(cls, json_data: dict[str, T]) -> Self:
+        return cls(json_data)
