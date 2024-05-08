@@ -27,15 +27,22 @@ Install the latest version of ParamDB using pip:
 pip install -U paramdb
 ```
 
-To install along with [Astropy] for support for storing scalar [`astropy.units.Quantity`]
-objects in the database, ParamDB can be installed with the `astropy` extra:
+ParamDB has several extras:
+
+- `pandas` for [`pandas.DataFrame`] support via [`paramdb.ParamDataFrame`]
+- `astropy` for [`astropy.units.Quantity`] support
+- `pydantic` for type-validation support via [Pydantic]
+
+To install all extras, use the `all` extra:
 
 ```
-pip install -U "paramdb[astropy]"
+pip install -U "paramdb[all]"
 ```
 
-[astropy]: https://docs.astropy.org/en/stable/index.html
+[`pandas.DataFrame`]: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.html
+[`paramdb.ParamDataFrame`]: https://paramdb.readthedocs.io/en/stable/api-reference.html#paramdb.ParamDataFrame
 [`astropy.units.quantity`]: https://docs.astropy.org/en/stable/api/astropy.units.Quantity.html#astropy.units.Quantity
+[Pydantic]: https://docs.pydantic.dev/latest/
 
 <!-- end installation -->
 
