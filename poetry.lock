@@ -2861,7 +2861,7 @@ cffi = {version = ">=1.11", markers = "platform_python_implementation == \"PyPy\
 cffi = ["cffi (>=1.11)"]
 
 [extras]
-all = ["astropy", "pandas", "pydantic"]
+all = ["astropy", "eval-type-backport", "pandas", "pydantic"]
 astropy = ["astropy"]
 pandas = ["pandas"]
 pydantic = ["eval-type-backport", "pydantic"]
@@ -2869,4 +2869,4 @@ pydantic = ["eval-type-backport", "pydantic"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "f1a8c9743c1dc0f8c62ef2169a7a4dc33608510d0353ad4cb3602607f0ab6c6b"
+content-hash = "50247cede4776a4d26a700c2fa6110fc89777136020eff0a5a57ff567f3e907d"
