@@ -7,6 +7,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] (May 8 2024)
+
 ### Added
 
 - If Pydantic is installed, parameter data classes automatically have Pydantic type
@@ -167,7 +169,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.11.0...develop
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.12.0...develop
+[0.12.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.12.0
 [0.11.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.11.0
 [0.10.2]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.2
 [0.10.1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.1
