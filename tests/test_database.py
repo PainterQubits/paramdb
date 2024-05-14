@@ -111,7 +111,7 @@ def test_load_empty_fails(db_path: str) -> None:
     param_db = ParamDB[Any](db_path)
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func()  # type: ignore
+            load_func()  # type: ignore[operator]
         assert (
             str(exc_info.value)
             == f"cannot load most recent commit because database '{db_path}' has no"
@@ -125,14 +125,14 @@ def test_load_nonexistent_commit_fails(db_path: str) -> None:
     param_db = ParamDB[Any](db_path)
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func(1)  # type: ignore
+            load_func(1)  # type: ignore[operator]
         assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
 
     # Database with one commit
     param_db.commit("Initial commit", {})
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func(100)  # type: ignore
+            load_func(100)  # type: ignore[operator]
         assert (
             str(exc_info.value) == "commit 100 does not exist in database"
             f" '{db_path}'"
@@ -421,17 +421,17 @@ def test_empty_commit_history(db_path: str) -> None:
     """Loads an empty commit history from an empty database."""
     param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
-        assert history_func() == []  # type: ignore
+        assert history_func() == []  # type: ignore[operator]
 
 
 def test_empty_commit_history_slice(db_path: str) -> None:
     """Correctly slices an empty commit history."""
     param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
-        assert history_func(0) == []  # type: ignore
-        assert history_func(0, 10) == []  # type: ignore
-        assert history_func(-10) == []  # type: ignore
-        assert history_func(-10, -5) == []  # type: ignore
+        assert history_func(0) == []  # type: ignore[operator]
+        assert history_func(0, 10) == []  # type: ignore[operator]
+        assert history_func(-10) == []  # type: ignore[operator]
+        assert history_func(-10, -5) == []  # type: ignore[operator]
 
 
 def test_commit_history(db_path: str, simple_param: SimpleParam) -> None:

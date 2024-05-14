@@ -17,7 +17,7 @@ from sqlalchemy.orm import (
 from paramdb._param_data._param_data import ParamData, get_param_class
 
 try:
-    from astropy.units import Quantity  # type: ignore
+    from astropy.units import Quantity  # type: ignore[import-untyped]
 
     _ASTROPY_INSTALLED = True
 except ImportError:

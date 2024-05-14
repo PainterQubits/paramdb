@@ -1,7 +1,7 @@
 """Base class for parameter dataclasses."""
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, cast
 from dataclasses import dataclass, is_dataclass, fields
 from typing_extensions import Self, dataclass_transform
 from paramdb._param_data._param_data import ParamData
@@ -16,7 +16,7 @@ except ImportError:
 
 
 @dataclass_transform()
-class ParamDataclass(ParamData):
+class ParamDataclass(ParamData[str]):
     """
     Subclass of :py:class:`ParamData`.
 
@@ -46,7 +46,7 @@ class ParamDataclass(ParamData):
     See https://docs.pydantic.dev/latest/api/config for full configuration options.
     """
 
-    __field_names: set[str]  # Data class field names
+    _field_names: set[str]  # Data class field names
     __type_validation: bool = True  # Whether to use Pydantic
     __pydantic_config: pydantic.ConfigDict = {
         "extra": "forbid",
@@ -56,9 +56,16 @@ class ParamDataclass(ParamData):
         "validate_default": True,
     }
 
-    # Set in __init_subclass__() and used to set attributes within __setattr__()
     # pylint: disable-next=unused-argument
-    def __base_setattr(self: Any, name: str, value: Any) -> None: ...
+    def __base_setattr(self: Any, name: str, value: Any) -> None:
+        """
+        If Pydantic is enabled and ``validate_assignment`` is True, this function will
+        both set and validate the attribute; otherwise, it will be an ordinary setattr
+        function.
+
+        Set in ``__init_subclass__()`` and used to set attributes within
+        ``__setattr__()``.
+        """
 
     def __init_subclass__(
         cls,
@@ -73,7 +80,7 @@ class ParamDataclass(ParamData):
         if pydantic_config is not None:
             # Merge new Pydantic config with the old one
             cls.__pydantic_config = cls.__pydantic_config | pydantic_config
-        cls.__base_setattr = super().__setattr__  # type: ignore
+        cls.__base_setattr = super().__setattr__  # type: ignore[assignment]
         if _PYDANTIC_INSTALLED and cls.__type_validation:
             # Transform the class into a Pydantic data class, with custom handling for
             # validate_assignment
@@ -93,13 +100,11 @@ class ParamDataclass(ParamData):
                     def __base_setattr(self: Any, name: str, value: Any) -> None:
                         pydantic_validator.validate_assignment(self, name, value)
 
-                    cls.__base_setattr = __base_setattr  # type: ignore
+                    cls.__base_setattr = __base_setattr  # type: ignore[method-assign]
         else:
             # Transform the class into a data class
             dataclass(**kwargs)(cls)
-        cls.__field_names = (
-            {f.name for f in fields(cls)} if is_dataclass(cls) else set()
-        )
+        cls._field_names = {f.name for f in fields(cls)} if is_dataclass(cls) else set()
 
     # pylint: disable-next=unused-argument
     def __new__(cls, *args: Any, **kwargs: Any) -> Self:
@@ -110,12 +115,15 @@ class ParamDataclass(ParamData):
                 f"only subclasses of {ParamDataclass.__name__} can be instantiated"
             )
         self = super().__new__(cls)
-        super().__init__(self)
+        super().__init__(self)  # type: ignore[arg-type]
         return self
 
     def __post_init__(self) -> None:
-        for field_name in self.__field_names:
-            self._add_child(getattr(self, field_name))
+        # Add and wrap fields as children
+        for field_name in self._field_names:
+            child = getattr(self, field_name)
+            super().__setattr__(field_name, self._wrap_child(child))
+            self._add_child(child)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via square brackets
@@ -125,16 +133,38 @@ class ParamDataclass(ParamData):
         # Enable setting attributes via square brackets
         setattr(self, name, value)
 
+    def __delitem__(self, name: str) -> None:
+        # Enable deleting attributes via square brackets
+        delattr(self, name)
+
+    def __getattribute__(self, name: str) -> Any:
+        # Unwrap child if the attribute is a field
+        value = super().__getattribute__(name)
+        if name in super().__getattribute__("_field_names"):
+            return self._unwrap_child(value)
+        return value
+
     def __setattr__(self, name: str, value: Any) -> None:
-        # If this attribute is a Data Class field, update last updated and children
-        if name in self.__field_names:
-            old_value = getattr(self, name) if hasattr(self, name) else None
-            self.__base_setattr(name, value)
-            self._update_last_updated()
-            self._remove_child(old_value)
+        # If this attribute is a field, process the old and new child
+        if name in self._field_names:
+            old_value = getattr(self, name)
+            self.__base_setattr(name, value)  # May perform type validation
+            super().__setattr__(name, self._wrap_child(value))
             self._add_child(value)
-            return
-        self.__base_setattr(name, value)
+            self._remove_child(old_value)
+        else:
+            self.__base_setattr(name, value)
+
+    def __delattr__(self, name: str) -> None:
+        old_value = getattr(self, name)
+        super().__delattr__(name)
+        if name in self._field_names:
+            self._remove_child(old_value)
+
+    def _get_wrapped_child(self, child_name: str) -> ParamData[Any]:
+        if child_name in self._field_names:
+            return cast(ParamData[Any], super().__getattribute__(child_name))
+        return super()._get_wrapped_child(child_name)
 
     def _to_json(self) -> dict[str, Any]:
         if is_dataclass(self):

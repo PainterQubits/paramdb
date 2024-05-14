@@ -1,7 +1,7 @@
 """Parameter data collection classes."""
 
 from __future__ import annotations
-from typing import TypeVar, Generic, SupportsIndex, Any, overload
+from typing import Union, TypeVar, Generic, SupportsIndex, Any, cast, overload
 from collections.abc import (
     Iterator,
     Collection,
@@ -9,20 +9,17 @@ from collections.abc import (
     Mapping,
     MutableSequence,
     MutableMapping,
-    KeysView,
-    ValuesView,
-    ItemsView,
 )
-from abc import abstractmethod
 from typing_extensions import Self
-from paramdb._param_data._param_data import ParamData
+from paramdb._param_data._param_data import ParamData, _ParamWrapper
 
 T = TypeVar("T")
+_ChildNameT = TypeVar("_ChildNameT", str, int)
 _CollectionT = TypeVar("_CollectionT", bound=Collection[Any])
 
 
 # pylint: disable-next=abstract-method
-class _ParamCollection(ParamData, Generic[_CollectionT]):
+class _ParamCollection(ParamData[_ChildNameT], Generic[_ChildNameT, _CollectionT]):
     """Base class for parameter collections."""
 
     _contents: _CollectionT
@@ -32,11 +29,7 @@ class _ParamCollection(ParamData, Generic[_CollectionT]):
 
     def __eq__(self, other: Any) -> bool:
         # Equal if they have are of the same class and their contents are equal
-        return (
-            isinstance(other, _ParamCollection)
-            and type(other) is type(self)
-            and self._contents == other._contents
-        )
+        return type(other) is type(self) and self._contents == other._contents
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._contents})"
@@ -44,12 +37,32 @@ class _ParamCollection(ParamData, Generic[_CollectionT]):
     def _to_json(self) -> _CollectionT:
         return self._contents
 
+    def _get_wrapped_child(self, child_name: _ChildNameT) -> ParamData[Any]:
+        # If a TypeError, IndexError, or KeyError occurs from _contents, raise the
+        # superclass ValueError from the _contents exception
+        try:
+            return cast(
+                ParamData[Any], self._contents[child_name]  # type: ignore[index]
+            )
+        except (TypeError, IndexError, KeyError) as contents_exc:
+            try:
+                return super()._get_wrapped_child(child_name)  # type: ignore[arg-type]
+            except ValueError as super_exc:
+                raise super_exc from contents_exc
+
     @classmethod
-    @abstractmethod
-    def _from_json(cls, json_data: _CollectionT) -> Self: ...
+    def _from_json(cls, json_data: _CollectionT) -> Self:
+        # Set contents directly since __init__() will contain child wrapping logic
+        new_param_collection = cls()
+        new_param_collection._contents = json_data
+        return new_param_collection
 
 
-class ParamList(_ParamCollection[list[T]], MutableSequence[T], Generic[T]):
+class ParamList(
+    _ParamCollection[int, list[Union[T, _ParamWrapper[T]]]],
+    MutableSequence[T],
+    Generic[T],
+):
     """
     Subclass of :py:class:`ParamData` and ``MutableSequence``.
 
@@ -59,19 +72,26 @@ class ParamList(_ParamCollection[list[T]], MutableSequence[T], Generic[T]):
 
     def __init__(self, iterable: Iterable[T] | None = None) -> None:
         super().__init__()
-        self._contents = [] if iterable is None else list(iterable)
-        if iterable is not None:
-            for item in self._contents:
-                self._add_child(item)
+        initial_contents = iterable or []
+        self._contents = [self._wrap_child(item) for item in initial_contents]
+        for item in initial_contents:
+            self._add_child(item)
 
     @overload
     def __getitem__(self, index: SupportsIndex) -> T: ...
 
     @overload
-    def __getitem__(self, index: slice) -> list[T]: ...
+    def __getitem__(self, index: slice) -> Self: ...
 
-    def __getitem__(self, index: Any) -> Any:
-        return self._contents[index]
+    def __getitem__(self, index: SupportsIndex | slice) -> T | Self:
+        if isinstance(index, slice):
+            return type(self)(
+                [
+                    self._unwrap_child(wrapped_child)
+                    for wrapped_child in self._contents[index]
+                ]
+            )
+        return self._unwrap_child(self._contents[index])
 
     @overload
     def __setitem__(self, index: SupportsIndex, value: T) -> None: ...
@@ -80,35 +100,45 @@ class ParamList(_ParamCollection[list[T]], MutableSequence[T], Generic[T]):
     def __setitem__(self, index: slice, value: Iterable[T]) -> None: ...
 
     def __setitem__(self, index: SupportsIndex | slice, value: Any) -> None:
-        old_value: Any = self._contents[index]
-        self._contents[index] = value
-        self._update_last_updated()
         if isinstance(index, slice):
-            for item in old_value:
-                self._remove_child(item)
+            old_values = self._contents[index]
+            self._contents[index] = [self._wrap_child(item) for item in value]
+            for old_item in old_values:
+                self._remove_child(old_item)
             for item in value:
                 self._add_child(item)
         else:
+            old_value = self._contents[index]
+            self._contents[index] = self._wrap_child(value)
             self._remove_child(old_value)
             self._add_child(value)
 
     def __delitem__(self, index: SupportsIndex | slice) -> None:
         old_value = self._contents[index]
         del self._contents[index]
-        self._update_last_updated()
-        self._remove_child(old_value)
+        if isinstance(index, slice) and isinstance(old_value, list):
+            for old_item in old_value:
+                self._remove_child(old_item)
+        else:
+            self._remove_child(old_value)
 
     def insert(self, index: SupportsIndex, value: T) -> None:
-        self._contents.insert(index, value)
-        self._update_last_updated()
+        self._contents.insert(index, self._wrap_child(value))
         self._add_child(value)
 
     @classmethod
-    def _from_json(cls, json_data: list[T]) -> Self:
-        return cls(json_data)
+    def _from_json(cls, json_data: list[T | _ParamWrapper[T]]) -> Self:
+
+        new_obj = cls()
+        new_obj._contents = json_data
+        return new_obj
 
 
-class ParamDict(_ParamCollection[dict[str, T]], MutableMapping[str, T], Generic[T]):
+class ParamDict(
+    _ParamCollection[str, dict[str, Union[T, _ParamWrapper[T]]]],
+    MutableMapping[str, T],
+    Generic[T],
+):
     """
     Subclass of :py:class:`ParamData` and ``MutableMapping``.
 
@@ -121,9 +151,12 @@ class ParamDict(_ParamCollection[dict[str, T]], MutableMapping[str, T], Generic[
 
     def __init__(self, mapping: Mapping[str, T] | None = None, /, **kwargs: T):
         super().__init__()
-        self._contents = ({} if mapping is None else dict(mapping)) | kwargs
-        for item in self._contents.values():
-            self._add_child(item)
+        initial_contents = {**(mapping or {}), **kwargs}
+        self._contents = {
+            key: self._wrap_child(value) for key, value in initial_contents.items()
+        }
+        for value in initial_contents.values():
+            self._add_child(value)
 
     def __dir__(self) -> Iterable[str]:
         # Return keys that are not attribute names (i.e. do not pass self._is_attribute)
@@ -134,19 +167,17 @@ class ParamDict(_ParamCollection[dict[str, T]], MutableMapping[str, T], Generic[
         ]
 
     def __getitem__(self, key: str) -> T:
-        return self._contents[key]
+        return self._unwrap_child(self._contents[key])
 
     def __setitem__(self, key: str, value: T) -> None:
         old_value = self._contents[key] if key in self._contents else None
-        self._contents[key] = value
-        self._update_last_updated()
+        self._contents[key] = self._wrap_child(value)
         self._remove_child(old_value)
         self._add_child(value)
 
     def __delitem__(self, key: str) -> None:
         old_value = self._contents[key] if key in self._contents else None
         del self._contents[key]
-        self._update_last_updated()
         self._remove_child(old_value)
 
     def __iter__(self) -> Iterator[str]:
@@ -184,19 +215,3 @@ class ParamDict(_ParamCollection[dict[str, T]], MutableMapping[str, T], Generic[
         (i.e. dunder variables), and to allow for true attributes to be used if needed.
         """
         return len(name) > 0 and name[0] == "_"
-
-    def keys(self) -> KeysView[str]:
-        # Use dict_keys so keys print nicely
-        return self._contents.keys()
-
-    def values(self) -> ValuesView[T]:
-        # Use dict_values so values print nicely
-        return self._contents.values()
-
-    def items(self) -> ItemsView[str, T]:
-        # Use dict_items so items print nicely
-        return self._contents.items()
-
-    @classmethod
-    def _from_json(cls, json_data: dict[str, T]) -> Self:
-        return cls(json_data)

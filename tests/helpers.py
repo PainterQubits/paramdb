@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from contextlib import contextmanager
 import time
 import pydantic
-from astropy.units import Quantity  # type: ignore # pylint: disable=import-error
+from astropy.units import Quantity  # type: ignore[import-untyped]
 from paramdb import (
     ParamData,
     ParamInt,

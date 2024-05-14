@@ -18,7 +18,10 @@ def test_custom_subclass_extra_kwarg_fails(param_data_type: type[ParamData]) -> 
     """Extra keyword arugments in a custom parameter data subclass raise a TypeError."""
     with pytest.raises(TypeError) as exc_info:
         # pylint: disable-next=unused-variable
-        class CustomParamData(param_data_type, extra_kwarg="test"):  # type: ignore
+        class CustomParamData(
+            param_data_type,  # type: ignore[valid-type, misc]
+            extra_kwarg="test",  # type: ignore[call-arg]
+        ):
             """Custom parameter data class with an extra keyword arugment."""
 
     error_message = str(exc_info.value)
