@@ -55,6 +55,7 @@ class ParamDataclass(ParamData[str]):
         "strict": True,
         "validate_default": True,
     }
+    _wrapped_children: dict[str, Any] | None = None  # Used when initializing from json
 
     # pylint: disable-next=unused-argument
     def __base_setattr(self: Any, name: str, value: Any) -> None:
@@ -119,11 +120,14 @@ class ParamDataclass(ParamData[str]):
         return self
 
     def __post_init__(self) -> None:
-        # Add and wrap fields as children
-        for field_name in self._field_names:
-            child = getattr(self, field_name)
-            super().__setattr__(field_name, self._wrap_child(child))
-            self._add_child(child)
+        # Wrap fields as children and process them
+        for field in fields(self):  # type: ignore[arg-type]
+            if self._wrapped_children is not None and field.init:
+                wrapped_child = self._wrapped_children[field.name]
+            else:
+                wrapped_child = self._wrap_child(super().__getattribute__(field.name))
+            super().__setattr__(field.name, wrapped_child)
+            self._add_child(wrapped_child)
 
     def __getitem__(self, name: str) -> Any:
         # Enable getting attributes via square brackets
@@ -147,19 +151,20 @@ class ParamDataclass(ParamData[str]):
     def __setattr__(self, name: str, value: Any) -> None:
         # If this attribute is a field, process the old and new child
         if name in self._field_names:
-            old_value = getattr(self, name)
+            old_wrapped_value = super().__getattribute__(name)
             self.__base_setattr(name, value)  # May perform type validation
-            super().__setattr__(name, self._wrap_child(value))
-            self._add_child(value)
-            self._remove_child(old_value)
+            wrapped_value = self._wrap_child(value)
+            super().__setattr__(name, wrapped_value)
+            self._remove_child(old_wrapped_value)
+            self._add_child(wrapped_value)
         else:
             self.__base_setattr(name, value)
 
     def __delattr__(self, name: str) -> None:
-        old_value = getattr(self, name)
+        old_wrapped_value = super().__getattribute__(name)
         super().__delattr__(name)
         if name in self._field_names:
-            self._remove_child(old_value)
+            self._remove_child(old_wrapped_value)
 
     def _get_wrapped_child(self, child_name: str) -> ParamData[Any]:
         if child_name in self._field_names:
@@ -167,10 +172,18 @@ class ParamDataclass(ParamData[str]):
         return super()._get_wrapped_child(child_name)
 
     def _to_json(self) -> dict[str, Any]:
-        if is_dataclass(self):
-            return {f.name: getattr(self, f.name) for f in fields(self) if f.init}
-        return {}
+        return {
+            field.name: super(ParamData, self).__getattribute__(field.name)
+            for field in fields(self)  # type: ignore[arg-type]
+            if field.init
+        }
 
-    @classmethod
-    def _from_json(cls, json_data: dict[str, Any]) -> Self:
-        return cls(**json_data)
+    def _init_from_json(self, json_data: dict[str, Any]) -> None:
+        unwrapped_children = {
+            name: self._unwrap_child(wrapped_child)
+            for name, wrapped_child in json_data.items()
+        }
+        super().__setattr__("_wrapped_children", json_data)
+        # pylint: disable-next=unnecessary-dunder-call
+        self.__init__(**unwrapped_children)  # type: ignore[misc]
+        super().__delattr__("_wrapped_children")

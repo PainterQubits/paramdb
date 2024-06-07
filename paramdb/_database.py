@@ -23,7 +23,7 @@ try:
 except ImportError:
     _ASTROPY_INSTALLED = False
 
-T = TypeVar("T")
+DataT = TypeVar("DataT")
 _SelectT = TypeVar("_SelectT", bound=Select[Any])
 
 CLASS_NAME_KEY = "__type"
@@ -157,22 +157,22 @@ class CommitEntry:
 
 
 @dataclass(frozen=True)
-class CommitEntryWithData(CommitEntry, Generic[T]):
+class CommitEntryWithData(CommitEntry, Generic[DataT]):
     """
     Subclass of :py:class:`CommitEntry`.
 
     Entry for a commit containing the ID, message, and timestamp, as well as the data.
     """
 
-    data: T
+    data: DataT
     """Data contained in this commit."""
 
 
-class ParamDB(Generic[T]):
+class ParamDB(Generic[DataT]):
     """
     Parameter database. The database is created in a file at the given path if it does
     not exist. To work with type checking, this class can be parameterized with a root
-    data type ``T``. For example::
+    data type ``DataT``. For example::
 
         from paramdb import ParamDataclass, ParamDB
 
@@ -233,7 +233,7 @@ class ParamDB(Generic[T]):
         return self._path
 
     def commit(
-        self, message: str, data: T, timestamp: datetime | None = None
+        self, message: str, data: DataT, timestamp: datetime | None = None
     ) -> CommitEntry:
         """
         Commit the given data to the database with the given message and return a commit
@@ -268,7 +268,7 @@ class ParamDB(Generic[T]):
     @overload
     def load(
         self, commit_id: int | None = None, *, load_classes: Literal[True] = True
-    ) -> T: ...
+    ) -> DataT: ...
 
     @overload
     def load(
@@ -331,7 +331,7 @@ class ParamDB(Generic[T]):
         end: int | None = None,
         *,
         load_classes: Literal[True] = True,
-    ) -> list[CommitEntryWithData[T]]: ...
+    ) -> list[CommitEntryWithData[DataT]]: ...
 
     @overload
     def commit_history_with_data(

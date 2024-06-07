@@ -146,38 +146,44 @@ def test_param_collection_len_nonempty(
 def test_param_collection_eq(
     param_collection_type: type[ParamCollection],
     param_collection: ParamCollection,
+    custom_param_collection: CustomParamCollection,
     contents: Any,
 ) -> None:
     """
-    Two parameter collections are equal if they have the same class and contents.
+    Parameter collections are equal to instances of the same root collection class
+    (ParamList or ParamDict instances) with the same contents.
     """
     assert param_collection == param_collection_type(contents)
+    assert param_collection == custom_param_collection
 
 
 def test_param_collection_neq_contents(
     param_collection_type: type[ParamCollection],
     param_collection: ParamCollection,
+    custom_param_collection: CustomParamCollection,
 ) -> None:
     """
     Two parameter collections are not equal if they have the same class but different
     contents.
     """
     assert param_collection != param_collection_type()
+    assert param_collection != type(custom_param_collection)()
 
 
 def test_param_collection_neq_class(
     contents_type: type[Contents],
     param_collection: ParamCollection,
     custom_param_collection: CustomParamCollection,
-    contents: Contents,
 ) -> None:
     """
     Two parameter collections are not equal if they have the same contents but different
-    classes.
+    root collection classes (ParamList or ParamDict).
     """
-    assert contents_type(param_collection) == contents_type(custom_param_collection)
-    assert param_collection != custom_param_collection
-    assert param_collection != contents
+    assert param_collection != contents_type(param_collection)
+    assert custom_param_collection != contents_type(custom_param_collection)
+    if isinstance(param_collection, ParamList):
+        assert ParamList(["a", "b", "c"]) != ParamDict(a=1, b=2, c=3)
+        assert ParamList(["a", "b", "c"]) == ParamList(ParamDict(a=1, b=2, c=3))
 
 
 def test_param_collection_repr(
@@ -217,15 +223,20 @@ def test_param_list_get_slice(
     param_list: ParamList[Any], param_list_contents: list[Any]
 ) -> None:
     """Can get an item by slice from a parameter list."""
-    assert isinstance(param_list[0:2], list)
-    assert param_list[0:2] == param_list_contents[0:2]
+    assert isinstance(param_list[0:2], ParamList)
+    assert list(param_list[0:2]) == param_list_contents[0:2]
 
 
 def test_param_list_get_slice_parent(param_list: ParamList[Any]) -> None:
-    """Items gotten from a parameter list via a slice have the correct parent."""
+    """
+    Slices of a parameter list have no parent, and the parent of their items is the
+    slice, not the original parameter list.
+    """
     sublist = param_list[2:4]
-    assert sublist[0].parent is param_list
-    assert sublist[1].parent is param_list
+    with pytest.raises(ValueError):
+        assert sublist.parent
+    assert sublist[0].parent is sublist
+    assert sublist[1].parent is sublist
 
 
 def test_param_list_set_index(param_list: ParamList[Any]) -> None:
@@ -246,7 +257,7 @@ def test_param_list_set_index_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_set_index_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """
     A parameter data added to a parameter list via indexing has the correct parent.
@@ -279,7 +290,7 @@ def test_param_list_set_slice_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_set_slice_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """A parameter data added to a parameter list via slicing has the correct parent."""
     for _ in range(2):  # Run twice to check reassigning the same parameter data
@@ -305,7 +316,7 @@ def test_param_list_insert_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_insert_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a parameter list via insertion has the correct parent."""
     param_list.insert(1, param_data)
@@ -329,7 +340,7 @@ def test_param_list_del_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_del_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """An item deleted from a parameter list has no parent."""
     param_list.append(param_data)
@@ -419,7 +430,7 @@ def test_param_dict_set_last_updated(param_dict: ParamDict[Any]) -> None:
 
 
 def test_param_dict_set_parent(
-    param_dict: ParamDict[Any], param_data: ParamData
+    param_dict: ParamDict[Any], param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a parameter dictionary has the correct parent."""
     with pytest.raises(ValueError):
@@ -454,7 +465,7 @@ def test_param_dict_del_last_updated(param_dict: ParamDict[Any]) -> None:
 
 
 def test_param_dict_del_parent(
-    param_dict: ParamDict[Any], param_data: ParamData
+    param_dict: ParamDict[Any], param_data: ParamData[Any]
 ) -> None:
     """An item deleted from a parameter dictionary has no parent."""
     param_dict["param_data"] = param_data

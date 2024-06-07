@@ -4,13 +4,14 @@ from __future__ import annotations
 from typing import TypeVar, Generic, Any, cast
 from paramdb._param_data._param_data import ParamData
 
-T = TypeVar("T", bound=ParamData[Any])
+ParentT = TypeVar("ParentT", bound=ParamData[Any])
+RootT = TypeVar("RootT", bound=ParamData[Any])
 
 
-class ParentType(ParamData[Any], Generic[T]):
+class ParentType(ParamData[Any], Generic[ParentT]):
     """
     Mixin for :py:class:`ParamData` that sets the type hint for
-    :py:attr:`ParamData.parent` to type parameter ``T``. For example::
+    :py:attr:`ParamData.parent` to type parameter ``ParentT``. For example::
 
         class CustomParam(ParentType[ParentParam], Param):
             ...
@@ -20,14 +21,14 @@ class ParentType(ParamData[Any], Generic[T]):
     """
 
     @property
-    def parent(self) -> T:
-        return cast(T, super().parent)
+    def parent(self) -> ParentT:
+        return cast(ParentT, super().parent)
 
 
-class RootType(ParamData[Any], Generic[T]):
+class RootType(ParamData[Any], Generic[RootT]):
     """
     Mixin for :py:class:`ParamData` that sets the type hint for
-    :py:attr:`ParamData.root` to type parameter ``T``. For example::
+    :py:attr:`ParamData.root` to type parameter ``RootT``. For example::
 
         class CustomParam(RootType[RootParam], Param):
             ...
@@ -37,5 +38,5 @@ class RootType(ParamData[Any], Generic[T]):
     """
 
     @property
-    def root(self) -> T:
-        return cast(T, super().root)
+    def root(self) -> RootT:
+        return cast(RootT, super().root)

@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
-from typing import Union, cast
+from typing import Union, Any, cast
 from copy import deepcopy
 import pydantic
 import pytest
@@ -116,7 +116,7 @@ def test_param_dataclass_init_parent(complex_param: ComplexParam) -> None:
 
 
 def test_param_dataclass_set_parent(
-    complex_param: ComplexParam, param_data: ParamData
+    complex_param: ComplexParam, param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a structure has the correct parent."""
     with pytest.raises(ValueError):
