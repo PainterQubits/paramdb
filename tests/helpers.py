@@ -108,7 +108,7 @@ class CustomParamDict(ParamDict[Any]):
 
 
 def assert_param_data_strong_equals(
-    param_data: ParamData[Any], other_param_data: ParamData[Any], child_name: str
+    param_data: ParamData[Any], other_param_data: ParamData[Any], child_name: str | int
 ) -> None:
     """
     Assert that the given parameter data is equal to the other parameter data based on

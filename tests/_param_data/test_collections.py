@@ -7,6 +7,7 @@ from tests.helpers import (
     ComplexParam,
     CustomParamList,
     CustomParamDict,
+    assert_param_data_strong_equals,
     capture_start_end_times,
 )
 from paramdb import ParamData, ParamList, ParamDict
@@ -223,9 +224,13 @@ def test_param_list_get_index_parent(param_list: ParamList[Any]) -> None:
 def test_param_list_get_slice(
     param_list: ParamList[Any], param_list_contents: list[Any]
 ) -> None:
-    """Can get an item by slice from a parameter list."""
+    """
+    Can get an item by slice from a parameter list. Also, a slice of the entire list is
+    strongly equal to the original list.
+    """
     assert isinstance(param_list[0:2], ParamList)
     assert list(param_list[0:2]) == param_list_contents[0:2]
+    assert_param_data_strong_equals(param_list[:], param_list, child_name=1)
 
 
 def test_param_list_get_slice_parent(param_list: ParamList[Any]) -> None:
@@ -238,6 +243,15 @@ def test_param_list_get_slice_parent(param_list: ParamList[Any]) -> None:
     assert sublist.parent is parent
     assert sublist[0].parent is param_list
     assert sublist[0].parent is param_list
+
+
+def test_param_list_get_slice_references(param_list: ParamList[Any]) -> None:
+    """
+    Children of a parameter list slice are references to items in the original list.
+    """
+    sublist = param_list[2:]
+    assert sublist[1] is param_list[3]
+    assert sublist[2] is param_list[4]
 
 
 def test_param_list_set_index(param_list: ParamList[Any]) -> None:
