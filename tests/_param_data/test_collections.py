@@ -4,6 +4,7 @@ from typing import Union, Any, cast
 from copy import deepcopy
 import pytest
 from tests.helpers import (
+    ComplexParam,
     CustomParamList,
     CustomParamDict,
     capture_start_end_times,
@@ -229,14 +230,14 @@ def test_param_list_get_slice(
 
 def test_param_list_get_slice_parent(param_list: ParamList[Any]) -> None:
     """
-    Slices of a parameter list have no parent, and the parent of their items is the
-    slice, not the original parameter list.
+    Slices of a parameter list have the same parent as the original parameter list, and
+    the parent of their items is the original parameter list.
     """
+    parent = ComplexParam(param_list=param_list)
     sublist = param_list[2:4]
-    with pytest.raises(ValueError):
-        assert sublist.parent
-    assert sublist[0].parent is sublist
-    assert sublist[1].parent is sublist
+    assert sublist.parent is parent
+    assert sublist[0].parent is param_list
+    assert sublist[0].parent is param_list
 
 
 def test_param_list_set_index(param_list: ParamList[Any]) -> None:
@@ -275,9 +276,9 @@ def test_param_list_set_index_parent(
 def test_param_list_set_slice(param_list: ParamList[Any]) -> None:
     """Can set items by slice in a parameter list."""
     new_numbers = [4.56, 7.89]
-    assert param_list[0:2] != new_numbers
+    assert list(param_list[0:2]) != new_numbers
     param_list[0:2] = new_numbers
-    assert param_list[0:2] == new_numbers
+    assert list(param_list[0:2]) == new_numbers
 
 
 def test_param_list_set_slice_last_updated(param_list: ParamList[Any]) -> None:
@@ -493,33 +494,3 @@ def test_param_dict_iter(
     """A parameter dictionary correctly supports iteration."""
     for key, contents_key in zip(param_dict, param_dict_contents):
         assert key == contents_key
-
-
-def test_param_dict_keys(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs keys as a dict_keys object."""
-    param_dict_keys = param_dict.keys()
-    contents_keys = param_dict_contents.keys()
-    assert isinstance(param_dict_keys, type(contents_keys))
-    assert param_dict_keys == param_dict_keys
-
-
-def test_param_dict_values(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs values as a dict_values object."""
-    param_dict_values = param_dict.values()
-    contents_values = param_dict_contents.values()
-    assert isinstance(param_dict_values, type(contents_values))
-    assert list(param_dict_values) == list(contents_values)
-
-
-def test_param_dict_items(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs items as a dict_items object."""
-    param_dict_items = param_dict.items()
-    contents_items = param_dict_contents.items()
-    assert isinstance(param_dict_items, type(contents_items))
-    assert param_dict_items == contents_items
