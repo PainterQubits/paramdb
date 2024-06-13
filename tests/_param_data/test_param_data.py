@@ -81,17 +81,6 @@ def test_param_data_updating_child_updates_last_updated(
     assert times.start < param_data.last_updated.timestamp() < times.end
 
 
-def test_param_data__updates_last_updated(
-    param_data: ParamData[Any], param_data_child_name: str | int | None
-) -> None:
-    """The last updated time is updated when a child is updated."""
-    if param_data_child_name is None:
-        return
-    with capture_start_end_times() as times:
-        update_child(param_data, param_data_child_name)
-    assert times.start < param_data.last_updated.timestamp() < times.end
-
-
 def test_child_does_not_change(param_data: ParamData[Any]) -> None:
     """
     Including a parameter data object as a child within a parent structure does not
