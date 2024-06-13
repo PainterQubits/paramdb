@@ -1,16 +1,7 @@
 """Parameter data collection classes."""
 
 from __future__ import annotations
-from typing import (
-    Union,
-    TypeVar,
-    Generic,
-    SupportsIndex,
-    Any,
-    cast,
-    overload,
-    get_type_hints,
-)
+from typing import Union, TypeVar, Generic, SupportsIndex, Any, cast, overload
 from collections.abc import (
     Iterator,
     Collection,
@@ -227,4 +218,7 @@ class ParamDict(
             existing_attribute = True
         except AttributeError:
             existing_attribute = False
-        return existing_attribute or name in get_type_hints(type(self))
+        class_annotations: dict[str, Any] = {}
+        for cls in type(self).mro():
+            class_annotations |= getattr(cls, "__annotations__", {})
+        return existing_attribute or name in class_annotations
