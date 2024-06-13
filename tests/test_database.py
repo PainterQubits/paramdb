@@ -4,6 +4,7 @@
 # subscriptable.
 # pylint: disable=unsubscriptable-object
 
+from __future__ import annotations
 from typing import Any
 from copy import deepcopy
 import os
@@ -19,6 +20,7 @@ from tests.helpers import (
     CustomParamDict,
     Times,
     assert_param_data_strong_equals,
+    update_child,
     capture_start_end_times,
 )
 from paramdb import (
@@ -131,7 +133,7 @@ def test_load_nonexistent_commit_fails(db_path: str) -> None:
 
 
 def test_commit_and_load(
-    db_path: str, param_data: ParamData[Any], param_data_child_name: str
+    db_path: str, param_data: ParamData[Any], param_data_child_name: str | int | None
 ) -> None:
     """Can commit and load parameter data and commit entries."""
     param_db = ParamDB[ParamData[Any]](db_path)
@@ -191,6 +193,31 @@ def test_commit_and_load_timestamp(db_path: str, simple_param: SimpleParam) -> N
         assert commit_entry_from_history.timestamp == aware_timestamp
         commit_entry_with_data = param_db.commit_history_with_data()[i]
         assert commit_entry_with_data.timestamp == aware_timestamp
+
+
+def test_update_timestamp_after_load(
+    db_path: str, param_data: ParamData[Any], param_data_child_name: str | int | None
+) -> None:
+    """
+    Updating the child of a parameter data object that has been loaded from the database
+    updates the timestamps of the object and the child.
+
+    The object and child timestamps are not updated when reconstructing the object from
+    the database, so this tests that they are subsequently updated as usual.
+    """
+    if param_data_child_name is None:
+        return
+    param_db = ParamDB[ParamData[Any]](db_path)
+    param_db.commit("Initial commit", param_data)
+    param_data_loaded = param_db.load()
+    with capture_start_end_times() as times:
+        update_child(param_data_loaded, param_data_child_name)
+    assert times.start < param_data_loaded.last_updated.timestamp() < times.end
+    assert (
+        times.start
+        < param_data_loaded.child_last_updated(param_data_child_name).timestamp()
+        < times.end
+    )
 
 
 def test_load_classes_false(db_path: str, param_data: ParamData[Any]) -> None:

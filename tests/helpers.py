@@ -108,7 +108,9 @@ class CustomParamDict(ParamDict[Any]):
 
 
 def assert_param_data_strong_equals(
-    param_data: ParamData[Any], other_param_data: ParamData[Any], child_name: str | int
+    param_data: ParamData[Any],
+    other_param_data: ParamData[Any],
+    child_name: str | int | None,
 ) -> None:
     """
     Assert that the given parameter data is equal to the other parameter data based on
@@ -130,6 +132,14 @@ def assert_param_data_strong_equals(
         else:
             assert child == other_child
             assert child.parent == other_child.parent
+
+
+def update_child(param_data: ParamData[Any], child_name: str | int) -> None:
+    """Update the specified child of the given parameter data."""
+    # Update the child by assignment
+    child = param_data[child_name]  # type: ignore[index]
+    # pylint: disable-next=unsupported-assignment-operation
+    param_data[child_name] = child  # type: ignore[index]
 
 
 @dataclass

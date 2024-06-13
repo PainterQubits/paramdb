@@ -1,10 +1,16 @@
 """Tests for the paramdb._param_data._param_data module."""
 
+from __future__ import annotations
 from typing import Any
 from dataclasses import is_dataclass
 from copy import deepcopy
 import pytest
-from tests.helpers import SimpleParam, ComplexParam, Times, capture_start_end_times
+from tests.helpers import (
+    SimpleParam,
+    ComplexParam,
+    update_child,
+    capture_start_end_times,
+)
 from paramdb import ParamData, ParamDataFrame
 from paramdb._param_data._param_data import get_param_class
 
@@ -64,16 +70,26 @@ def test_param_data_initial_last_updated(
     assert times.start < new_param_data.last_updated.timestamp() < times.end
 
 
-def test_param_data_updates_last_updated(
-    updated_param_data: ParamData[Any], updated_times: Times
+def test_param_data_updating_child_updates_last_updated(
+    param_data: ParamData[Any], param_data_child_name: str | int | None
 ) -> None:
-    """Updating parameter data updates the last updated time."""
-    assert updated_param_data.last_updated is not None
-    assert (
-        updated_times.start
-        < updated_param_data.last_updated.timestamp()
-        < updated_times.end
-    )
+    """The last updated time is updated when a child is updated."""
+    if param_data_child_name is None:
+        return
+    with capture_start_end_times() as times:
+        update_child(param_data, param_data_child_name)
+    assert times.start < param_data.last_updated.timestamp() < times.end
+
+
+def test_param_data__updates_last_updated(
+    param_data: ParamData[Any], param_data_child_name: str | int | None
+) -> None:
+    """The last updated time is updated when a child is updated."""
+    if param_data_child_name is None:
+        return
+    with capture_start_end_times() as times:
+        update_child(param_data, param_data_child_name)
+    assert times.start < param_data.last_updated.timestamp() < times.end
 
 
 def test_child_does_not_change(param_data: ParamData[Any]) -> None:
