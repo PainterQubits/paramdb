@@ -1,7 +1,16 @@
 """Parameter data collection classes."""
 
 from __future__ import annotations
-from typing import Union, TypeVar, Generic, SupportsIndex, Any, cast, overload
+from typing import (
+    Union,
+    TypeVar,
+    Generic,
+    SupportsIndex,
+    Any,
+    cast,
+    overload,
+    get_type_hints,
+)
 from collections.abc import (
     Iterator,
     Collection,
@@ -158,11 +167,12 @@ class ParamDict(
         return isinstance(other, ParamDict) and self._contents == other._contents
 
     def __dir__(self) -> Iterable[str]:
-        # Return keys that are not attribute names (i.e. do not pass self._is_attribute)
-        # in __dir__() so they are suggested by interactive prompts like IPython.
+        # In addition to the default __dir__(), include dictionary keys so they are
+        # suggested for dot notation by interactive prompts like IPython.
+        super_dir = super().__dir__()
         return [
-            *super().__dir__(),
-            *filter(lambda key: not self._is_attribute(key), self._contents.keys()),
+            *super_dir,
+            *filter(lambda key: key not in super_dir, self.keys()),
         ]
 
     def __getitem__(self, key: str) -> ItemT:
@@ -185,13 +195,12 @@ class ParamDict(
 
     def __getattr__(self, name: str) -> ItemT:
         # Enable accessing items via dot notation
-        if self._is_attribute(name):
-            # It is important to raise an attribute error rather than a key error for
-            # names considered to be attributes. For example, this allows deepcopy to
-            # work properly.
-            raise AttributeError(
-                f"'{type(self).__name__}' object has no attribute '{name}'"
-            )
+        if self._is_attribute(name) or name not in self:
+            # If the name corresponds to an attribute or is not in the dictionary, we
+            # should raise the default AttributeError rather than a KeyError, since this
+            # is the expected behavior of __getattr__(). For example, this allows
+            # getattr() and hasattr() to work properly.
+            self.__getattribute__(name)  # Raises the default AttributeError
         return self[name]
 
     def __setattr__(self, name: str, value: ItemT) -> None:
@@ -203,15 +212,19 @@ class ParamDict(
 
     def __delattr__(self, name: str) -> None:
         # Enable deleting items via dot notation
-        if self._is_attribute(name):
+        if self._is_attribute(name) or name not in self:
             super().__delattr__(name)
         else:
             del self[name]
 
     def _is_attribute(self, name: str) -> bool:
         """
-        Names beginning with underscores are considered to be attributes when accessed
-        via dot notation. This is both to allow internal Python variables to be set
-        (i.e. dunder variables), and to allow for true attributes to be used if needed.
+        If the given name matches an existing attribute or has a corresponding class
+        type hint, treat it as the name of an attribute.
         """
-        return len(name) > 0 and name[0] == "_"
+        try:
+            self.__getattribute__(name)  # pylint: disable=unnecessary-dunder-call
+            existing_attribute = True
+        except AttributeError:
+            existing_attribute = False
+        return existing_attribute or name in get_type_hints(type(self))

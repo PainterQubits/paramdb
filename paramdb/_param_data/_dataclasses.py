@@ -151,7 +151,10 @@ class ParamDataclass(ParamData[str]):
     def __setattr__(self, name: str, value: Any) -> None:
         # If this attribute is a field, process the old and new child
         if name in self._field_names:
-            old_wrapped_value = super().__getattribute__(name)
+            try:
+                old_wrapped_value = super().__getattribute__(name)
+            except AttributeError:
+                old_wrapped_value = None
             self.__base_setattr(name, value)  # May perform type validation
             wrapped_value = self._wrap_child(value)
             super().__setattr__(name, wrapped_value)

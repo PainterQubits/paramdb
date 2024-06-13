@@ -378,36 +378,34 @@ def test_param_list_empty_last_updated() -> None:
 
 
 def test_param_dict_key_error(param_dict: ParamDict[Any]) -> None:
-    """Getting or deleting a nonexistent key raises a KeyError."""
+    """
+    Getting or deleting a nonexistent key raises a KeyError if accessed using bracket
+    notation.
+    """
     with pytest.raises(KeyError):
         _ = param_dict["nonexistent"]
     with pytest.raises(KeyError):
         del param_dict["nonexistent"]
-    with pytest.raises(KeyError):
-        _ = param_dict.nonexistent
-    with pytest.raises(KeyError):
-        del param_dict.nonexistent
 
 
 def test_param_dict_attribute_error(param_dict: ParamDict[Any]) -> None:
-    """Getting or deleting a nonexistent attribute raises an AttributeError."""
+    """
+    Getting or deleting a nonexistent attribute raises an AttributeError if accessed
+    using dot notation.
+    """
     with pytest.raises(AttributeError):
-        _ = param_dict._nonexistent  # pylint: disable=protected-access
+        _ = param_dict.nonexistent  # pylint: disable=protected-access
     with pytest.raises(AttributeError):
-        del param_dict._nonexistent  # pylint: disable=protected-access
+        del param_dict.nonexistent  # pylint: disable=protected-access
 
 
 def test_param_dict_dir(param_dict: ParamDict[Any]) -> None:
-    """
-    Keys of a parameter dictionary that are not attribute names (names that pass
-    ParamDict._is_attribute) are returned by dir().
-    """
+    """Keys of a parameter dictionary are included in the list returned by dir()."""
     param_dict["_attribute_name"] = 123
-    param_dict_dir_items = set(dir(param_dict))
-    assert "_attribute_name" not in param_dict_dir_items
+    param_dict["__attribute_name__"] = 456
+    param_dict_dir = dir(param_dict)
     for key in param_dict.keys():
-        if not param_dict._is_attribute(key):  # pylint: disable=protected-access
-            assert key in param_dict_dir_items
+        assert key in param_dict_dir
 
 
 def test_param_dict_get(
