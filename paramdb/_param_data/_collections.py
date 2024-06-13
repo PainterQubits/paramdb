@@ -139,8 +139,8 @@ class ParamDict(
     Mutable mapping that is also parameter data. It can be initialized from any mapping
     or using keyword arguments (like builtin ``dict``).
 
-    Keys that do not begin with an underscore can be set via dot notation. Keys, values,
-    and items are returned as dict_keys, dict_values, and dict_items objects.
+    Keys that do not refer to existing attributes or class type hints can be gotten,
+    set, and deleted via dot notation.
     """
 
     def __init__(self, mapping: Mapping[str, ItemT] | None = None, /, **kwargs: ItemT):
