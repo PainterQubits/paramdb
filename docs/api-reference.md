@@ -10,11 +10,6 @@ All of the following can be imported from `paramdb`.
 
 ```{eval-rst}
 .. autoclass:: ParamData
-.. autoclass:: ParamInt
-.. autoclass:: ParamFloat
-.. autoclass:: ParamBool
-.. autoclass:: ParamStr
-.. autoclass:: ParamNone
 .. autoclass:: ParamDataclass
 .. autoclass:: ParamFile
 .. autoclass:: ParamDataFrame

@@ -147,7 +147,7 @@ def test_param_dataclass_init_wrong_type(
         assert "Input should be a valid number" in str(exc_info.value)
 
 
-def test_param_dataclass_init_default_wrong_type() -> None:
+def test_param_dataclass_init_default_wrong_type(number: float) -> None:
     """
     Fails or succeeds to initialize a parameter object with a default value having the
     wrong type
@@ -159,7 +159,7 @@ def test_param_dataclass_init_default_wrong_type() -> None:
         default_number: float = "123"  # type: ignore[assignment]
 
     with pytest.raises(pydantic.ValidationError) as exc_info:
-        DefaultWrongTypeParam()
+        DefaultWrongTypeParam(number=number)
         assert "Input should be a valid number" in str(exc_info.value)
 
 

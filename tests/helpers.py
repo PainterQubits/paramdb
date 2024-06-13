@@ -45,7 +45,7 @@ class EmptyParam(ParamDataclass):
 class SimpleParam(ParamDataclass):
     """Simple parameter data class."""
 
-    number: float = DEFAULT_NUMBER
+    number: float  # No default to verify that non-default properties work
     number_init_false: float = field(init=False, default=DEFAULT_NUMBER)
     number_with_units: Quantity = Quantity(12, "m")
     string: str = DEFAULT_STRING
