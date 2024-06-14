@@ -4,6 +4,7 @@
 # subscriptable.
 # pylint: disable=unsubscriptable-object
 
+from __future__ import annotations
 from typing import Any
 from copy import deepcopy
 import os
@@ -15,23 +16,15 @@ from tests.helpers import (
     SimpleParam,
     SubclassParam,
     ComplexParam,
-    CustomParamInt,
-    CustomParamFloat,
-    CustomParamBool,
-    CustomParamStr,
-    CustomParamNone,
     CustomParamList,
     CustomParamDict,
     Times,
+    assert_param_data_strong_equals,
+    update_child,
     capture_start_end_times,
 )
 from paramdb import (
     ParamData,
-    ParamInt,
-    ParamFloat,
-    ParamBool,
-    ParamStr,
-    ParamNone,
     ParamDataclass,
     ParamDataFrame,
     ParamList,
@@ -39,7 +32,7 @@ from paramdb import (
     ParamDB,
     CommitEntry,
     CommitEntryWithData,
-    CLASS_NAME_KEY,
+    ParamDBKey,
 )
 from paramdb._param_data._param_data import _param_classes
 
@@ -85,8 +78,8 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
         param_db.commit("Initial commit", data)
     assert (
         str(exc_info.value)
-        == f"'{NotJSONSerializable.__module__}.{NotJSONSerializable.__name__}' object"
-        f" {repr(data)} is not JSON serializable, so the commit failed"
+        == f"'{NotJSONSerializable.__name__}' object {repr(data)} is not JSON"
+        " serializable, so the commit failed"
     )
 
 
@@ -102,7 +95,8 @@ def test_load_unknown_class_fails(db_path: str) -> None:
         param_db.load()
     assert (
         str(exc_info.value)
-        == f"class '{Unknown.__name__}' is not known to ParamDB, so the load failed"
+        == f"ParamData class '{Unknown.__name__}' is not known to ParamDB, so the load"
+        " failed"
     )
 
 
@@ -111,7 +105,7 @@ def test_load_empty_fails(db_path: str) -> None:
     param_db = ParamDB[Any](db_path)
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func()  # type: ignore
+            load_func()  # type: ignore[operator]
         assert (
             str(exc_info.value)
             == f"cannot load most recent commit because database '{db_path}' has no"
@@ -125,23 +119,25 @@ def test_load_nonexistent_commit_fails(db_path: str) -> None:
     param_db = ParamDB[Any](db_path)
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func(1)  # type: ignore
+            load_func(1)  # type: ignore[operator]
         assert str(exc_info.value) == f"commit 1 does not exist in database '{db_path}'"
 
     # Database with one commit
     param_db.commit("Initial commit", {})
     for load_func in param_db.load, param_db.load_commit_entry:
         with pytest.raises(IndexError) as exc_info:
-            load_func(100)  # type: ignore
+            load_func(100)  # type: ignore[operator]
         assert (
             str(exc_info.value) == "commit 100 does not exist in database"
             f" '{db_path}'"
         )
 
 
-def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
+def test_commit_and_load(
+    db_path: str, param_data: ParamData[Any], param_data_child_name: str | int | None
+) -> None:
     """Can commit and load parameter data and commit entries."""
-    param_db = ParamDB[ParamData](db_path)
+    param_db = ParamDB[ParamData[Any]](db_path)
     with capture_start_end_times() as times:
         commit_entry = param_db.commit("Initial commit", param_data)
 
@@ -154,30 +150,31 @@ def test_commit_and_load(db_path: str, param_data: ParamData) -> None:
     with capture_start_end_times():
         param_data_latest = param_db.load()
         commit_entry_latest = param_db.load_commit_entry()
-    assert param_data_latest == param_data
-    assert param_data_latest.last_updated == param_data.last_updated
+    assert_param_data_strong_equals(
+        param_data_latest, param_data, param_data_child_name
+    )
     assert commit_entry_latest == commit_entry
 
     # Can load by commit ID
     with capture_start_end_times():
         param_data_first = param_db.load(commit_entry.id)
         commit_entry_first = param_db.load_commit_entry(commit_entry.id)
-    assert param_data_first == param_data
-    assert param_data_first.last_updated == param_data.last_updated
+    assert_param_data_strong_equals(param_data_first, param_data, param_data_child_name)
     assert commit_entry_first == commit_entry
 
     # Can load from history
     with capture_start_end_times():
         param_data_from_history = param_db.commit_history_with_data()[0].data
         commit_entry_from_history = param_db.commit_history()[0]
-    assert param_data_from_history == param_data
-    assert param_data_from_history.last_updated == param_data.last_updated
+    assert_param_data_strong_equals(
+        param_data_from_history, param_data, param_data_child_name
+    )
     assert commit_entry_from_history == commit_entry
 
 
 def test_commit_and_load_timestamp(db_path: str, simple_param: SimpleParam) -> None:
     """Can make a commit using a specific timestamp and load it back."""
-    param_db = ParamDB[ParamData](db_path)
+    param_db = ParamDB[ParamData[Any]](db_path)
     utc_timestamp = datetime.now(timezone.utc)
     naive_timestamp = utc_timestamp.replace(tzinfo=None)
     aware_timestamp = utc_timestamp.astimezone()
@@ -199,43 +196,61 @@ def test_commit_and_load_timestamp(db_path: str, simple_param: SimpleParam) -> N
         assert commit_entry_with_data.timestamp == aware_timestamp
 
 
-def test_load_classes_false(db_path: str, param_data: ParamData) -> None:
-    """Can load data as dictionaries if ``load_classes`` is false."""
-    param_db = ParamDB[ParamData](db_path)
+def test_update_timestamp_after_load(
+    db_path: str, param_data: ParamData[Any], param_data_child_name: str | int | None
+) -> None:
+    """
+    Updating the child of a parameter data object that has been loaded from the database
+    updates the timestamps of the object and the child.
+
+    The object and child timestamps are not updated when reconstructing the object from
+    the database, so this tests that they are subsequently updated as usual.
+    """
+    if param_data_child_name is None:
+        return
+    param_db = ParamDB[ParamData[Any]](db_path)
     param_db.commit("Initial commit", param_data)
-    data_loaded = param_db.load(load_classes=False)
-    data_from_history = param_db.commit_history_with_data(load_classes=False)[0].data
+    param_data_loaded = param_db.load()
+    with capture_start_end_times() as times:
+        update_child(param_data_loaded, param_data_child_name)
+    assert times.start < param_data_loaded.last_updated.timestamp() < times.end
+    assert (
+        times.start
+        < param_data_loaded.child_last_updated(param_data_child_name).timestamp()
+        < times.end
+    )
+
+
+def test_decode_json_false(db_path: str, param_data: ParamData[Any]) -> None:
+    """Can load raw JSON data if ``decode_json`` is false."""
+    param_db = ParamDB[ParamData[Any]](db_path)
+    param_db.commit("Initial commit", param_data)
+    data_loaded = param_db.load(decode_json=False)
+    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
 
     for data in data_loaded, data_from_history:
         # Check that loaded dictionary has the correct type and keys
-        assert isinstance(data, dict)
-        assert data.pop(CLASS_NAME_KEY) == type(param_data).__name__
-        param_data_dict = param_data.to_dict()
-        assert data.keys() == param_data_dict.keys()
+        assert isinstance(data, list)
+        assert len(data) == 4
+        key, class_name, timestamp, json_data = data
+        assert key == ParamDBKey.PARAM
+        assert class_name == type(param_data).__name__
+        assert timestamp == param_data.last_updated.timestamp()
 
-        # Check that loaded dictionary has the correct values
-        for key, value in data.items():
-            value_from_param_data = param_data_dict[key]
-            if isinstance(value_from_param_data, ParamData):
-                assert isinstance(value, dict)
-                assert value.pop(CLASS_NAME_KEY) == type(value_from_param_data).__name__
-                assert value.keys() == value_from_param_data.to_dict().keys()
-            else:
-                if isinstance(value, list):
-                    assert isinstance(value_from_param_data, list)
-                    assert len(value) == len(value_from_param_data)
-                elif isinstance(value, dict):
-                    if CLASS_NAME_KEY in value:
-                        value_class = type(value_from_param_data)
-                        full_class_name = (
-                            f"{value_class.__module__}.{value_class.__name__}"
-                        )
-                        assert value[CLASS_NAME_KEY] == full_class_name
-                    else:
-                        assert isinstance(value_from_param_data, dict)
-                        assert value.keys() == value_from_param_data.keys()
-                else:
-                    assert value == value_from_param_data
+        # Check that the loaded JSON data has the correct data
+        assert isinstance(json_data, list)
+        json_data_key, json_data_data = json_data
+        param_json_data = param_data.to_json()
+        if json_data_key == "l":
+            assert isinstance(json_data_data, list)
+            assert isinstance(param_json_data, list)
+            assert len(json_data_data) == len(param_json_data)
+        elif json_data_key == "d":
+            assert isinstance(json_data_data, dict)
+            assert isinstance(param_json_data, dict)
+            assert json_data_data.keys() == param_json_data.keys()
+        else:
+            assert False  # Currently, all param_data have list or dict data
 
 
 def test_load_classes_false_unknown_class(db_path: str) -> None:
@@ -244,12 +259,12 @@ def test_load_classes_false_unknown_class(db_path: str) -> None:
     """
     param_db = ParamDB[Unknown](db_path)
     param_db.commit("Initial commit", Unknown())
-    data_loaded = param_db.load(load_classes=False)
-    data_from_history = param_db.commit_history_with_data(load_classes=False)[0].data
-    assert isinstance(data_loaded, dict)
-    assert data_loaded.pop(CLASS_NAME_KEY) == Unknown.__name__
-    assert isinstance(data_from_history, dict)
-    assert data_from_history.pop(CLASS_NAME_KEY) == Unknown.__name__
+    data_loaded = param_db.load(decode_json=False)
+    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
+    assert isinstance(data_loaded, list)
+    assert data_loaded[1] == Unknown.__name__
+    assert isinstance(data_from_history, list)
+    assert data_from_history[1] == Unknown.__name__
 
 
 # pylint: disable-next=too-many-arguments,too-many-locals
@@ -259,11 +274,6 @@ def test_commit_and_load_complex(
     string: str,
     param_list_contents: list[Any],
     param_dict_contents: dict[str, Any],
-    param_int: ParamInt,
-    param_float: ParamFloat,
-    param_bool: ParamBool,
-    param_str: ParamStr,
-    param_none: ParamNone,
     param_data_frame: ParamDataFrame,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
@@ -281,11 +291,6 @@ def test_commit_and_load_complex(
         string: str
         list: list[Any]
         dict: dict[str, Any]
-        param_int: ParamInt
-        param_float: ParamFloat
-        param_bool: ParamBool
-        param_str: ParamStr
-        param_none: ParamNone
         param_data_frame: ParamDataFrame
         empty_param: EmptyParam
         simple_param: SimpleParam
@@ -293,11 +298,6 @@ def test_commit_and_load_complex(
         complex_param: ComplexParam
         param_list: ParamList[Any]
         param_dict: ParamDict[Any]
-        custom_param_int: CustomParamInt
-        custom_param_float: CustomParamFloat
-        custom_param_bool: CustomParamBool
-        custom_param_str: CustomParamStr
-        custom_param_none: CustomParamNone
         custom_param_list: CustomParamList
         custom_param_dict: CustomParamDict
 
@@ -306,11 +306,6 @@ def test_commit_and_load_complex(
         string=string,
         list=param_list_contents,
         dict=param_dict_contents,
-        param_int=param_int,
-        param_float=param_float,
-        param_bool=param_bool,
-        param_str=param_str,
-        param_none=param_none,
         param_data_frame=param_data_frame,
         empty_param=empty_param,
         simple_param=simple_param,
@@ -318,22 +313,15 @@ def test_commit_and_load_complex(
         complex_param=complex_param,
         param_list=param_list,
         param_dict=param_dict,
-        custom_param_int=CustomParamInt(param_int.value),
-        custom_param_float=CustomParamFloat(param_float.value),
-        custom_param_bool=CustomParamBool(param_bool.value),
-        custom_param_str=CustomParamStr(param_str.value),
-        custom_param_none=CustomParamNone(),
         custom_param_list=CustomParamList(deepcopy(param_list_contents)),
         custom_param_dict=CustomParamDict(deepcopy(param_dict_contents)),
     )
     param_db = ParamDB[Root](db_path)
     param_db.commit("Initial commit", root)
     root_loaded = param_db.load()
-    assert root_loaded == root
-    assert root_loaded.last_updated == root.last_updated
+    assert_param_data_strong_equals(root_loaded, root, "number")
     root_from_history = param_db.commit_history_with_data()[0].data
-    assert root_from_history == root
-    assert root_from_history.last_updated == root.last_updated
+    assert_param_data_strong_equals(root_from_history, root, "number")
 
 
 def test_commit_load_latest(db_path: str) -> None:
@@ -379,11 +367,9 @@ def test_commit_load_multiple(db_path: str) -> None:
 
         # Verify data
         param_loaded = param_db.load(commit_entry.id)
-        assert param_loaded == param
-        assert param_loaded.last_updated == param.last_updated
+        assert_param_data_strong_equals(param_loaded, param, "number")
         param_from_history = commit_entry_with_data_from_history.data
-        assert param_from_history == param
-        assert param_from_history.last_updated == param.last_updated
+        assert_param_data_strong_equals(param_from_history, param, "number")
 
 
 def test_separate_connections(db_path: str, simple_param: SimpleParam) -> None:
@@ -399,8 +385,8 @@ def test_separate_connections(db_path: str, simple_param: SimpleParam) -> None:
     # Load back using another connection
     param_db2 = ParamDB[SimpleParam](db_path)
     param_loaded = param_db2.load()
-    assert simple_param == param_loaded
-    assert simple_param.last_updated == param_loaded.last_updated
+
+    assert_param_data_strong_equals(param_loaded, simple_param, "number")
 
 
 def test_empty_num_commits(db_path: str) -> None:
@@ -421,17 +407,17 @@ def test_empty_commit_history(db_path: str) -> None:
     """Loads an empty commit history from an empty database."""
     param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
-        assert history_func() == []  # type: ignore
+        assert history_func() == []  # type: ignore[operator]
 
 
 def test_empty_commit_history_slice(db_path: str) -> None:
     """Correctly slices an empty commit history."""
     param_db = ParamDB[SimpleParam](db_path)
     for history_func in param_db.commit_history, param_db.commit_history_with_data:
-        assert history_func(0) == []  # type: ignore
-        assert history_func(0, 10) == []  # type: ignore
-        assert history_func(-10) == []  # type: ignore
-        assert history_func(-10, -5) == []  # type: ignore
+        assert history_func(0) == []  # type: ignore[operator]
+        assert history_func(0, 10) == []  # type: ignore[operator]
+        assert history_func(-10) == []  # type: ignore[operator]
+        assert history_func(-10, -5) == []  # type: ignore[operator]
 
 
 def test_commit_history(db_path: str, simple_param: SimpleParam) -> None:

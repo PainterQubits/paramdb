@@ -1,19 +1,10 @@
 """Defines global fixtures. Called automatically by Pytest before running tests."""
 
+from __future__ import annotations
 from typing import Any
 from copy import deepcopy
 import pytest
-from paramdb import (
-    ParamData,
-    ParamInt,
-    ParamFloat,
-    ParamBool,
-    ParamStr,
-    ParamNone,
-    ParamDataFrame,
-    ParamList,
-    ParamDict,
-)
+from paramdb import ParamData, ParamDataFrame, ParamList, ParamDict
 from tests.helpers import (
     DEFAULT_NUMBER,
     DEFAULT_STRING,
@@ -25,8 +16,6 @@ from tests.helpers import (
     WithAssignmentValidationParam,
     SubclassParam,
     ComplexParam,
-    Times,
-    capture_start_end_times,
 )
 
 
@@ -40,36 +29,6 @@ def fixture_number() -> float:
 def fixture_string() -> str:
     """String used to initialize parameter data."""
     return DEFAULT_STRING
-
-
-@pytest.fixture(name="param_int")
-def fixture_param_int() -> ParamInt:
-    """Parameter integer object."""
-    return ParamInt(123)
-
-
-@pytest.fixture(name="param_float")
-def fixture_param_float(number: float) -> ParamFloat:
-    """Parameter float object."""
-    return ParamFloat(number)
-
-
-@pytest.fixture(name="param_bool")
-def fixture_param_bool() -> ParamBool:
-    """Parameter boolean object."""
-    return ParamBool(True)
-
-
-@pytest.fixture(name="param_str")
-def fixture_param_str(string: str) -> ParamStr:
-    """Parameter string object."""
-    return ParamStr(string)
-
-
-@pytest.fixture(name="param_none")
-def fixture_param_none() -> ParamNone:
-    """Parameter ``None`` object."""
-    return ParamNone()
 
 
 @pytest.fixture(name="param_data_frame")
@@ -138,12 +97,12 @@ def fixture_complex_param(number: float, string: str) -> ComplexParam:
         string=string,
         param_data_frame=ParamDataFrame(string),
         empty_param=EmptyParam(),
-        simple_param=SimpleParam(),
-        no_type_validation_param=NoTypeValidationParam(),
-        with_type_validation_param=WithTypeValidationParam(),
-        no_assignment_validation_param=NoAssignmentValidationParam(),
-        with_assignment_validation_param=WithAssignmentValidationParam(),
-        subclass_param=SubclassParam(),
+        simple_param=SimpleParam(number=number),
+        no_type_validation_param=NoTypeValidationParam(number=number),
+        with_type_validation_param=WithTypeValidationParam(number=number),
+        no_assignment_validation_param=NoAssignmentValidationParam(number=number),
+        with_assignment_validation_param=WithAssignmentValidationParam(number=number),
+        subclass_param=SubclassParam(number=number),
         complex_param=ComplexParam(),
         param_list=ParamList(),
         param_dict=ParamDict(),
@@ -156,19 +115,14 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
     return [
         number,
         string,
-        ParamInt(),
-        ParamFloat(number),
-        ParamBool(),
-        ParamStr(string),
-        ParamNone(),
         ParamDataFrame(string),
         EmptyParam(),
-        SimpleParam(),
-        NoTypeValidationParam(),
-        WithTypeValidationParam(),
-        NoAssignmentValidationParam(),
-        WithAssignmentValidationParam(),
-        SubclassParam(),
+        SimpleParam(number=number),
+        NoTypeValidationParam(number=number),
+        WithTypeValidationParam(number=number),
+        NoAssignmentValidationParam(number=number),
+        WithAssignmentValidationParam(number=number),
+        SubclassParam(number=number),
         ComplexParam(),
         ParamList(),
         ParamDict(),
@@ -180,11 +134,6 @@ def fixture_param_list_contents(number: float, string: str) -> list[Any]:
 def fixture_param_dict_contents(
     number: float,
     string: str,
-    param_int: ParamInt,
-    param_float: ParamFloat,
-    param_bool: ParamBool,
-    param_str: ParamStr,
-    param_none: ParamNone,
     param_data_frame: ParamDataFrame,
     empty_param: EmptyParam,
     simple_param: SimpleParam,
@@ -199,11 +148,6 @@ def fixture_param_dict_contents(
     return {
         "number": number,
         "string": string,
-        "param_int": param_int,
-        "param_float": deepcopy(param_float),
-        "param_bool": deepcopy(param_bool),
-        "param_str": deepcopy(param_str),
-        "param_none": deepcopy(param_none),
         "param_data_frame": deepcopy(param_data_frame),
         "empty_param": deepcopy(empty_param),
         "simple_param": deepcopy(simple_param),
@@ -245,11 +189,6 @@ def fixture_param_dict(param_dict_contents: dict[str, Any]) -> ParamDict[Any]:
 @pytest.fixture(
     name="param_data",
     params=[
-        "param_int",
-        "param_float",
-        "param_bool",
-        "param_str",
-        "param_none",
         "param_data_frame",
         "empty_param",
         "simple_param",
@@ -263,62 +202,26 @@ def fixture_param_dict(param_dict_contents: dict[str, Any]) -> ParamDict[Any]:
         "param_dict",
     ],
 )
-def fixture_param_data(request: pytest.FixtureRequest) -> ParamData:
+def fixture_param_data(request: pytest.FixtureRequest) -> ParamData[Any]:
     """Parameter data."""
-    param_data: ParamData = deepcopy(request.getfixturevalue(request.param))
+    param_data: ParamData[Any] = deepcopy(request.getfixturevalue(request.param))
     return param_data
 
 
-@pytest.fixture(name="updated_param_data_and_times")
-def fixture_updated_param_data_and_times(
-    param_data: ParamData, number: float
-) -> tuple[ParamData, Times]:
-    """
-    Parameter data that has been updated between the returned Times. Broken down into
-    individual fixtures for parameter data and times below.
-    """
-    updated_param_data = deepcopy(param_data)
-    with capture_start_end_times() as times:
-        if isinstance(
-            updated_param_data,
-            (ParamInt, ParamFloat, ParamBool, ParamStr),
-        ):
-            updated_param_data = type(updated_param_data)(updated_param_data.value)
-        elif isinstance(updated_param_data, (ParamNone, EmptyParam)):
-            updated_param_data = type(updated_param_data)()
-        elif isinstance(updated_param_data, ParamDataFrame):
-            updated_param_data.path = ""
-        elif isinstance(updated_param_data, SimpleParam):
-            updated_param_data.number += 1
-        elif isinstance(updated_param_data, SubclassParam):
-            updated_param_data.second_number += 1
-        elif isinstance(updated_param_data, ComplexParam):
-            assert updated_param_data.simple_param is not None
-            updated_param_data.simple_param.number += 1
-        elif isinstance(updated_param_data, ParamList):
-            if len(updated_param_data) == 0:
-                updated_param_data.append(number)
-            else:
-                updated_param_data[9].number += 1
-        elif isinstance(updated_param_data, ParamDict):
-            if len(updated_param_data) == 0:
-                updated_param_data["number"] = number
-            else:
-                updated_param_data.simple_param.number += 1
-    return updated_param_data, times
-
-
-@pytest.fixture(name="updated_param_data")
-def fixture_updated_param_data(
-    updated_param_data_and_times: tuple[ParamData, Times]
-) -> ParamData:
-    """Parameter data that has been updated."""
-    return updated_param_data_and_times[0]
-
-
-@pytest.fixture(name="updated_times")
-def fixture_updated_times(
-    updated_param_data_and_times: tuple[ParamData, Times]
-) -> Times:
-    """Times before and after param_data fixture was updated."""
-    return updated_param_data_and_times[1]
+@pytest.fixture(name="param_data_child_name")
+# pylint: disable-next=too-many-return-statements
+def fixture_param_data_child_name(param_data: ParamData[Any]) -> str | int | None:
+    """Name of a child in the parameter data."""
+    if isinstance(param_data, ParamDataFrame):
+        return "path"
+    if isinstance(param_data, SimpleParam):
+        return "number"
+    if isinstance(param_data, SubclassParam):
+        return "second_number"
+    if isinstance(param_data, ComplexParam):
+        return "simple_param"
+    if isinstance(param_data, ParamList):
+        return None if len(param_data) == 0 else 4
+    if isinstance(param_data, ParamDict):
+        return None if len(param_data) == 0 else "simple_param"
+    return None

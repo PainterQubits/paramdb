@@ -4,8 +4,10 @@ from typing import Union, Any, cast
 from copy import deepcopy
 import pytest
 from tests.helpers import (
+    ComplexParam,
     CustomParamList,
     CustomParamDict,
+    assert_param_data_strong_equals,
     capture_start_end_times,
 )
 from paramdb import ParamData, ParamList, ParamDict
@@ -146,38 +148,44 @@ def test_param_collection_len_nonempty(
 def test_param_collection_eq(
     param_collection_type: type[ParamCollection],
     param_collection: ParamCollection,
+    custom_param_collection: CustomParamCollection,
     contents: Any,
 ) -> None:
     """
-    Two parameter collections are equal if they have the same class and contents.
+    Parameter collections are equal to instances of the same root collection class
+    (ParamList or ParamDict instances) with the same contents.
     """
     assert param_collection == param_collection_type(contents)
+    assert param_collection == custom_param_collection
 
 
 def test_param_collection_neq_contents(
     param_collection_type: type[ParamCollection],
     param_collection: ParamCollection,
+    custom_param_collection: CustomParamCollection,
 ) -> None:
     """
     Two parameter collections are not equal if they have the same class but different
     contents.
     """
     assert param_collection != param_collection_type()
+    assert param_collection != type(custom_param_collection)()
 
 
 def test_param_collection_neq_class(
     contents_type: type[Contents],
     param_collection: ParamCollection,
     custom_param_collection: CustomParamCollection,
-    contents: Contents,
 ) -> None:
     """
     Two parameter collections are not equal if they have the same contents but different
-    classes.
+    root collection classes (ParamList or ParamDict).
     """
-    assert contents_type(param_collection) == contents_type(custom_param_collection)
-    assert param_collection != custom_param_collection
-    assert param_collection != contents
+    assert param_collection != contents_type(param_collection)
+    assert custom_param_collection != contents_type(custom_param_collection)
+    if isinstance(param_collection, ParamList):
+        assert ParamList(["a", "b", "c"]) != ParamDict(a=1, b=2, c=3)
+        assert ParamList(["a", "b", "c"]) == ParamList(ParamDict(a=1, b=2, c=3))
 
 
 def test_param_collection_repr(
@@ -216,16 +224,34 @@ def test_param_list_get_index_parent(param_list: ParamList[Any]) -> None:
 def test_param_list_get_slice(
     param_list: ParamList[Any], param_list_contents: list[Any]
 ) -> None:
-    """Can get an item by slice from a parameter list."""
-    assert isinstance(param_list[0:2], list)
-    assert param_list[0:2] == param_list_contents[0:2]
+    """
+    Can get an item by slice from a parameter list. Also, a slice of the entire list is
+    strongly equal to the original list.
+    """
+    assert isinstance(param_list[0:2], ParamList)
+    assert list(param_list[0:2]) == param_list_contents[0:2]
+    assert_param_data_strong_equals(param_list[:], param_list, child_name=1)
 
 
 def test_param_list_get_slice_parent(param_list: ParamList[Any]) -> None:
-    """Items gotten from a parameter list via a slice have the correct parent."""
+    """
+    Slices of a parameter list have the same parent as the original parameter list, and
+    the parent of their items is the original parameter list.
+    """
+    parent = ComplexParam(param_list=param_list)
     sublist = param_list[2:4]
+    assert sublist.parent is parent
     assert sublist[0].parent is param_list
-    assert sublist[1].parent is param_list
+    assert sublist[0].parent is param_list
+
+
+def test_param_list_get_slice_references(param_list: ParamList[Any]) -> None:
+    """
+    Children of a parameter list slice are references to items in the original list.
+    """
+    sublist = param_list[2:]
+    assert sublist[1] is param_list[3]
+    assert sublist[2] is param_list[4]
 
 
 def test_param_list_set_index(param_list: ParamList[Any]) -> None:
@@ -246,7 +272,7 @@ def test_param_list_set_index_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_set_index_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """
     A parameter data added to a parameter list via indexing has the correct parent.
@@ -264,9 +290,9 @@ def test_param_list_set_index_parent(
 def test_param_list_set_slice(param_list: ParamList[Any]) -> None:
     """Can set items by slice in a parameter list."""
     new_numbers = [4.56, 7.89]
-    assert param_list[0:2] != new_numbers
+    assert list(param_list[0:2]) != new_numbers
     param_list[0:2] = new_numbers
-    assert param_list[0:2] == new_numbers
+    assert list(param_list[0:2]) == new_numbers
 
 
 def test_param_list_set_slice_last_updated(param_list: ParamList[Any]) -> None:
@@ -279,7 +305,7 @@ def test_param_list_set_slice_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_set_slice_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """A parameter data added to a parameter list via slicing has the correct parent."""
     for _ in range(2):  # Run twice to check reassigning the same parameter data
@@ -305,7 +331,7 @@ def test_param_list_insert_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_insert_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a parameter list via insertion has the correct parent."""
     param_list.insert(1, param_data)
@@ -329,7 +355,7 @@ def test_param_list_del_last_updated(param_list: ParamList[Any]) -> None:
 
 
 def test_param_list_del_parent(
-    param_list: ParamList[Any], param_data: ParamData
+    param_list: ParamList[Any], param_data: ParamData[Any]
 ) -> None:
     """An item deleted from a parameter list has no parent."""
     param_list.append(param_data)
@@ -352,36 +378,34 @@ def test_param_list_empty_last_updated() -> None:
 
 
 def test_param_dict_key_error(param_dict: ParamDict[Any]) -> None:
-    """Getting or deleting a nonexistent key raises a KeyError."""
+    """
+    Getting or deleting a nonexistent key raises a KeyError if accessed using bracket
+    notation.
+    """
     with pytest.raises(KeyError):
         _ = param_dict["nonexistent"]
     with pytest.raises(KeyError):
         del param_dict["nonexistent"]
-    with pytest.raises(KeyError):
-        _ = param_dict.nonexistent
-    with pytest.raises(KeyError):
-        del param_dict.nonexistent
 
 
 def test_param_dict_attribute_error(param_dict: ParamDict[Any]) -> None:
-    """Getting or deleting a nonexistent attribute raises an AttributeError."""
+    """
+    Getting or deleting a nonexistent attribute raises an AttributeError if accessed
+    using dot notation.
+    """
     with pytest.raises(AttributeError):
-        _ = param_dict._nonexistent  # pylint: disable=protected-access
+        _ = param_dict.nonexistent  # pylint: disable=protected-access
     with pytest.raises(AttributeError):
-        del param_dict._nonexistent  # pylint: disable=protected-access
+        del param_dict.nonexistent  # pylint: disable=protected-access
 
 
 def test_param_dict_dir(param_dict: ParamDict[Any]) -> None:
-    """
-    Keys of a parameter dictionary that are not attribute names (names that pass
-    ParamDict._is_attribute) are returned by dir().
-    """
+    """Keys of a parameter dictionary are included in the list returned by dir()."""
     param_dict["_attribute_name"] = 123
-    param_dict_dir_items = set(dir(param_dict))
-    assert "_attribute_name" not in param_dict_dir_items
+    param_dict["__attribute_name__"] = 456
+    param_dict_dir = dir(param_dict)
     for key in param_dict.keys():
-        if not param_dict._is_attribute(key):  # pylint: disable=protected-access
-            assert key in param_dict_dir_items
+        assert key in param_dict_dir
 
 
 def test_param_dict_get(
@@ -419,7 +443,7 @@ def test_param_dict_set_last_updated(param_dict: ParamDict[Any]) -> None:
 
 
 def test_param_dict_set_parent(
-    param_dict: ParamDict[Any], param_data: ParamData
+    param_dict: ParamDict[Any], param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a parameter dictionary has the correct parent."""
     with pytest.raises(ValueError):
@@ -454,7 +478,7 @@ def test_param_dict_del_last_updated(param_dict: ParamDict[Any]) -> None:
 
 
 def test_param_dict_del_parent(
-    param_dict: ParamDict[Any], param_data: ParamData
+    param_dict: ParamDict[Any], param_data: ParamData[Any]
 ) -> None:
     """An item deleted from a parameter dictionary has no parent."""
     param_dict["param_data"] = param_data
@@ -482,33 +506,3 @@ def test_param_dict_iter(
     """A parameter dictionary correctly supports iteration."""
     for key, contents_key in zip(param_dict, param_dict_contents):
         assert key == contents_key
-
-
-def test_param_dict_keys(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs keys as a dict_keys object."""
-    param_dict_keys = param_dict.keys()
-    contents_keys = param_dict_contents.keys()
-    assert isinstance(param_dict_keys, type(contents_keys))
-    assert param_dict_keys == param_dict_keys
-
-
-def test_param_dict_values(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs values as a dict_values object."""
-    param_dict_values = param_dict.values()
-    contents_values = param_dict_contents.values()
-    assert isinstance(param_dict_values, type(contents_values))
-    assert list(param_dict_values) == list(contents_values)
-
-
-def test_param_dict_items(
-    param_dict: ParamDict[Any], param_dict_contents: dict[str, Any]
-) -> None:
-    """A parameter dictionary outputs items as a dict_items object."""
-    param_dict_items = param_dict.items()
-    contents_items = param_dict_contents.items()
-    assert isinstance(param_dict_items, type(contents_items))
-    assert param_dict_items == contents_items

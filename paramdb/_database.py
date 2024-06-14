@@ -14,23 +14,40 @@ from sqlalchemy.orm import (
     Mapped,
     mapped_column,
 )
-from paramdb._param_data._param_data import ParamData, get_param_class
+from paramdb._param_data._param_data import ParamData, _ParamWrapper, get_param_class
 
 try:
-    from astropy.units import Quantity  # type: ignore
+    from astropy.units import Quantity  # type: ignore[import-untyped]
 
     _ASTROPY_INSTALLED = True
 except ImportError:
     _ASTROPY_INSTALLED = False
 
-T = TypeVar("T")
+DataT = TypeVar("DataT")
 _SelectT = TypeVar("_SelectT", bound=Select[Any])
 
-CLASS_NAME_KEY = "__type"
-"""
-Dictionary key corresponding to an object's class name in the JSON representation of a
-ParamDB commit.
-"""
+
+class ParamDBKey:
+    """
+    Keys corresponding to different object types in the JSON representation of the data
+    in a ParamDB commit.
+    """
+
+    DATETIME = "t"
+    """Key for ``datetime.datetime`` objects."""
+    QUANTITY = "q"
+    """Key for ``astropy.units.quantity`` objects."""
+    LIST = "l"
+    """Key for ordinary lists."""
+    DICT = "d"
+    """Key for ordinary dictionaries."""
+    WRAPPER = "w"
+    """
+    Key for non-:py:class:`ParamData` children of :py:class:`ParamData` objects, since
+    they are wrapped with additional metadata, such as a last updated time.
+    """
+    PARAM = "p"
+    """Key for :py:class:`ParamData` objects."""
 
 
 def _compress(text: str) -> bytes:
@@ -43,79 +60,80 @@ def _decompress(compressed_text: bytes) -> str:
     return ZstdDecompressor().decompress(compressed_text).decode()
 
 
-def _full_class_name(cls: type) -> str:
+# pylint: disable-next=too-many-return-statements
+def _encode_json(obj: Any) -> Any:
     """
-    Return the full name of the given class, including the module. Used to convert
-    non-parameter-data objects to and from JSON.
-    """
-    return f"{cls.__module__}.{cls.__name__}"
+    Encode the given object and its children into a JSON-serializable format.
 
-
-def _from_dict(json_dict: dict[str, Any]) -> Any:
+    See ``ParamDB.load()`` for the format specification.
     """
-    If the given dictionary created by ``json.loads()`` has the key ``CLASS_NAME_KEY``,
-    attempt to construct an object of the named type from it. Otherwise, return the
-    dictionary unchanged.
-
-    If load_classes is False, then parameter data objects will be loaded as
-    dictionaries.
-    """
-    if CLASS_NAME_KEY not in json_dict:
-        return json_dict
-    class_name = json_dict.pop(CLASS_NAME_KEY)
-    if class_name == _full_class_name(datetime):
-        return datetime.fromisoformat(json_dict["isoformat"]).astimezone()
-    if _ASTROPY_INSTALLED and class_name == _full_class_name(Quantity):
-        return Quantity(**json_dict)
-    param_class = get_param_class(class_name)
-    if param_class is not None:
-        return param_class.from_dict(json_dict)
-    raise ValueError(
-        f"class '{class_name}' is not known to ParamDB, so the load failed"
-    )
-
-
-def _preprocess_json(obj: Any) -> Any:
-    """
-    Preprocess the given object and its children into a JSON-serializable format.
-    Compared with ``json.dumps()``, this function can define custom logic for dealing
-    with subclasses of ``int``, ``float``, and ``str``.
-    """
-    if isinstance(obj, ParamData):
-        return {CLASS_NAME_KEY: type(obj).__name__} | _preprocess_json(obj.to_dict())
     if isinstance(obj, (int, float, bool, str)) or obj is None:
         return obj
-    if isinstance(obj, (list, tuple)):
-        return [_preprocess_json(value) for value in obj]
-    if isinstance(obj, dict):
-        return {key: _preprocess_json(value) for key, value in obj.items()}
-    class_full_name = _full_class_name(type(obj))
-    class_full_name_dict = {CLASS_NAME_KEY: class_full_name}
     if isinstance(obj, datetime):
-        return class_full_name_dict | {"isoformat": obj.isoformat()}
+        return [ParamDBKey.DATETIME, obj.timestamp()]
     if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
-        return class_full_name_dict | {"value": obj.value, "unit": str(obj.unit)}
+        return [ParamDBKey.QUANTITY, obj.value, str(obj.unit)]
+    if isinstance(obj, (list, tuple)):
+        return [ParamDBKey.LIST, [_encode_json(item) for item in obj]]
+    if isinstance(obj, dict):
+        return [
+            ParamDBKey.DICT,
+            {key: _encode_json(value) for key, value in obj.items()},
+        ]
+    if isinstance(obj, ParamData):
+        timestamp_and_json = [
+            obj.last_updated.timestamp(),
+            _encode_json(obj.to_json()),
+        ]
+        if isinstance(obj, _ParamWrapper):
+            return [ParamDBKey.WRAPPER, *timestamp_and_json]
+        return [ParamDBKey.PARAM, type(obj).__name__, *timestamp_and_json]
     raise TypeError(
-        f"'{class_full_name}' object {repr(obj)} is not JSON serializable, so the"
+        f"'{type(obj).__name__}' object {repr(obj)} is not JSON serializable, so the"
         " commit failed"
     )
+
+
+# pylint: disable-next=too-many-return-statements
+def _decode_json(json_data: Any) -> Any:
+    """Reconstruct an object encoded by ``_json_encode()``."""
+    if isinstance(json_data, list):
+        key, *data = json_data
+        if key == ParamDBKey.DATETIME:
+            return datetime.fromtimestamp(data[0], timezone.utc).astimezone()
+        if _ASTROPY_INSTALLED and key == ParamDBKey.QUANTITY:
+            return Quantity(*data)
+        if key == ParamDBKey.LIST:
+            return [_decode_json(item) for item in data[0]]
+        if key == ParamDBKey.DICT:
+            return {key: _decode_json(value) for key, value in data[0].items()}
+        if key == ParamDBKey.WRAPPER:
+            return _ParamWrapper.from_json(data[0], _decode_json(data[1]))
+        if key == ParamDBKey.PARAM:
+            class_name = data[0]
+            param_class = get_param_class(class_name)
+            if param_class is not None:
+                return param_class.from_json(data[1], _decode_json(data[2]))
+            raise ValueError(
+                f"ParamData class '{class_name}' is not known to ParamDB, so the load"
+                " failed"
+            )
+    return json_data
 
 
 def _encode(obj: Any) -> bytes:
     """Encode the given object into bytes that will be stored in the database."""
     # pylint: disable=no-member
-    return _compress(json.dumps(_preprocess_json(obj)))
+    return _compress(json.dumps(_encode_json(obj)))
 
 
-def _decode(data: bytes, load_classes: bool) -> Any:
+def _decode(data: bytes, decode_json: bool) -> Any:
     """
     Decode an object from the given data from the database. Classes will be loaded in
     if ``load_classes`` is True; otherwise, classes will be loaded as dictionaries.
     """
-    return json.loads(
-        _decompress(data),
-        object_hook=_from_dict if load_classes else None,
-    )
+    json_data = json.loads(_decompress(data))
+    return _decode_json(json_data) if decode_json else json_data
 
 
 class _Base(MappedAsDataclass, DeclarativeBase):
@@ -157,22 +175,22 @@ class CommitEntry:
 
 
 @dataclass(frozen=True)
-class CommitEntryWithData(CommitEntry, Generic[T]):
+class CommitEntryWithData(CommitEntry, Generic[DataT]):
     """
     Subclass of :py:class:`CommitEntry`.
 
     Entry for a commit containing the ID, message, and timestamp, as well as the data.
     """
 
-    data: T
+    data: DataT
     """Data contained in this commit."""
 
 
-class ParamDB(Generic[T]):
+class ParamDB(Generic[DataT]):
     """
     Parameter database. The database is created in a file at the given path if it does
     not exist. To work with type checking, this class can be parameterized with a root
-    data type ``T``. For example::
+    data type ``DataT``. For example::
 
         from paramdb import ParamDataclass, ParamDB
 
@@ -233,7 +251,7 @@ class ParamDB(Generic[T]):
         return self._path
 
     def commit(
-        self, message: str, data: T, timestamp: datetime | None = None
+        self, message: str, data: DataT, timestamp: datetime | None = None
     ) -> CommitEntry:
         """
         Commit the given data to the database with the given message and return a commit
@@ -267,32 +285,44 @@ class ParamDB(Generic[T]):
 
     @overload
     def load(
-        self, commit_id: int | None = None, *, load_classes: Literal[True] = True
-    ) -> T: ...
+        self, commit_id: int | None = None, *, decode_json: Literal[True] = True
+    ) -> DataT: ...
 
     @overload
     def load(
-        self, commit_id: int | None = None, *, load_classes: Literal[False]
+        self, commit_id: int | None = None, *, decode_json: Literal[False]
     ) -> Any: ...
 
-    def load(self, commit_id: int | None = None, *, load_classes: bool = True) -> Any:
+    def load(self, commit_id: int | None = None, *, decode_json: bool = True) -> Any:
         """
         Load and return data from the database. If a commit ID is given, load from that
         commit; otherwise, load from the most recent commit. Raise an ``IndexError`` if
         the specified commit does not exist. Note that commit IDs begin at 1.
 
-        By default, parameter data, ``datetime``, and Astropy ``Quantity`` classes are
-        reconstructed. The relevant parameter data classes must be defined in the
-        current program. However, if ``load_classes`` is False, classes are loaded
-        directly from the database as dictionaries with the class name in the key
-        :py:const:`~paramdb._database.CLASS_NAME_KEY`.
+        By default, objects are reconstructed, which requires the relevant parameter
+        data classes to be defined in the current program. However, if ``decode_json``
+        is False, the encoded JSON data is loaded directly from the database. The format
+        of the encoded data is as follows (see :py:class:`ParamDBKey` for key codes)::
+
+            json_data:
+                | int
+                | float
+                | bool
+                | str
+                | None
+                | [ParamDBKey.DATETIME, float<timestamp>]
+                | [ParamDBKey.QUANTITY, float<value>, str<unit>]
+                | [ParamDBKey.LIST, [json_data<item>, ...]]
+                | [ParamDBKey.DICT, {str<key>: json_data<value>, ...}]
+                | [ParamDBKey.WRAPPED, float<timestamp>, json_data<data>]
+                | [ParamDBKey.PARAM, str<class_name>, float<timestamp>, json_data<data>]
         """
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:
             data = session.scalar(select_stmt)
         if data is None:
             raise self._index_error(commit_id)
-        return _decode(data, load_classes)
+        return _decode(data, decode_json)
 
     def load_commit_entry(self, commit_id: int | None = None) -> CommitEntry:
         """
@@ -330,8 +360,8 @@ class ParamDB(Generic[T]):
         start: int | None = None,
         end: int | None = None,
         *,
-        load_classes: Literal[True] = True,
-    ) -> list[CommitEntryWithData[T]]: ...
+        decode_json: Literal[True] = True,
+    ) -> list[CommitEntryWithData[DataT]]: ...
 
     @overload
     def commit_history_with_data(
@@ -339,7 +369,7 @@ class ParamDB(Generic[T]):
         start: int | None = None,
         end: int | None = None,
         *,
-        load_classes: Literal[False],
+        decode_json: Literal[False],
     ) -> list[CommitEntryWithData[Any]]: ...
 
     def commit_history_with_data(
@@ -347,14 +377,14 @@ class ParamDB(Generic[T]):
         start: int | None = None,
         end: int | None = None,
         *,
-        load_classes: bool = True,
+        decode_json: bool = True,
     ) -> list[CommitEntryWithData[Any]]:
         """
         Retrieve the commit history with data as a list of
         :py:class:`CommitEntryWithData` objects between the provided start and end
         indices, which work like slicing a Python list.
 
-        See :py:meth:`ParamDB.load` for the behavior of ``load_classes``.
+        See :py:meth:`ParamDB.load` for the behavior of ``decode_json``.
         """
         with self._Session() as session:
             select_stmt = self._select_slice(select(_Snapshot), start, end)
@@ -364,7 +394,7 @@ class ParamDB(Generic[T]):
                     snapshot.id,
                     snapshot.message,
                     snapshot.timestamp,
-                    _decode(snapshot.data, load_classes),
+                    _decode(snapshot.data, decode_json),
                 )
                 for snapshot in snapshots
             ]

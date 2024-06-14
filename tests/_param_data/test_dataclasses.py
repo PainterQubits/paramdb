@@ -1,6 +1,6 @@
 """Tests for the paramdb._param_data._dataclasses module."""
 
-from typing import Union, cast
+from typing import Union, Any, cast
 from copy import deepcopy
 import pydantic
 import pytest
@@ -116,7 +116,7 @@ def test_param_dataclass_init_parent(complex_param: ComplexParam) -> None:
 
 
 def test_param_dataclass_set_parent(
-    complex_param: ComplexParam, param_data: ParamData
+    complex_param: ComplexParam, param_data: ParamData[Any]
 ) -> None:
     """Parameter data added to a structure has the correct parent."""
     with pytest.raises(ValueError):
@@ -139,15 +139,15 @@ def test_param_dataclass_init_wrong_type(
     string = "123"  # Use a string of a number to make sure strict mode is enabled
     param_dataclass_class = type(param_dataclass_object)
     if param_dataclass_class is NoTypeValidationParam:
-        param = param_dataclass_class(number=string)  # type: ignore
-        assert param.number == string  # type: ignore
+        param = param_dataclass_class(number=string)  # type: ignore[arg-type]
+        assert param.number == string  # type: ignore[comparison-overlap]
     else:
         with pytest.raises(pydantic.ValidationError) as exc_info:
-            param_dataclass_class(number=string)  # type: ignore
+            param_dataclass_class(number=string)  # type: ignore[arg-type]
         assert "Input should be a valid number" in str(exc_info.value)
 
 
-def test_param_dataclass_init_default_wrong_type() -> None:
+def test_param_dataclass_init_default_wrong_type(number: float) -> None:
     """
     Fails or succeeds to initialize a parameter object with a default value having the
     wrong type
@@ -156,10 +156,10 @@ def test_param_dataclass_init_default_wrong_type() -> None:
     class DefaultWrongTypeParam(SimpleParam):
         """Parameter data class with a default value having the wrong type."""
 
-        default_number: float = "123"  # type: ignore
+        default_number: float = "123"  # type: ignore[assignment]
 
     with pytest.raises(pydantic.ValidationError) as exc_info:
-        DefaultWrongTypeParam()
+        DefaultWrongTypeParam(number=number)
         assert "Input should be a valid number" in str(exc_info.value)
 
 
@@ -171,11 +171,11 @@ def test_param_dataclass_init_extra(
     exc_info: pytest.ExceptionInfo[Exception]
     if param_dataclass_class is NoTypeValidationParam:
         with pytest.raises(TypeError) as exc_info:
-            param_dataclass_class(extra=number)  # type: ignore
+            param_dataclass_class(extra=number)  # type: ignore[call-arg]
         assert "__init__() got an unexpected keyword argument" in str(exc_info.value)
     else:
         with pytest.raises(pydantic.ValidationError) as exc_info:
-            param_dataclass_class(extra=number)  # type: ignore
+            param_dataclass_class(extra=number)  # type: ignore[call-arg]
         assert "Unexpected keyword argument" in str(exc_info.value)
 
 
@@ -190,11 +190,13 @@ def test_param_dataclass_assignment_wrong_type(
     if isinstance(
         param_dataclass_object, (NoTypeValidationParam, NoAssignmentValidationParam)
     ):
-        param_dataclass_object.number = string  # type: ignore
-        assert param_dataclass_object.number == string  # type: ignore
+        param_dataclass_object.number = string  # type: ignore[assignment]
+        assert (
+            param_dataclass_object.number == string  # type: ignore[comparison-overlap]
+        )
     else:
         with pytest.raises(pydantic.ValidationError) as exc_info:
-            param_dataclass_object.number = string  # type: ignore
+            param_dataclass_object.number = string  # type: ignore[assignment]
         assert "Input should be a valid number" in str(exc_info.value)
 
 
@@ -209,7 +211,7 @@ def test_param_dataclass_assignment_extra(
         param_dataclass_object, (NoTypeValidationParam, NoAssignmentValidationParam)
     ):
         param_dataclass_object.extra = number
-        assert param_dataclass_object.extra == number  # type: ignore
+        assert param_dataclass_object.extra == number
     else:
         with pytest.raises(pydantic.ValidationError) as exc_info:
             param_dataclass_object.extra = number

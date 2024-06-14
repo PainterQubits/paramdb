@@ -3,9 +3,31 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this
-project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.13.0b1] (Jun 13 2024)
+
+### Added
+
+- The timestamps of non-`ParamData` children are now tracked internally and can be
+  accessed via the new method `ParamData.child_last_updated()`.
+- The class `ParamDBKey` contains the keys used in the JSON representation of a commit.
+
+### Changed
+
+- `ParamDict` dot notation now treates names of existing attributes and names of class
+  type annotations as attributes (rather than treating all names beginning with
+  underscores as attributes).
+- The JSON format of a commit has been changed, as specified in the docstring for
+  `ParamDB.load()`.
+- `ParamData.to_dict()` and `ParamData.from_dict()` have been replaced by
+  `ParamData.to_json()` and `ParamData.from_json()`.
+
+### Removed
+
+- Parameter primitive classes have been replaced by the new timestamp tracking.
 
 ## [0.12.0] (May 8 2024)
 
@@ -169,7 +191,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.12.0...develop
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.13.0b1...develop
+[0.13.0b1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.13.0b1
 [0.12.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.12.0
 [0.11.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.11.0
 [0.10.2]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.2

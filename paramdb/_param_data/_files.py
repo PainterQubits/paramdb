@@ -13,10 +13,10 @@ try:
 except ImportError:
     PANDAS_INSTALLED = False
 
-T = TypeVar("T")
+DataT = TypeVar("DataT")
 
 
-class ParamFile(ParamDataclass, Generic[T]):
+class ParamFile(ParamDataclass, Generic[DataT]):
     """
     Subclass of :py:class:`ParamDataclass`.
 
@@ -35,28 +35,28 @@ class ParamFile(ParamDataclass, Generic[T]):
 
     path: str
     """Path to the file represented by this object."""
-    initial_data: InitVar[T | None] = None
+    initial_data: InitVar[DataT | None] = None
 
     # pylint: disable-next=arguments-differ
-    def __post_init__(self, initial_data: T | None) -> None:
+    def __post_init__(self, initial_data: DataT | None) -> None:
         super().__post_init__()
         if initial_data is not None:
             self.update_data(initial_data)
 
     @abstractmethod
-    def _save_data(self, path: str, data: T) -> None:
+    def _save_data(self, path: str, data: DataT) -> None:
         """Save the given data in a file at the given path."""
 
     @abstractmethod
-    def _load_data(self, path: str) -> T:
+    def _load_data(self, path: str) -> DataT:
         """Load data from the file at the given path."""
 
     @property
-    def data(self) -> T:
+    def data(self) -> DataT:
         """Data stored in the file represented by this object."""
         return self._load_data(self.path)
 
-    def update_data(self, data: T) -> None:
+    def update_data(self, data: DataT) -> None:
         """Update the data stored within the file represented by this object."""
         self._save_data(self.path, data)
         self._update_last_updated()

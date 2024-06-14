@@ -32,46 +32,6 @@ type (`str`, `int`, `float`, `bool`, `None`, `dict`, or `list`), a [`datetime`],
 a `TypeError` will be raised when they are committed to the database.
 ```
 
-## Primitives
-
-Primitives are the building blocks of parameter data. While builtin primitive types can
-be used in a ParamDB (`int`, `float`, `str`, `bool`, and `None`), they will not store a
-{py:class}`~ParamData.last_updated` time and will not have {py:class}`~ParamData.parent`
-or {py:class}`~ParamData.root` properties. When these features are desired, we can wrap
-primitive values in the following types:
-
-- {py:class}`ParamInt` for integers
-- {py:class}`ParamFloat` for float
-- {py:class}`ParamBool` for booleans
-- {py:class}`ParamStr` for strings
-- {py:class}`ParamNone` for `None`
-
-For example:
-
-```{jupyter-execute}
-from paramdb import ParamInt
-
-param_int = ParamInt(123)
-param_int
-```
-
-```{jupyter-execute}
-print(param_int.last_updated)
-```
-
-````{tip}
-Methods from the builtin primitive types work on parameter primitives, with the caveat
-that they return the builtin type. For example:
-
-```{jupyter-execute}
-param_int + 123
-```
-
-```{jupyter-execute}
-type(param_int + 123)
-```
-````
-
 ## Data Classes
 
 A parameter data class is defined from the base class {py:class}`ParamDataclass`. This
@@ -81,19 +41,20 @@ function is generated. An example of a defining a custom parameter Data Class is
 below.
 
 ```{jupyter-execute}
-from paramdb import ParamFloat, ParamDataclass
+from paramdb import ParamDataclass
 
 class CustomParam(ParamDataclass):
-    value: ParamFloat
+    value: float
 
-custom_param = CustomParam(value=ParamFloat(1.23))
+custom_param = CustomParam(value=1.23)
+print(custom_param)
 ```
 
 These properties can then be accessed and updated.
 
 ```{jupyter-execute}
-custom_param.value = ParamFloat(1.234)
-custom_param.value
+custom_param.value += 0.004
+print(custom_param)
 ```
 
 The data class aspects of the subclass can be customized by passing keyword arguments when
@@ -112,16 +73,18 @@ when building up dataclasses through inheritance.
 from dataclasses import field
 
 class KeywordOnlyParam(ParamDataclass, kw_only=True):
-    count: int
+    num_values: int = 0
     values: list[int] = field(default_factory=list)
+    type: str
 
-keyword_only_param = KeywordOnlyParam(count=123)
-keyword_only_param
+keyword_only_param = KeywordOnlyParam(type="example")
+print(keyword_only_param)
 ```
 
 ```{warning}
-For mutable default values, `default_factory` should generally be used. See the Python
-data class documentation on [mutable default values] for more information.
+For mutable default values, `default_factory` should generally be used (see the example
+above). See the Python data class documentation on [mutable default values] for more
+information.
 ```
 
 Custom methods can also be added, including dynamic properties using the [`@property`]
@@ -129,27 +92,27 @@ decorator. For example:
 
 ```{jupyter-execute}
 class ParamWithProperty(ParamDataclass):
-    value: ParamInt
+    value: int
 
     @property
     def value_cubed(self) -> int:
         return self.value ** 3
 
-param_with_property = ParamWithProperty(value=ParamInt(16))
-param_with_property.value_cubed
+param_with_property = ParamWithProperty(value=16)
+print(param_with_property.value_cubed)
 ```
 
 ````{important}
 Since [`__init__`] is generated for data classes, other initialization must be done using
 the [`__post_init__`] function. Furthermore, since [`__post_init__`] is used internally by
 {py:class}`ParamDataclass` to perform initialization, always call the superclass's
-[`__post_init__`]. For example:
+[`__post_init__`] first. For example:
 
 ```{jupyter-execute}
 class ParamCustomInit(ParamDataclass):
     def __post_init__(self) -> None:
+        super().__post_init__()  # Always call the superclass __post_init__() first
         print("Initializing...")  # Replace with custom initialization code
-        super().__post_init__()
 
 param_custom_init = ParamCustomInit()
 ```
@@ -166,27 +129,33 @@ print(custom_param.last_updated)
 import time
 
 time.sleep(1)
-custom_param.value = ParamFloat(4.56)
+custom_param.value = 4.56
 print(custom_param.last_updated)
 ```
 
-Parameter dataclasses can also be nested, in which case the
-{py:attr}`ParamData.last_updated` property returns the most recent last updated time stamp
-among its own last updated time and the last updated times of any {py:class}`ParamData`
-it contains. For example:
+Last updated times for properties can also be accessed using by calling
+{py:meth}`ParamData.child_last_updated` on the parent object. This is particularly useful
+for property values which are not {py:class}`ParamData`. For example:
+
+```{jupyter-execute}
+print(custom_param.child_last_updated("value"))
+```
+
+When parameter dataclasses are nested, updating a child also updates the last updated
+times of its parents. For example:
 
 ```{jupyter-execute}
 class NestedParam(ParamDataclass):
     value: float
     child_param: CustomParam
 
-nested_param = NestedParam(value=1.23, child_param=CustomParam(value=ParamFloat(4.56)))
+nested_param = NestedParam(value=1.23, child_param=CustomParam(value=4.56))
 print(nested_param.last_updated)
 ```
 
 ```{jupyter-execute}
 time.sleep(1)
-nested_param.child_param.value = ParamFloat(2)
+nested_param.child_param.value += 1
 print(nested_param.last_updated)
 ```
 
@@ -273,54 +242,33 @@ properly. For example:
 ```{jupyter-execute}
 from paramdb import ParamList
 
-param_list = ParamList([ParamInt(1), ParamInt(2), ParamInt(3)])
-param_list[1].parent is param_list
-```
-
-```{jupyter-execute}
-print(param_list.last_updated)
-```
-
-```{jupyter-execute}
-time.sleep(1)
-param_list[1] = ParamInt(4)
-print(param_list.last_updated)
+param_list = ParamList([1, 2, 3])
+print(param_list.child_last_updated(1))
 ```
 
 ### Parameter Dictionaries
 
 Similarly, {py:class}`ParamDict` implements `MutableMapping` from [`collections.abc`],
-so it behaves similarly to a dictionary. Additionally, its items can be accessed via
-dot notation in addition to index brackets (unless they begin with an underscore). For
-example:
+so it behaves similarly to a dictionary. Additionally, items can be accessed via dot
+notation in addition to index brackets. For example:
 
 ```{jupyter-execute}
 from paramdb import ParamDict
 
-param_dict = ParamDict(p1=ParamFloat(1.23), p2=ParamFloat(4.56), p3=ParamFloat(7.89))
-param_dict.p2.root == param_dict
-```
-
-```{jupyter-execute}
-print(param_dict.last_updated)
-```
-
-```{jupyter-execute}
-time.sleep(1)
-param_dict.p2 = ParamFloat(0)
-print(param_dict.last_updated)
+param_dict = ParamDict(p1=1.23, p2=4.56, p3=7.89)
+print(param_dict.child_last_updated("p2"))
 ```
 
 Parameter collections can also be subclassed to provide custom functionality. For example:
 
 ```{jupyter-execute}
-class CustomDict(ParamDict[ParamFloat]):
+class CustomDict(ParamDict[float]):
     @property
     def total(self) -> float:
-        return sum(param.value for param in self.values())
+        return sum(self.values())
 
 custom_dict = CustomDict(param_dict)
-custom_dict.total
+print(custom_dict.total)
 ```
 
 ## Type Mixins
