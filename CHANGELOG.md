@@ -92,14 +92,14 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 - Custom `ParamData` subclasses have an improved error message if extra keyword arguments
   are passed.
 
-## [0.9.0] (June 29 2023)
+## [0.9.0] (Jun 29 2023)
 
 ### Added
 
 - `ParamDB.path` to retrieve the database path.
 - `ParamDB.latest_commit` to retrieve the latest commit entry.
 
-## [0.8.0] (June 9 2023)
+## [0.8.0] (Jun 9 2023)
 
 ### Changed
 
