@@ -7,7 +7,7 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
-## [0.13.0] (Jun 13 2024)
+## [0.13.0] (Jun 14 2024)
 
 ### Added
 
