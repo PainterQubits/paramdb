@@ -93,14 +93,14 @@ def test_child_does_not_change(param_data: ParamData[Any]) -> None:
     assert param_data == param_data_original
 
 
-def test_to_and_from_dict(param_data: ParamData[Any]) -> None:
-    """Parameter data can be converted to and from a dictionary."""
-    param_data_dict = param_data.to_dict()
-    assert isinstance(param_data_dict, dict)
+def test_to_and_from_json(param_data: ParamData[Any]) -> None:
+    """Parameter data can be converted to and from JSON data."""
+    timestamp = param_data.last_updated.timestamp()
+    json_data = param_data.to_json()
     with capture_start_end_times():
-        param_data_from_dict = param_data.from_dict(param_data_dict)
-    assert param_data_from_dict == param_data
-    assert param_data_from_dict.last_updated == param_data.last_updated
+        param_data_from_json = param_data.from_json(timestamp, json_data)
+    assert param_data_from_json == param_data
+    assert param_data_from_json.last_updated == param_data.last_updated
 
 
 def test_no_parent_fails(param_data: ParamData[Any]) -> None:

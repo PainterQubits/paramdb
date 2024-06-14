@@ -13,12 +13,17 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 - The timestamps of non-`ParamData` children are now tracked internally and can be
   accessed via the new method `ParamData.child_last_updated()`.
+- The class `ParamDBKey` contains the keys used in the JSON representation of a commit.
 
 ### Changed
 
 - `ParamDict` dot notation now treates names of existing attributes and names of class
   type annotations as attributes (rather than treating all names beginning with
   underscores as attributes).
+- The JSON format of a commit has been changed, as specified in the docstring for
+  `ParamDB.load()`.
+- `ParamData.to_dict()` and `ParamData.from_dict()` have been replaced by
+  `ParamData.to_json()` and `ParamData.from_json()`.
 
 ### Removed
 

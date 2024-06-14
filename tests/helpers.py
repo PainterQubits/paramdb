@@ -119,7 +119,7 @@ def assert_param_data_strong_equals(
     # pylint: disable=protected-access
     assert param_data == other_param_data
     assert param_data.last_updated == other_param_data.last_updated
-    assert param_data.to_dict() == other_param_data.to_dict()
+    assert param_data.to_json() == other_param_data.to_json()
     if child_name is not None:
         assert param_data.child_last_updated(
             child_name

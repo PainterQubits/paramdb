@@ -35,7 +35,7 @@ class _ParamCollection(
         # _ParamWrapper objects
         return f"{type(self).__name__}({type(self._contents)(self)})"
 
-    def _to_json(self) -> _CollectionT:
+    def to_json(self) -> _CollectionT:
         return self._contents
 
     def _get_wrapped_child(self, child_name: _ChildNameT) -> ParamData[Any]:

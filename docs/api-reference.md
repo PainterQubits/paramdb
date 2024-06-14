@@ -29,15 +29,5 @@ All of the following can be imported from `paramdb`.
 .. autoclass:: ParamDB
 .. autoclass:: CommitEntry
 .. autoclass:: CommitEntryWithData
-```
-
-<!--
-Changing the current module to paramdb._database is necessary in order to show the correct
-docstring.
--->
-
-```{eval-rst}
-.. py:currentmodule:: paramdb._database
-.. autodata:: CLASS_NAME_KEY
-.. py:currentmodule:: paramdb
+.. autoclass:: ParamDBKey
 ```

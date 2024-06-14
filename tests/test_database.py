@@ -32,7 +32,7 @@ from paramdb import (
     ParamDB,
     CommitEntry,
     CommitEntryWithData,
-    CLASS_NAME_KEY,
+    ParamDBKey,
 )
 from paramdb._param_data._param_data import _param_classes
 
@@ -78,8 +78,8 @@ def test_commit_not_json_serializable_fails(db_path: str) -> None:
         param_db.commit("Initial commit", data)
     assert (
         str(exc_info.value)
-        == f"'{NotJSONSerializable.__module__}.{NotJSONSerializable.__name__}' object"
-        f" {repr(data)} is not JSON serializable, so the commit failed"
+        == f"'{NotJSONSerializable.__name__}' object {repr(data)} is not JSON"
+        " serializable, so the commit failed"
     )
 
 
@@ -95,7 +95,8 @@ def test_load_unknown_class_fails(db_path: str) -> None:
         param_db.load()
     assert (
         str(exc_info.value)
-        == f"class '{Unknown.__name__}' is not known to ParamDB, so the load failed"
+        == f"ParamData class '{Unknown.__name__}' is not known to ParamDB, so the load"
+        " failed"
     )
 
 
@@ -220,43 +221,36 @@ def test_update_timestamp_after_load(
     )
 
 
-def test_load_classes_false(db_path: str, param_data: ParamData[Any]) -> None:
-    """Can load data as dictionaries if ``load_classes`` is false."""
+def test_decode_json_false(db_path: str, param_data: ParamData[Any]) -> None:
+    """Can load raw JSON data if ``decode_json`` is false."""
     param_db = ParamDB[ParamData[Any]](db_path)
     param_db.commit("Initial commit", param_data)
-    data_loaded = param_db.load(load_classes=False)
-    data_from_history = param_db.commit_history_with_data(load_classes=False)[0].data
+    data_loaded = param_db.load(decode_json=False)
+    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
 
     for data in data_loaded, data_from_history:
         # Check that loaded dictionary has the correct type and keys
-        assert isinstance(data, dict)
-        assert data.pop(CLASS_NAME_KEY) == type(param_data).__name__
-        param_data_dict = param_data.to_dict()
-        assert data.keys() == param_data_dict.keys()
+        assert isinstance(data, list)
+        assert len(data) == 4
+        key, class_name, timestamp, json_data = data
+        assert key == ParamDBKey.PARAM
+        assert class_name == type(param_data).__name__
+        assert timestamp == param_data.last_updated.timestamp()
 
-        # Check that loaded dictionary has the correct values
-        for key, value in data.items():
-            value_from_param_data = param_data_dict[key]
-            if isinstance(value_from_param_data, ParamData):
-                assert isinstance(value, dict)
-                assert value.pop(CLASS_NAME_KEY) == type(value_from_param_data).__name__
-                assert value.keys() == value_from_param_data.to_dict().keys()
-            else:
-                if isinstance(value, list):
-                    assert isinstance(value_from_param_data, list)
-                    assert len(value) == len(value_from_param_data)
-                elif isinstance(value, dict):
-                    if CLASS_NAME_KEY in value:
-                        value_class = type(value_from_param_data)
-                        full_class_name = (
-                            f"{value_class.__module__}.{value_class.__name__}"
-                        )
-                        assert value[CLASS_NAME_KEY] == full_class_name
-                    else:
-                        assert isinstance(value_from_param_data, dict)
-                        assert value.keys() == value_from_param_data.keys()
-                else:
-                    assert value == value_from_param_data
+        # Check that the loaded JSON data has the correct data
+        assert isinstance(json_data, list)
+        json_data_key, json_data_data = json_data
+        param_json_data = param_data.to_json()
+        if json_data_key == "l":
+            assert isinstance(json_data_data, list)
+            assert isinstance(param_json_data, list)
+            assert len(json_data_data) == len(param_json_data)
+        elif json_data_key == "d":
+            assert isinstance(json_data_data, dict)
+            assert isinstance(param_json_data, dict)
+            assert json_data_data.keys() == param_json_data.keys()
+        else:
+            assert False  # Currently, all param_data have list or dict data
 
 
 def test_load_classes_false_unknown_class(db_path: str) -> None:
@@ -265,12 +259,12 @@ def test_load_classes_false_unknown_class(db_path: str) -> None:
     """
     param_db = ParamDB[Unknown](db_path)
     param_db.commit("Initial commit", Unknown())
-    data_loaded = param_db.load(load_classes=False)
-    data_from_history = param_db.commit_history_with_data(load_classes=False)[0].data
-    assert isinstance(data_loaded, dict)
-    assert data_loaded.pop(CLASS_NAME_KEY) == Unknown.__name__
-    assert isinstance(data_from_history, dict)
-    assert data_from_history.pop(CLASS_NAME_KEY) == Unknown.__name__
+    data_loaded = param_db.load(decode_json=False)
+    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
+    assert isinstance(data_loaded, list)
+    assert data_loaded[1] == Unknown.__name__
+    assert isinstance(data_from_history, list)
+    assert data_from_history[1] == Unknown.__name__
 
 
 # pylint: disable-next=too-many-arguments,too-many-locals

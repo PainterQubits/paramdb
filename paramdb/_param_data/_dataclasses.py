@@ -174,7 +174,7 @@ class ParamDataclass(ParamData[str]):
             return cast(ParamData[Any], super().__getattribute__(child_name))
         return super()._get_wrapped_child(child_name)
 
-    def _to_json(self) -> dict[str, Any]:
+    def to_json(self) -> dict[str, Any]:
         return {
             field.name: super(ParamData, self).__getattribute__(field.name)
             for field in fields(self)  # type: ignore[arg-type]
