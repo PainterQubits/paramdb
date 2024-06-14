@@ -209,7 +209,6 @@ def fixture_param_data(request: pytest.FixtureRequest) -> ParamData[Any]:
 
 
 @pytest.fixture(name="param_data_child_name")
-# pylint: disable-next=too-many-return-statements
 def fixture_param_data_child_name(param_data: ParamData[Any]) -> str | int | None:
     """Name of a child in the parameter data."""
     if isinstance(param_data, ParamDataFrame):

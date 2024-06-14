@@ -60,7 +60,6 @@ def _decompress(compressed_text: bytes) -> str:
     return ZstdDecompressor().decompress(compressed_text).decode()
 
 
-# pylint: disable-next=too-many-return-statements
 def _encode_json(obj: Any) -> Any:
     """
     Encode the given object and its children into a JSON-serializable format.
@@ -94,7 +93,6 @@ def _encode_json(obj: Any) -> Any:
     )
 
 
-# pylint: disable-next=too-many-return-statements
 def _decode_json(json_data: Any) -> Any:
     """Reconstruct an object encoded by ``_json_encode()``."""
     if isinstance(json_data, list):
