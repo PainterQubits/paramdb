@@ -7,7 +7,7 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
-## [0.13.0b1] (Jun 13 2024)
+## [0.13.0] (Jun 13 2024)
 
 ### Added
 
@@ -191,8 +191,8 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.13.0b1...develop
-[0.13.0b1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.13.0b1
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.13.0...develop
+[0.13.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.13.0
 [0.12.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.12.0
 [0.11.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.11.0
 [0.10.2]: https://github.com/PainterQubits/paramdb/releases/tag/v0.10.2
