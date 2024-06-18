@@ -33,7 +33,7 @@ from paramdb import (
     ParamDB,
     CommitEntry,
     CommitEntryWithData,
-    ParamDBKey,
+    ParamDBType,
 )
 from paramdb._param_data._param_data import _param_classes
 
@@ -233,25 +233,26 @@ def test_raw_json_true(db_path: str, param_data: ParamData[Any]) -> None:
 
     for data in data_loaded, data_from_history:
         # Check that loaded dictionary has the correct type and keys
-        assert isinstance(data, list)
+        assert isinstance(data, dict)
         assert len(data) == 4
-        key, json_data, class_name, timestamp = data
-        assert key == ParamDBKey.PARAM
-        assert class_name == type(param_data).__name__
-        assert timestamp == param_data.last_updated.timestamp()
+        assert data["type"] == ParamDBType.PARAM
+        assert data["className"] == type(param_data).__name__
+        assert data["lastUpdated"] == param_data.last_updated.timestamp()
 
         # Check that the loaded JSON data has the correct data
-        assert isinstance(json_data, list)
-        json_data_key, json_data_data = json_data
+        contents = data["data"]
+        assert isinstance(contents, dict)
+        contents_type = contents["type"]
+        contents_data = contents["data"]
         param_json_data = param_data.to_json()
-        if json_data_key == "l":
-            assert isinstance(json_data_data, list)
+        if contents_type == ParamDBType.LIST:
+            assert isinstance(contents_data, list)
             assert isinstance(param_json_data, list)
-            assert len(json_data_data) == len(param_json_data)
-        elif json_data_key == "d":
-            assert isinstance(json_data_data, dict)
+            assert len(contents_data) == len(param_json_data)
+        elif contents_type == ParamDBType.DICT:
+            assert isinstance(contents_data, dict)
             assert isinstance(param_json_data, dict)
-            assert json_data_data.keys() == param_json_data.keys()
+            assert contents_data.keys() == param_json_data.keys()
         else:
             assert False  # Currently, all param_data have list or dict data
 
@@ -266,10 +267,10 @@ def test_load_classes_false_unknown_class(db_path: str) -> None:
     data_from_history = json.loads(
         param_db.commit_history_with_data(raw_json=True)[0].data
     )
-    assert isinstance(data_loaded, list)
-    assert data_loaded[2] == Unknown.__name__
-    assert isinstance(data_from_history, list)
-    assert data_from_history[2] == Unknown.__name__
+    assert isinstance(data_loaded, dict)
+    assert data_loaded["className"] == Unknown.__name__
+    assert isinstance(data_from_history, dict)
+    assert data_from_history["className"] == Unknown.__name__
 
 
 # pylint: disable-next=too-many-arguments,too-many-locals

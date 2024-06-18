@@ -29,5 +29,5 @@ All of the following can be imported from `paramdb`.
 .. autoclass:: ParamDB
 .. autoclass:: CommitEntry
 .. autoclass:: CommitEntryWithData
-.. autoclass:: ParamDBKey
+.. autoclass:: ParamDBType
 ```

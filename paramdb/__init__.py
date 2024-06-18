@@ -5,7 +5,7 @@ from paramdb._param_data._dataclasses import ParamDataclass
 from paramdb._param_data._files import ParamFile
 from paramdb._param_data._collections import ParamList, ParamDict
 from paramdb._param_data._type_mixins import ParentType, RootType
-from paramdb._database import ParamDB, CommitEntry, CommitEntryWithData, ParamDBKey
+from paramdb._database import ParamDB, CommitEntry, CommitEntryWithData, ParamDBType
 
 __all__ = [
     "ParamData",
@@ -18,7 +18,7 @@ __all__ = [
     "ParamDB",
     "CommitEntry",
     "CommitEntryWithData",
-    "ParamDBKey",
+    "ParamDBType",
 ]
 
 try:

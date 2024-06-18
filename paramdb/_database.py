@@ -27,23 +27,23 @@ DataT = TypeVar("DataT")
 _SelectT = TypeVar("_SelectT", bound=Select[Any])
 
 
-class ParamDBKey:
+class ParamDBType:
     """
-    Keys corresponding to different object types in the JSON representation of the data
-    in a ParamDB commit.
+    Type strings corresponding to different object types in the JSON representation of
+    the data in a ParamDB commit.
     """
 
-    DATETIME = "t"
-    """Key for ``datetime.datetime`` objects."""
-    QUANTITY = "q"
-    """Key for ``astropy.units.quantity`` objects."""
-    LIST = "l"
-    """Key for ordinary lists."""
-    DICT = "d"
-    """Key for ordinary dictionaries."""
-    PARAM = "p"
+    DATETIME = "datetime"
+    """Type string for ``datetime.datetime`` objects."""
+    QUANTITY = "Quantity"
+    """Type string ``astropy.units.Quantity`` objects."""
+    LIST = "list"
+    """Type string ordinary lists."""
+    DICT = "dict"
+    """Type string ordinary dictionaries."""
+    PARAM = "ParamData"
     """
-    Key for :py:class:`ParamData` objects.
+    Type string for :py:class:`ParamData` objects.
 
     The JSON object should either include a parameter class name, or be None if wrapping
     a non-:py:class:`ParamData` with parameter metadata (e.g. a last updated time).
@@ -69,23 +69,25 @@ def _encode_json(obj: Any) -> Any:
     if isinstance(obj, (int, float, bool, str)) or obj is None:
         return obj
     if isinstance(obj, datetime):
-        return [ParamDBKey.DATETIME, obj.timestamp()]
+        return {"type": ParamDBType.DATETIME, "timestamp": obj.timestamp()}
     if _ASTROPY_INSTALLED and isinstance(obj, Quantity):
-        return [ParamDBKey.QUANTITY, obj.value, str(obj.unit)]
+        return {"type": ParamDBType.QUANTITY, "value": obj.value, "unit": str(obj.unit)}
     if isinstance(obj, (list, tuple)):
-        return [ParamDBKey.LIST, [_encode_json(item) for item in obj]]
+        return {"type": ParamDBType.LIST, "data": [_encode_json(item) for item in obj]}
     if isinstance(obj, dict):
-        return [
-            ParamDBKey.DICT,
-            {key: _encode_json(value) for key, value in obj.items()},
-        ]
+        return {
+            "type": ParamDBType.DICT,
+            "data": {key: _encode_json(value) for key, value in obj.items()},
+        }
     if isinstance(obj, ParamData):
-        return [
-            ParamDBKey.PARAM,
-            _encode_json(obj.to_json()),
-            None if isinstance(obj, _ParamWrapper) else type(obj).__name__,
-            obj.last_updated.timestamp(),
-        ]
+        encoded_json = {"type": ParamDBType.PARAM}
+        if not isinstance(obj, _ParamWrapper):
+            encoded_json |= {"className": type(obj).__name__}
+        encoded_json |= {
+            "lastUpdated": obj.last_updated.timestamp(),
+            "data": _encode_json(obj.to_json()),
+        }
+        return encoded_json
     raise TypeError(
         f"'{type(obj).__name__}' object {repr(obj)} is not JSON serializable, so the"
         " commit failed"
@@ -94,23 +96,29 @@ def _encode_json(obj: Any) -> Any:
 
 def _decode_json(json_data: Any) -> Any:
     """Reconstruct an object encoded by ``_json_encode()``."""
-    if isinstance(json_data, list):
-        key, *data = json_data
-        if key == ParamDBKey.DATETIME:
-            return datetime.fromtimestamp(data[0], timezone.utc).astimezone()
-        if _ASTROPY_INSTALLED and key == ParamDBKey.QUANTITY:
-            return Quantity(*data)
-        if key == ParamDBKey.LIST:
-            return [_decode_json(item) for item in data[0]]
-        if key == ParamDBKey.DICT:
-            return {key: _decode_json(value) for key, value in data[0].items()}
-        if key == ParamDBKey.PARAM:
-            json_data, class_name, timestamp = data
+    if isinstance(json_data, dict):
+        param_db_type = json_data["type"]
+        if param_db_type == ParamDBType.DATETIME:
+            return datetime.fromtimestamp(
+                json_data["timestamp"], timezone.utc
+            ).astimezone()
+        if _ASTROPY_INSTALLED and param_db_type == ParamDBType.QUANTITY:
+            return Quantity(value=json_data["value"], unit=json_data["unit"])
+        if param_db_type == ParamDBType.LIST:
+            return [_decode_json(item) for item in json_data["data"]]
+        if param_db_type == ParamDBType.DICT:
+            return {
+                key: _decode_json(value) for key, value in json_data["data"].items()
+            }
+        if param_db_type == ParamDBType.PARAM:
+            class_name = json_data.get("className", None)
             param_class = (
                 _ParamWrapper if class_name is None else get_param_class(class_name)
             )
             if param_class is not None:
-                return param_class.from_json(_decode_json(json_data), timestamp)
+                return param_class.from_json(
+                    _decode_json(json_data["data"]), json_data["lastUpdated"]
+                )
             raise ValueError(
                 f"ParamData class '{class_name}' is not known to ParamDB, so the load"
                 " failed"
@@ -300,20 +308,19 @@ class ParamDB(Generic[DataT]):
         By default, objects are reconstructed, which requires the relevant parameter
         data classes to be defined in the current program. However, if ``raw_json``
         is True, the JSON data is returned directly from the database as a string.
-        The format of the JSON data is as follows (see :py:class:`ParamDBKey` for key
-        codes)::
+        The format of the JSON data is as follows::
 
-            json_data:
+            json_data =
                 | int
                 | float
                 | bool
                 | str
                 | None
-                | [ParamDBKey.DATETIME, float<timestamp>]
-                | [ParamDBKey.QUANTITY, float<value>, str<unit>]
-                | [ParamDBKey.LIST, [json_data<item>, ...]]
-                | [ParamDBKey.DICT, {str<key>: json_data<value>, ...}]
-                | [ParamDBKey.PARAM, json_data<data>, str<class_name> | None, float<timestamp>]
+                | {"type": "datetime", "timestamp": float}
+                | {"type": "Quantity", "value": float, "unit": str}
+                | {"type": "list", "data": [json_data, ...]}
+                | {"type": "dict", "data": {str: json_data, ...}}
+                | {"type": "ParamData", "className": str, "lastUpdated": float, "data": json_data}
         """  # noqa: E501
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:
