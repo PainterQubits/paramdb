@@ -10,6 +10,7 @@ from copy import deepcopy
 import os
 from pathlib import Path
 from datetime import datetime, timezone
+import json
 import pytest
 from tests.helpers import (
     EmptyParam,
@@ -221,18 +222,20 @@ def test_update_timestamp_after_load(
     )
 
 
-def test_decode_json_false(db_path: str, param_data: ParamData[Any]) -> None:
-    """Can load raw JSON data if ``decode_json`` is false."""
+def test_raw_json_true(db_path: str, param_data: ParamData[Any]) -> None:
+    """Can load raw JSON data if ``raw_json`` is True."""
     param_db = ParamDB[ParamData[Any]](db_path)
     param_db.commit("Initial commit", param_data)
-    data_loaded = param_db.load(decode_json=False)
-    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
+    data_loaded = json.loads(param_db.load(raw_json=True))
+    data_from_history = json.loads(
+        param_db.commit_history_with_data(raw_json=True)[0].data
+    )
 
     for data in data_loaded, data_from_history:
         # Check that loaded dictionary has the correct type and keys
         assert isinstance(data, list)
         assert len(data) == 4
-        key, class_name, timestamp, json_data = data
+        key, json_data, class_name, timestamp = data
         assert key == ParamDBKey.PARAM
         assert class_name == type(param_data).__name__
         assert timestamp == param_data.last_updated.timestamp()
@@ -259,12 +262,14 @@ def test_load_classes_false_unknown_class(db_path: str) -> None:
     """
     param_db = ParamDB[Unknown](db_path)
     param_db.commit("Initial commit", Unknown())
-    data_loaded = param_db.load(decode_json=False)
-    data_from_history = param_db.commit_history_with_data(decode_json=False)[0].data
+    data_loaded = json.loads(param_db.load(raw_json=True))
+    data_from_history = json.loads(
+        param_db.commit_history_with_data(raw_json=True)[0].data
+    )
     assert isinstance(data_loaded, list)
-    assert data_loaded[1] == Unknown.__name__
+    assert data_loaded[2] == Unknown.__name__
     assert isinstance(data_from_history, list)
-    assert data_from_history[1] == Unknown.__name__
+    assert data_from_history[2] == Unknown.__name__
 
 
 # pylint: disable-next=too-many-arguments,too-many-locals
