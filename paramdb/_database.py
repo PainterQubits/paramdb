@@ -382,7 +382,7 @@ class ParamDB(Generic[DataT]):
         :py:class:`CommitEntryWithData` objects between the provided start and end
         indices, which work like slicing a Python list.
 
-        See :py:meth:`ParamDB.load` for the behavior of ``decode_json``.
+        See :py:meth:`ParamDB.load` for the behavior of ``raw_json``.
         """
         with self._Session() as session:
             select_stmt = self._select_slice(select(_Snapshot), start, end)
