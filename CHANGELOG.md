@@ -7,6 +7,20 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
+## [0.14.0] (Jun 18 2024)
+
+### Changed
+
+- The option `decode_json` in `ParamDB.load()` was replaced with `raw_json`, which
+  allows loading the raw JSON string from the database.
+- The order of data for `ParamData` objects in the underlying JSON representation was
+  changed; see `ParamDB.load()` for the new order.
+
+### Removed
+
+- `ParamDBKey.WRAPPER` was removed in favor of encoding these values using
+  `ParamDBKey.PARAM` with a class name of `None`.
+
 ## [0.13.0] (Jun 14 2024)
 
 ### Added
@@ -191,7 +205,8 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.13.0...develop
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.14.0...develop
+[0.14.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.14.0
 [0.13.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.13.0
 [0.12.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.12.0
 [0.11.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.11.0

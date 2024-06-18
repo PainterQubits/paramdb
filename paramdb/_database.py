@@ -41,13 +41,13 @@ class ParamDBKey:
     """Key for ordinary lists."""
     DICT = "d"
     """Key for ordinary dictionaries."""
-    WRAPPER = "w"
-    """
-    Key for non-:py:class:`ParamData` children of :py:class:`ParamData` objects, since
-    they are wrapped with additional metadata, such as a last updated time.
-    """
     PARAM = "p"
-    """Key for :py:class:`ParamData` objects."""
+    """
+    Key for :py:class:`ParamData` objects.
+
+    The JSON object should either include a parameter class name, or be None if wrapping
+    a non-:py:class:`ParamData` with parameter metadata (e.g. a last updated time).
+    """
 
 
 def _compress(text: str) -> bytes:
@@ -80,13 +80,12 @@ def _encode_json(obj: Any) -> Any:
             {key: _encode_json(value) for key, value in obj.items()},
         ]
     if isinstance(obj, ParamData):
-        timestamp_and_json = [
-            obj.last_updated.timestamp(),
+        return [
+            ParamDBKey.PARAM,
             _encode_json(obj.to_json()),
+            None if isinstance(obj, _ParamWrapper) else type(obj).__name__,
+            obj.last_updated.timestamp(),
         ]
-        if isinstance(obj, _ParamWrapper):
-            return [ParamDBKey.WRAPPER, *timestamp_and_json]
-        return [ParamDBKey.PARAM, type(obj).__name__, *timestamp_and_json]
     raise TypeError(
         f"'{type(obj).__name__}' object {repr(obj)} is not JSON serializable, so the"
         " commit failed"
@@ -105,13 +104,13 @@ def _decode_json(json_data: Any) -> Any:
             return [_decode_json(item) for item in data[0]]
         if key == ParamDBKey.DICT:
             return {key: _decode_json(value) for key, value in data[0].items()}
-        if key == ParamDBKey.WRAPPER:
-            return _ParamWrapper.from_json(data[0], _decode_json(data[1]))
         if key == ParamDBKey.PARAM:
-            class_name = data[0]
-            param_class = get_param_class(class_name)
+            json_data, class_name, timestamp = data
+            param_class = (
+                _ParamWrapper if class_name is None else get_param_class(class_name)
+            )
             if param_class is not None:
-                return param_class.from_json(data[1], _decode_json(data[2]))
+                return param_class.from_json(_decode_json(json_data), timestamp)
             raise ValueError(
                 f"ParamData class '{class_name}' is not known to ParamDB, so the load"
                 " failed"
@@ -122,16 +121,19 @@ def _decode_json(json_data: Any) -> Any:
 def _encode(obj: Any) -> bytes:
     """Encode the given object into bytes that will be stored in the database."""
     # pylint: disable=no-member
-    return _compress(json.dumps(_encode_json(obj)))
+    return _compress(json.dumps(_encode_json(obj), separators=(",", ":")))
 
 
-def _decode(data: bytes, decode_json: bool) -> Any:
+def _decode(data: bytes, raw_json: bool) -> Any:
     """
-    Decode an object from the given data from the database. Classes will be loaded in
-    if ``load_classes`` is True; otherwise, classes will be loaded as dictionaries.
+    Decode an object from the given data from the database.
+
+    If ``raw_json`` is True, the raw JSON string will from the database will be
+    returned; otherwise, the JSON data will be parsed and decoded into the corresponding
+    classes.
     """
-    json_data = json.loads(_decompress(data))
-    return _decode_json(json_data) if decode_json else json_data
+    json_str = _decompress(data)
+    return json_str if raw_json else _decode_json(json.loads(json_str))
 
 
 class _Base(MappedAsDataclass, DeclarativeBase):
@@ -283,24 +285,23 @@ class ParamDB(Generic[DataT]):
 
     @overload
     def load(
-        self, commit_id: int | None = None, *, decode_json: Literal[True] = True
+        self, commit_id: int | None = None, *, raw_json: Literal[False] = False
     ) -> DataT: ...
 
     @overload
-    def load(
-        self, commit_id: int | None = None, *, decode_json: Literal[False]
-    ) -> Any: ...
+    def load(self, commit_id: int | None = None, *, raw_json: Literal[True]) -> str: ...
 
-    def load(self, commit_id: int | None = None, *, decode_json: bool = True) -> Any:
+    def load(self, commit_id: int | None = None, *, raw_json: bool = False) -> Any:
         """
         Load and return data from the database. If a commit ID is given, load from that
         commit; otherwise, load from the most recent commit. Raise an ``IndexError`` if
         the specified commit does not exist. Note that commit IDs begin at 1.
 
         By default, objects are reconstructed, which requires the relevant parameter
-        data classes to be defined in the current program. However, if ``decode_json``
-        is False, the encoded JSON data is loaded directly from the database. The format
-        of the encoded data is as follows (see :py:class:`ParamDBKey` for key codes)::
+        data classes to be defined in the current program. However, if ``raw_json``
+        is True, the JSON data is returned directly from the database as a string.
+        The format of the JSON data is as follows (see :py:class:`ParamDBKey` for key
+        codes)::
 
             json_data:
                 | int
@@ -312,15 +313,14 @@ class ParamDB(Generic[DataT]):
                 | [ParamDBKey.QUANTITY, float<value>, str<unit>]
                 | [ParamDBKey.LIST, [json_data<item>, ...]]
                 | [ParamDBKey.DICT, {str<key>: json_data<value>, ...}]
-                | [ParamDBKey.WRAPPED, float<timestamp>, json_data<data>]
-                | [ParamDBKey.PARAM, str<class_name>, float<timestamp>, json_data<data>]
-        """
+                | [ParamDBKey.PARAM, json_data<data>, str<class_name> | None, float<timestamp>]
+        """  # noqa: E501
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
         with self._Session() as session:
             data = session.scalar(select_stmt)
         if data is None:
             raise self._index_error(commit_id)
-        return _decode(data, decode_json)
+        return _decode(data, raw_json)
 
     def load_commit_entry(self, commit_id: int | None = None) -> CommitEntry:
         """
@@ -358,7 +358,7 @@ class ParamDB(Generic[DataT]):
         start: int | None = None,
         end: int | None = None,
         *,
-        decode_json: Literal[True] = True,
+        raw_json: Literal[False] = False,
     ) -> list[CommitEntryWithData[DataT]]: ...
 
     @overload
@@ -367,15 +367,15 @@ class ParamDB(Generic[DataT]):
         start: int | None = None,
         end: int | None = None,
         *,
-        decode_json: Literal[False],
-    ) -> list[CommitEntryWithData[Any]]: ...
+        raw_json: Literal[True],
+    ) -> list[CommitEntryWithData[str]]: ...
 
     def commit_history_with_data(
         self,
         start: int | None = None,
         end: int | None = None,
         *,
-        decode_json: bool = True,
+        raw_json: bool = False,
     ) -> list[CommitEntryWithData[Any]]:
         """
         Retrieve the commit history with data as a list of
@@ -392,7 +392,7 @@ class ParamDB(Generic[DataT]):
                     snapshot.id,
                     snapshot.message,
                     snapshot.timestamp,
-                    _decode(snapshot.data, decode_json),
+                    _decode(snapshot.data, raw_json),
                 )
                 for snapshot in snapshots
             ]

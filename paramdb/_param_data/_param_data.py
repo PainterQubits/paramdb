@@ -177,7 +177,7 @@ class ParamData(ABC, Generic[ChildNameT]):
         self.__init__(json_data)  # type: ignore[misc]
 
     @classmethod
-    def from_json(cls, last_updated_timestamp: float, json_data: list[Any]) -> Self:
+    def from_json(cls, json_data: list[Any], last_updated_timestamp: float) -> Self:
         """
         Construct a parameter data object from the given last updated timestamp and JSON
         data originally constructed by :py:meth:`to_json`.
