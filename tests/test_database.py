@@ -235,7 +235,7 @@ def test_raw_json_true(db_path: str, param_data: ParamData[Any]) -> None:
         # Check that loaded dictionary has the correct type and keys
         assert isinstance(data, dict)
         assert len(data) == 4
-        assert data["type"] == ParamDBType.PARAM
+        assert data["type"] == ParamDBType.PARAM_DATA
         assert data["className"] == type(param_data).__name__
         assert data["lastUpdated"] == param_data.last_updated.timestamp()
 

@@ -41,7 +41,7 @@ class ParamDBType:
     """Type string ordinary lists."""
     DICT = "dict"
     """Type string ordinary dictionaries."""
-    PARAM = "ParamData"
+    PARAM_DATA = "ParamData"
     """
     Type string for :py:class:`ParamData` objects.
 
@@ -80,7 +80,7 @@ def _encode_json(obj: Any) -> Any:
             "data": {key: _encode_json(value) for key, value in obj.items()},
         }
     if isinstance(obj, ParamData):
-        encoded_json = {"type": ParamDBType.PARAM}
+        encoded_json = {"type": ParamDBType.PARAM_DATA}
         if not isinstance(obj, _ParamWrapper):
             encoded_json |= {"className": type(obj).__name__}
         encoded_json |= {
@@ -110,7 +110,7 @@ def _decode_json(json_data: Any) -> Any:
             return {
                 key: _decode_json(value) for key, value in json_data["data"].items()
             }
-        if param_db_type == ParamDBType.PARAM:
+        if param_db_type == ParamDBType.PARAM_DATA:
             class_name = json_data.get("className", None)
             param_class = (
                 _ParamWrapper if class_name is None else get_param_class(class_name)
