@@ -365,6 +365,7 @@ class ParamDB(Generic[DataT]):
                 | {"type": "Quantity", "value": float, "unit": str}
                 | {"type": "list", "data": [json_data, ...]}
                 | {"type": "dict", "data": {str: json_data, ...}}
+                | {"type": "ParamData", "lastUpdated": float, "data": json_data}
                 | {"type": "ParamData", "className": str, "lastUpdated": float, "data": json_data}
         """  # noqa: E501
         select_stmt = self._select_commit(select(_Snapshot.data), commit_id)
