@@ -14,7 +14,7 @@ repository = "https://github.com/PainterQubits/paramdb"
 [tool.poetry.dependencies]
 python = "^3.9"
 typing-extensions = "^4.12.2"
-sqlalchemy = "^2.0.30"
+sqlalchemy = "^2.0.31"
 zstandard = "^0.22.0"
 pandas = { version = "^2.2.2", optional = true }
 astropy = { version = "^6.0.1", optional = true }
