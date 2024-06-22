@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "paramdb"
-version = "0.14.0"
+version = "0.15.0"
 description = "Python package for storing and retrieving experiment parameters."
 authors = ["Alex Hadley <contact@alexhadley.net>"]
 license = "BSD-3-Clause"

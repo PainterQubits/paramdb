@@ -4,6 +4,6 @@ authors:
   - family-names: "Hadley"
     given-names: "Alex"
 title: "ParamDB"
-version: 0.14.0
-date-released: 2024-06-18
+version: 0.15.0
+date-released: 2024-06-21
 url: "https://github.com/PainterQubits/paramdb"
