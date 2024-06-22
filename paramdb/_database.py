@@ -126,10 +126,17 @@ def _decode_json(json_data: Any) -> Any:
     return json_data
 
 
-def _encode(obj: Any) -> bytes:
-    """Encode the given object into bytes that will be stored in the database."""
-    # pylint: disable=no-member
-    return _compress(json.dumps(_encode_json(obj), separators=(",", ":")))
+def _encode(obj: Any, raw_json: bool) -> bytes:
+    """
+    Encode the given object into bytes that will be stored in the database.
+
+    If ``raw_json`` is True, the object will be assumed to be a raw JSON string and will
+    only be compressed; otherwise, the given object will be first encoded as a JSON
+    string.
+    """
+    return _compress(
+        obj if raw_json else json.dumps(_encode_json(obj), separators=(",", ":"))
+    )
 
 
 def _decode(data: bytes, raw_json: bool) -> Any:
@@ -214,6 +221,9 @@ class ParamDB(Generic[DataT]):
         self._Session = sessionmaker(self._engine)  # pylint: disable=invalid-name
         _Base.metadata.create_all(self._engine)
 
+    def __repr__(self) -> str:
+        return f"{type(self).__name__}(path={self.path!r})"
+
     def _index_error(self, commit_id: int | None) -> IndexError:
         """
         Returns an ``IndexError`` to raise if the given commit ID was not found in the
@@ -258,8 +268,33 @@ class ParamDB(Generic[DataT]):
         """Path of the database file."""
         return self._path
 
+    @overload
     def commit(
-        self, message: str, data: DataT, timestamp: datetime | None = None
+        self,
+        message: str,
+        data: DataT,
+        timestamp: datetime | None = None,
+        *,
+        raw_json: Literal[False] = False,
+    ) -> CommitEntry: ...
+
+    @overload
+    def commit(
+        self,
+        message: str,
+        data: str,
+        timestamp: datetime | None = None,
+        *,
+        raw_json: Literal[True],
+    ) -> CommitEntry: ...
+
+    def commit(
+        self,
+        message: str,
+        data: Any,
+        timestamp: datetime | None = None,
+        *,
+        raw_json: bool = False,
     ) -> CommitEntry:
         """
         Commit the given data to the database with the given message and return a commit
@@ -267,9 +302,19 @@ class ParamDB(Generic[DataT]):
 
         By default, the timestamp will be set to the current time. If a timestamp is
         given, it is used instead. Naive datetimes will be assumed to be in UTC time.
+
+        By default, the given data will be converted into a JSON string, which is then
+        saved to the database; however, if ``raw_json`` is True, then the given data is
+        assumed to already be a JSON string in the format specified by
+        :py:meth:`ParamDB.load`. Note that any string will be accepted, so be careful
+        using this option. If the format is incorrect, loading this particular commit
+        may fail.
         """
         with self._Session.begin() as session:
-            kwargs: dict[str, Any] = {"message": message, "data": _encode(data)}
+            kwargs: dict[str, Any] = {
+                "message": message,
+                "data": _encode(data, raw_json),
+            }
             if timestamp is not None:
                 utc_offset = timestamp.utcoffset()
                 kwargs["timestamp"] = (
