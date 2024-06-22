@@ -7,6 +7,17 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
+### Added
+
+- Added `ParamDB.__repr__()` for better debugging.
+
+### Changed
+
+- `ParamDB.commit()` now has a `raw_json` option, allowing a raw JSON string to be
+  committed to the database.
+- Updated the underlying JSON representation to be more self-describing; see
+  `ParamDB.load()` for the new format specification.
+
 ## [0.14.0] (Jun 18 2024)
 
 ### Changed
