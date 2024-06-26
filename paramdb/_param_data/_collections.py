@@ -210,8 +210,8 @@ class ParamDict(
 
     def _is_attribute(self, name: str) -> bool:
         """
-        If the given name matches an existing attribute or has a corresponding class
-        type hint, treat it as the name of an attribute.
+        If the given name matches an existing attribute, has a corresponding class type
+        hint, or is a dunder name (e.g. __init__), treat it as the name of an attribute.
         """
         try:
             self.__getattribute__(name)  # pylint: disable=unnecessary-dunder-call
@@ -221,4 +221,5 @@ class ParamDict(
         class_annotations: dict[str, Any] = {}
         for cls in type(self).mro():
             class_annotations |= getattr(cls, "__annotations__", {})
-        return existing_attribute or name in class_annotations
+        dunder = name.startswith("__") and name.endswith("__")
+        return existing_attribute or name in class_annotations or dunder

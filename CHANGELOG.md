@@ -7,6 +7,13 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
+## [0.15.1] (Jun 25 2024)
+
+### Fixed
+
+- `ParamDict` treats dunder names (e.g. `__init__`) as attributes, allowing internal
+  Python functionalities to work.
+
 ## [0.15.0] (Jun 21 2024)
 
 ### Added
