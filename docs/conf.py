@@ -4,7 +4,7 @@
 project = "ParamDB"
 copyright = "2023–2024, California Institute of Technology"
 author = "Alex Hadley"
-release = "0.15.1"
+release = "0.15.2"
 
 # General configuration
 extensions = [
