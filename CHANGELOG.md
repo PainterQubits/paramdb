@@ -7,6 +7,13 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
+## [0.15.2] (Jun 28 2024)
+
+### Changed
+
+- `ParamDataFrame` now saves and loads DataFrames to and from Pickle files instead of CSV
+  files.
+
 ## [0.15.1] (Jun 26 2024)
 
 ### Fixed

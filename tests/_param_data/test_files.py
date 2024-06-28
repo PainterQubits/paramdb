@@ -88,7 +88,7 @@ def test_param_file_saves_file(
     type(param_file)(param_file_path, data)
     assert os.path.exists(param_file_path)
     if isinstance(param_file, ParamDataFrame):
-        pd.testing.assert_frame_equal(data, pd.read_csv(param_file_path))
+        pd.testing.assert_frame_equal(data, pd.read_pickle(param_file_path))
     else:
         with open(param_file_path, "r", encoding="utf-8") as f:
             assert data == f.read()
