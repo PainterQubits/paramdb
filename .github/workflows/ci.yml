@@ -59,7 +59,7 @@ jobs:
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
         run: poetry test --cov=${{ env.PACKAGE_NAME }} --cov-report=xml
 
-      - name: Upload coverage reports to Codecov
+      - name: Upload coverage to Codecov
         if: matrix.python_version == env.MAIN_PYTHON_VERSION
         uses: codecov/codecov-action@v4
         with:
