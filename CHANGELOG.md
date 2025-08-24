@@ -7,6 +7,12 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 
 ## [Unreleased]
 
+## [0.15.3] (Aug 24 2025)
+
+### Fixed
+
+- New fields can be defined on a `ParamDataclass` without causing a `KeyError`.
+
 ## [0.15.2] (Jun 28 2024)
 
 ### Changed
@@ -232,7 +238,8 @@ project adheres to clauses 1–8 of [Semantic Versioning](https://semver.org/spe
 - Database class `ParamDB` to store parameters in a SQLite file
 - Ability to retrieve the commit history as `CommitEntry` objects
 
-[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.15.2...main
+[unreleased]: https://github.com/PainterQubits/paramdb/compare/v0.15.3...main
+[0.15.3]: https://github.com/PainterQubits/paramdb/releases/tag/v0.15.3
 [0.15.2]: https://github.com/PainterQubits/paramdb/releases/tag/v0.15.2
 [0.15.1]: https://github.com/PainterQubits/paramdb/releases/tag/v0.15.1
 [0.15.0]: https://github.com/PainterQubits/paramdb/releases/tag/v0.15.0
