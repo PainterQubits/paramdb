@@ -378,10 +378,12 @@ def test_commit_load_multiple(db_path: str) -> None:
         assert_param_data_strong_equals(param_from_history, param, "number")
 
 
-def test_commit_load_new_dataclass_property(db_path: str) -> None:
-    """Can commit, add a new property to a dataclass, and then load."""
+def test_commit_load_new_dataclass_field(db_path: str) -> None:
+    """Can commit, add a new field to a dataclass, and then load."""
 
     class CustomParam(ParamDataclass):
+        """Initial parameter dataclass."""
+
         number1: int
 
     with capture_start_end_times() as number1_times:
@@ -389,7 +391,9 @@ def test_commit_load_new_dataclass_property(db_path: str) -> None:
     param_db = ParamDB[CustomParam](db_path)
     param_db.commit("Initial commit", custom_param)
 
-    class CustomParam(ParamDataclass):
+    class CustomParam(ParamDataclass):  # pylint: disable=function-redefined
+        """Parameter dataclass with an added field."""
+
         number1: int
         number2: int | None = None
 
