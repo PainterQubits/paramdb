@@ -378,6 +378,38 @@ def test_commit_load_multiple(db_path: str) -> None:
         assert_param_data_strong_equals(param_from_history, param, "number")
 
 
+def test_commit_load_new_dataclass_property(db_path: str) -> None:
+    """Can commit, add a new property to a dataclass, and then load."""
+
+    class CustomParam(ParamDataclass):
+        number1: int
+
+    with capture_start_end_times() as number1_times:
+        custom_param = CustomParam(number1=123)
+    param_db = ParamDB[CustomParam](db_path)
+    param_db.commit("Initial commit", custom_param)
+
+    class CustomParam(ParamDataclass):
+        number1: int
+        number2: int | None = None
+
+    param_db = ParamDB[CustomParam](db_path)
+    with capture_start_end_times() as number2_times:
+        custom_param_loaded = param_db.load()
+    assert custom_param_loaded.number1 == 123
+    assert custom_param_loaded.number2 is None
+    assert (
+        number1_times.start
+        < custom_param_loaded.child_last_updated("number1").timestamp()
+        < number1_times.end
+    )
+    assert (
+        number2_times.start
+        < custom_param_loaded.child_last_updated("number2").timestamp()
+        < number2_times.end
+    )
+
+
 def test_separate_connections(db_path: str, simple_param: SimpleParam) -> None:
     """
     Can commit and load using separate connections. This simulates committing to the
