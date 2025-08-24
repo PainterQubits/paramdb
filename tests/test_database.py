@@ -391,7 +391,8 @@ def test_commit_load_new_dataclass_field(db_path: str) -> None:
     param_db = ParamDB[CustomParam](db_path)
     param_db.commit("Initial commit", custom_param)
 
-    class CustomParam(ParamDataclass):  # type: ignore[no-redef] # pylint: disable=function-redefined
+    # pylint: disable-next=function-redefined
+    class CustomParam(ParamDataclass):  # type: ignore[no-redef]
         """Parameter dataclass with an added field."""
 
         number1: int
