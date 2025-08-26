@@ -122,7 +122,11 @@ class ParamDataclass(ParamData[str]):
     def __post_init__(self) -> None:
         # Wrap fields as children and process them
         for field in fields(self):  # type: ignore[arg-type]
-            if self._wrapped_children is not None and field.init:
+            if (
+                self._wrapped_children is not None
+                and field.init
+                and field.name in self._wrapped_children
+            ):
                 wrapped_child = self._wrapped_children[field.name]
             else:
                 wrapped_child = self._wrap_child(super().__getattribute__(field.name))
